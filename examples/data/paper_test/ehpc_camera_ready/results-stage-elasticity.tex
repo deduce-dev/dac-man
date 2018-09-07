@@ -1,0 +1,628 @@
+\begin{figure*}[htbp]
+	\centering
+	\subfloat[Runtime.]{\includegraphics[width=0.4\textwidth]{figs/montage_turn-around-new.pdf}
+		\label{fig:montage_turnaround-new}}
+	\subfloat[Core-hours.]{\includegraphics[width=0.4\textwidth]{figs/montage_core-hour-new.pdf}
+		\label{fig:montage_core-hour-new}}
+	\caption{\small Montage workflow performance (Cori):
+	(a) workflow runtime  and (b) core-hours usage for Montage with and without \systemname. 
+	Montage shows shorter runtimes without \systemname.
+	For values of n larger than 32, \systemname runs consume less core-hours.
+        \revcomment{Reviewer 1 has comments about these results. I am not sure what was meant.}
+%	However, the sequence stages use less core-hours in \systemname due to dynamic elastic resource allocation.
+	}
+% Gonzalo Edit
+%\caption{\small \fix{Montage workflow (Cori): (a) workflow runtime  and (b) Core-hours usage for Montage with \systemname and without \systemname.  sequence stages are allocated 1 node (i.e., 32 cores) and use one core. Parallel stages scale linearly, while sequence stages suffer due to I/O after 32 cores. The sequence stages incur lower core-hour expenditure in \systemname. Parallel stages use roughly same core-hours in \systemname and non\systemname cases. However, the sequence stages use less core-hours in \systemname
+%due to dynamic elastic resource allocation.}}
+	\label{fig:montage_results}
+	\vspace{-0.4cm}
+\end{figure*}
+\subsection{Effect of Stage Elasticity}
+%In one of its use cases, \systemname 
+%adjusts workflow resources to the static,
+%but different requirements of each workflow stage.
+%In this case, elasticity is achieved by including a call to
+%\systemname API in the workflow,
+%before the start of each stage to
+%express its resource requirements.
+%In this section, performance results of workflows
+%run in this use case are presented.
+
+The stage elasticity in \systemname allows workflows to
+request resource changes between the stages of a workflow
+(as described in Section~\ref{subsec:user}). In this section,
+we present the results of using stage elasticity in \systemname
+for different workflows. 
+
+In our evaluation, we measure \systemname performance using workflow
+runtime and allocated core-hours. Values observed in each experiment
+are presented in Figures~\ref{fig:montage_results}
+to~\ref{fig:synthetic_results}.  Each bar in the figure presents the
+average value (with standard deviation bars) over three repetitions of an
+experiment. 
+
+Experiments include runs with and without \systemname and different
+resource allocation (32, 64, 128 and 256 cores).
+%Y-axis of the figures indicates the measured metric and 
+The X-axis represents the peak CPUs (\textit{n}) allocated for the
+workflow in a particular experiment.  In non\systemname runs, a value
+\textit{n} on the X-axis corresponds to the number of CPU cores
+allocated during the complete lifecycle of a workflow. In \systemname
+runs, \textit{n} is the maximum number of CPU cores allocated during
+the duration of a workflow.
+
+%number of CPU cores allocated to a parallel stages. Sequence stages always
+%allocate 32 cores.
+%\fix{Movied this under Metrics.}
+%The runtime of a workflow is calculated as the time between the execution
+%start of the first stage and completion of the last stage of the workflow.
+
+
+%In the figures, main contributors to the runtimes are decomposed as stacked
+%bars including: runtime of each stage (labeled as \emph{[order in the
+%execution]-[Sequential/Parallel]}), wait time of each stage if run as an
+%independent job (\emph{[order in the execution]-Queue}), and aggregated runtime
+%consumed by checkpoint and restart operations (\emph{Checkpointing}).
+
+% moved under metrics
+%The core-hours measured in this section correspond to allocation,
+%including resources left unused by a workflow. Core-hours are labeled
+%and decomposed in stacked bars like the runtime figures. Wait time values
+%are not included since jobs do not consume core-hours when they wait.
+
+%Y-axes workflow indicate averagethe runtime expressed  in seconds, with the standard deviation shown by vertical intervals over stage times.  The turnaround time is calculated at the start of first workflow task to end of the workflow execution.  
+%For each workflow, we compare the different factors contributing to the total turnaround time, represented by the bars in Figures
+%\ref{fig:montage_turnaround-new}, \ref{fig:blast_turnaround-new} and \ref{fig:synthetic_turnaround-new}. 
+%These factors are stage executions time, checkpoint, restart, process kill times, and inter job wait times (Queue Time).
+%Each bar presents the average workflow execution runtime in seconds with and without \systemname for four allocation sizes \textit{n}: 32, 64, 128 and 256 cores. 
+%
+%\fix{Pasted from below needs to be integrated.}
+%
+%In this section, we compare the core-hours used under both execution modes - \systemname and non\systemname for the three workflows as shown in Figures \ref{fig:montage_core-hour-new} \ref{fig:blast_core-hour-new} and \ref{fig:synthetic_core-hour-new}.  
+%The X-axis show the peak CPUs allocated in each run and Y-axis shows the total core-hours. 
+%We also show the standard deviation with vertical bars over stage times related to the experimental runs.
+%Since \systemname uses one node for sequential stages,
+%its core-hours is lower than non\systemname in all sequential stages.  
+%Each bar in the Figures represents the Core-Hour contributions from each Stage execution runtime and the Overhead times (Checkpoint, Restart and Process Kill times),
+%which were summed up and joined together in one stack as they are very small compared to the total core-hour expenditure. 
+
+
+
+%In this section, we evaluate and compare the performance and resource usage of
+%workflows with and without \systemname as per the different workflow patterns.
+\vspace{-0.3cm} 
+\subsubsection{Montage}
+\begin{figure*}[htbp]
+  \centering
+  \subfloat[Runtime.]{\includegraphics[width=0.4\textwidth]{figs/blast_turn-around-new.pdf}
+    \label{fig:blast_turnaround-new}}
+  \subfloat[Core-hours.]{\includegraphics[width=0.4\textwidth]{figs/blast_corehrs-new.pdf}
+    \label{fig:blast_core-hour-new}}
+  \caption{\small BLAST workflow performance (Cori):
+  (a) workflow runtime and (b) core-hours usage for BLAST with \systemname and without \systemname.
+  BLAST execution is dominated by its first parallel stage.
+  BLAST runtimes and core-hours are similar under both approaches, with slightly longer times
+  and higher core-hour numbers in \systemname.}
+%  \caption{\small \fix{BLAST workflow (Cori): (a) Total turnaround time and (b) Core-hours usage for BLAST with \systemname and without \systemname. The sequence stages are allocated 1 node (i.e., 32 cores) and use one core. The parallel stage scales linearly, which is the dominant stage in BLAST. The sequence stage is very small due to its short operation. 
+%%\fix{What??? -  \systemname contribute to lower core-hour expenditure in \systemname.} 
+%Parallel stages scale roughly the same way in \systemname and non\systemname, though \systemname incurs a small overhead due to checkpoint and restart. Core-hours usage does not improve with \systemname due to extrememly small sequence stage. Scaling down incurs a checkpoint/restart overhead that overshadows the scaled down resource allocation for the sequence stage.}}
+  \label{fig:blast_results}
+  \vspace{-0.4cm}
+\end{figure*}
+
+\begin{figure*}[htbp]
+  \centering
+  \subfloat[Runtime.]{\includegraphics[width=0.4\textwidth]{figs/synthetic_turn-around-new.pdf}
+    \label{fig:synthetic_turnaround-new}}
+  \subfloat[Core-hours.]{\includegraphics[width=0.4\textwidth]{figs/synthetic_core-hours-new.pdf}
+    \label{fig:synthetic_core-hour-new}}
+  \caption{\small
+  Synthetic workflow performance (Cori): (a) workflow runtime and (b) core-hours usage for the Synthetic workflow with \systemname and without \systemname.
+  Synthetic workflows show significantly shorter runtimes without \systemname.
+  Until 128 cores, less core-hours are allocated under \systemname.
+  For higher values of n, \systemname uses less core-hours.
+}
+%    \caption{\small \fix{Synthetic workflow (Cori): (a) Total turnaround time and (b) Core-hours usage for the Synthetic workflow with \systemname and without \systemname. The sequence stages are allocated 1 node (i.e., 32 cores) and use one core. Parallel stages scale linearly, but the overall workflow perform porrly in \systemname due to large number of memory allocation/deallocation calls. DMTCP monitors all memory allocation operations, resulting in high runtime overheads in \systemname. \systemname uses larger core-hours for 32 cores, but uses lesser core-hours for increasing cores. Core-hours usage for the parallel stage increases due to larger overheads, but the core-hours usage decreases significantly for the sequence stage because \systemname allocates fewer resources (1 node, 32 cores as compared to 256 cores) for the sequence stage.}}
+% In (b), \systemname contribute to lower core-hour expenditure in \systemname. Parallel stages contribute roughly in the same way in \systemname and Non\systemname.} }
+  \label{fig:synthetic_results}
+  \vspace{-0.4cm}
+\end{figure*}
+In this section, we evaluate the performance and resource usage of
+Montage.
+
+\noindent\textbf{Workflow Runtime.}
+Figure~\ref{fig:montage_turnaround-new} compares the workflow runtime for Montage
+with and without \systemname. 
+%Gonzalo: this is already said before, so I comment it out.
+%
+%Montage is an I/O intensive workflow and most of the overheads 
+%are concentrated in the parallel filesystem, especially for intermediate 
+%I/O. 
+%with file
+%handling happening in between all stages depicted in Figure
+%\ref{fig:montage_dag}.  
+When running without \systemname, the workflow runtime does not
+change substantially across different values of \textit{n} and
+the shortest one is observed for $n=32$ (single node on Cori).
+%This result is counterintuitive, as it was expected
+%that assigning more results to the workflow tasks would
+%reduce its runtime.
+For larger $n$, the runtime of sequence stages
+(\montageSecond and \montageFourth) increases equally or more
+than the runtime gains in the parallel ones (\montageFirst and \montageThird).
+%Execution analysis associates this phenomenon to changes 
+This is likely due to the inter-stage data caching for different values of $n$.
+%because sequential stages run always on 
+%a node independently of $n$-
+For instance, if $n=32$, \montageFirst runs on a single node and all
+its output data ($4.5$ GiB) is cached locally (and will eventually be
+written to the file system). As a consequence, \montageSecond reads
+its input data mainly from memory.  However, for $n=64$, \montageFirst
+runs across two nodes, caching one half of its output data on each
+node.  When \montageSecond starts on one of the two nodes, only half
+of its input data is locally cached.  The runtime of the I/O intensive
+stage becomes $15\%$ longer than for $n=32$.
+%For larger $n$, the cached data size decreases proportionally
+%and the runtime keeps increasing accordingly.
+This effect is also observed for \montageFourth since
+it is also an I/O intensive sequential stage preceded
+by a parallel one (\montageThird).
+However, since its input data is larger than for
+\montageSecond ($38$ GiB), the effect is more noticeable,
+e.g., runtime of \montageFourth from $n=32$ to
+$n=64$ increases $52\%$.
+%
+%
+%For instance, stage \emph{mProjDiff} runs over a parallel template, it is I/O
+%intensive, and, as expected, its runtime becomes shorter for larger value of $n$.
+%\emph{mConcatBg} is a sequential stage, also I/O intensive, and its runtime
+%increases significantly from  $n=32$ to $n=64$ and increases slightly
+%for larger values of $n$.
+%Since \emph{mConcatBg}  is a sequential stage, $n$ does not include
+%on the code execution our its output write.
+%As a consequence, the increase of runtime of this stage
+%must be related to the stage input read.
+%The size of the intermediate data was measured, \emph{mConcatBg}
+%reads $4.5$ GiB of data, which is significantly smaller than the
+%memory of Cori's compute nodes ($128$ GiB).
+%However, as $n$ increases, the effect of this caching is different.
+%For $n=32$,  \emph{mProjDiff} runs in a single node
+% its output cached by the local I/O subsystem, 
+%and then read from memory by the \emph{mConcatBg} stage.
+%For $n=64$,  \emph{mProjDiff} runs on two nodes, all of its
+%output is stored in the file system, but half of it is cached
+%in a compute node, and the other half in another.
+%The \emph{mConcatBg} stage runs on one of the nodes
+%used \emph{mProjDiff}, so $50\%$ of the data is not locally
+%cached, which makes the read slower than for $n=32$.
+%This explains the large difference in \emph{mConcatBg} runtime 
+%between $n=32$ and $n=64$.
+%For $n=128$, and $n=256$,
+%the locally cached data becomes even smaller 
+%($25\%$ and $12.5\%$), 
+%which explains the slight increase in runtime for 
+%larger values of $n$.
+%
+%The increase of runtime of \emph{mJPEG} for larger values of $n$ is
+%even more significant than for \emph{mConcatBg}.
+%This is explained by the I/O nature of  \emph{mJPEG} and 
+%the preceding parallel stage and the larger size of
+%the intermediate date ($38$ GiB).
+
+%\grfix{Why does it not change? Most people will expect it to go down with increased cores} 
+%Parallel
+%\emph{mProjDiff} and $mBackground$ stages represent shorter times of the
+%total runtime and show linear scaling \grfix{don't understand - due to
+%  resource distribution among compute nodes}.  Sequential \emph{mConcatBg}
+%and \emph{mJPEG} stages are affected by scaling (64, 128 and 256), where
+%sequential \emph{mJPEG} runs longer than 32 cores.  The reason for this
+%performance loss in the fourth stage for both scenarios are \grfix{I
+%  dont understand this - too vague and hand wavy} due to the way files
+%are cached in the I/O buffer among compute nodes.
+
+When run with \systemname, Montage workflow runtime presents
+a different pattern. Again, workflows running on a single node ($n=32$)
+present the shortest runtime because the tasks run on a single node
+and in the same job allocation. For $n>32$, the inter
+job wait time increases the workflow runtime significantly compared to $n=32$.
+This is expected since for $n>32$, \systemname runs each section of the workflow
+in a separate job to adjust the resource allocation to the desired size  (Figure \ref{fig:montage_dag}). 
+As $n$ increases, the runtime for the sequence stages does not
+change and parallel stages becomes shorter, decreasing the overall runtime.
+%This is different from the pattern observed in non-\systemname runs
+%because workflow divided between jobs cannot benefit from intermediate data caching,
+%as new resources are allocated for each job.
+
+%For \systemname, the runtime doesn't change substantially when
+%\textit{n} increases. \grfix{If this is the same for both, we can start
+%  with that in both. What is the point of showing n on X axis if it
+%  doesnt change?}  Parallel stages \emph{mProjDiff} and $mBackground$ scale
+%linearly, similarly to Non\systemname.  Sequential \emph{mConcatBg} and
+%\emph{mJPEG} stages are affected by scaling due to the I/O buffering, and
+%differences in runtime per stage are low when compared to
+%Non\systemname. \grfix{Why? why? why?}  A major contributor for a longer
+%turnaround time for \systemname in comparison to Non\systemname were
+%Queue \emph{mConcatBg}, $mBackground$ and \emph{mJPEG} times, added in between
+%the stages. \grfix{Why?} Workflow-aware schedulers could be used to mitigate this
+%behavior \cite{rodrigo2017enabling}. \grfix{How?}
+%
+
+The comparison between running Montage with or without \systemname
+shows that runtime is longer with \systemname in all cases.
+When run on a single node, the 20\% runtime increase is due to
+monitoring overhead of DMTCP. For $n>32$, the workflow runtime
+difference is contributed by the inter-job wait time and longer runtime of the stages.
+The inter job wait time is dependent on the current workflow of the system and out of the
+control of \systemname. 
+%The stages run longer with \systemname because of 
+%DMTCP's monitoring overhead and the impossibility of inter-stage data caching.
+For most cases, total stage runtime is $\approx 20\%$
+longer with \systemname. As we scale to $n=256$, non\systemname runs can no longer benefit
+from inter-stage data caching due to data being distributed across
+multiple node, and hence, stage runtime overhead in \systemname is reduced to $10\%$
+as compared to non\systemname. 
+%The runtime results show that the performance
+%of the workflow with \systemname is affected only due to the checkpoint-restart
+%overhead and the underlying application characteristics.
+
+\noindent\textbf{Workflow core-hours.}
+Core-hours consumed by all the experiments with Montage on
+Cori are detailed in Figure \ref{fig:montage_core-hour-new}.
+In cases without \systemname, larger allocations
+increase the core-hours consumed. Without elasticity, the
+sequence stages consume significantly more 
+core-hours since their runtime is not reduced by the
+larger resource allocation. Also, parallel stages, when
+scaling up from $n=32$ to $n=256$, consume
+slightly more core-hours due to the increasing overheads
+of the initial setup in Tigres for launching the parallel tasks across multiple nodes %due to imperfections.
+For Montage, $n=32$ (single node on Cori),
+72\% of the workflow runtime is consumed by serial stages
+(\montageSecond and \montageFourth). 
+%The importance of the sequential stages
+%causes the linear increase of core-hours consumed as $n$ grows.
+
+With \systemname, for values of $n>32$, doubling the allocated
+resources induces small variations in consumed core hours. For
+example, stepping $n$ up from 64 to 128, increase core-hours
+consumption by 11\%.  Core-hour usage increases are attributed to the
+natural overhead of less than perfect parallelism in the code, and the
+initial overhead of distributing the tasks through Tigres across
+multiple nodes.  Otherwise, with \systemname, there is no resource
+wastage and checkpointing core-hours are very small ($<1\%$).
+However, there is a larger step between $n=32$ and $n=64$, with an
+increase of 35\% of core hours.  This is due to the loss in efficiency
+in the sequence stages due to lack of caching of intermediate data.
+
+Finally, comparing runs of Montage with the two approaches,
+for values $n>32$ (elasticity is possible),
+\systemname requires significantly less core-hours ($76 \%$ for 256 cores)
+than non\systemname due to elastic management of resources.
+The core-hour results in Montage show that with increasing
+parallelism, \systemname utilizes resources more
+efficiently than non\systemname due to diverse level of parallelism.
+% for workflows with diverse level of parallelism.
+ 
+% This demonstrate the capacity of the system
+% to adjust resource allocations to the workflow
+%demand efficiently and to minimzie resources wastage.
+
+
+
+%
+%
+%Non\systemname core-hour expenditure gets worse as the number of CPUs allocated \textit{n} scales out.
+%It goes from 1\% worse in 64 cores to up to 400\% worse in 256 cores. 
+%It is mainly due to its poor core reservation as one big job, mostly affected in sequential stages (\montageSecond and \montageFourth). 
+%Since \systemname sequential stages runtime overheads are lower in comparison to non\systemname, \montageSecond and \montageFourth stages were the ones that negatively affected non\systemname core-hours consumption.
+%As \systemname allocates only one node (32 cores) for these stages, it spent less core-hour than non\systemname in all cases.
+%
+
+
+%\grfix{This is hanging and not clear where it fits into the rest of the
+%  explanation} In both Non\systemname and \systemname, when scaling
+%out to more than 32 cores (one node), the cache miss ratio might
+%increase as the workflow tasks are placed in different nodes at each
+%stage.  This is important particularly when the workflow transitions
+%from a parallel to a sequential stage as these tasks try to access
+%files that are not cached in the nodes they were placed, causing many
+%I/O cache misses.  Given these cache misses, the requested files have
+%to be loaded at runtime, decreasing the I/O performance and increasing
+%overall stage runtime.  \\
+
+\vspace{-0.3cm}
+\subsubsection{BLAST}
+This section focuses on evaluating the impact of \systemname on BLAST.
+
+\noindent\textbf{Workflow runtime.}
+The runtime of all the experiments running BLAST 
+on Cori are presented in Figure~\ref{fig:blast_turnaround-new}.
+When run without \systemname, 
+BLAST's runtime is dominated by the first parallel stage  (\blastFirst occupies  $>99\%$
+of the total runtime in all cases).
+This stage scales well over more resources and overall workflow runtime is significantly reduced when run
+over more resources.
+For instance, for $n=64$ the runtime is less than half ($53\%$ shorter) than for $n=32$.
+%As expected the runtime of the sequential stage (\blastSecond) does not change
+%as resources are increased.
+
+Similar workflow runtimes are observed in BLAST when run with \systemname.
+DMTCP's monitoring overhead is relatively small but becomes more significant
+for larger values of $n$. 
+e.g., DMTCP increases BLAST's runtime by $1\%$ for $n=32$ and $8\%$ for $n=256$.
+For all values of $n$,
+ checkpoint, restart, and queue times increase the overall workflow runtime by 
+$\approx 2$ minutes, which is not significant compared to the overall workflow runtime.
+In summary, BLAST scales well as the workflow allocation is increased,
+and has very little overhead when run with \systemname.
+
+% For non\systemname workflows, \blastFirst stage represents the largest
+% portion of total execution time as can be seen in Figure \ref{fig:blast_turnaround-new}.
+%\blastFirst tasks are equally distributed among compute-nodes as resources scale,
+%equally reducing the load in each compute node and explaining its linear scalability.  
+%On the other hand, \blastSecond stages are unaffected by scaling, since
+%only one compute node is necessary to execute its simple file merge operation.
+%
+%The comparison between running BLAST with or without \systemname
+%shows that runtime is longer with \systemname in all cases.
+%For \systemname, similarly to non\systemname, results shown stage
+%runtime decreases in half when the number of nodes \textit{n}.
+%Extra overheads are due to checkpoint, restart and queue times.
+%Excluding overheads, stage runtimes show low overhead in comparison to non\systemname. 
+%This is so because BLAST compares DNA sequences with the sequence
+%database residing in memory.
+%This type of operation does not incur in any substantial overhead to \systemname, 
+%running under DMTCP, enabling it to have a nearly zero stage runtime footprint in relation to non\systemname.
+%Finally, $Sequence Merging$ stages are short and unaffected by scaling,
+\begin{figure*}[htbp]
+  \centering
+  \subfloat[Runtime.]{\includegraphics[width=0.4\textwidth]{figs/blast_execution_new.pdf}
+    \label{fig:blast_execution}}
+  \subfloat[Core-hours.]{\includegraphics[width=0.4\textwidth]{figs/blast_charged_new.pdf}
+    \label{fig:blast_charged}}
+  \caption{\small Runtime elasticity on BLAST (Gordon) vs static allocation: (a) workflow runtime and (b) core-hour usage for BLAST. The \systemname coordinated job starts on a single 16 core node and expands to the peak core allocation after 60 seconds of execution. }
+%    \caption{\small Runtime elasticity on BLAST (Gordon): Workflow turnaround time (a) and Core-hour usage (b) versus maximum cores utilized for BLAST with \systemname and without \systemname. The \systemname coordinated job starts on a single 16 core node and expands to the Peak Core Allocation after 60 seconds of execution. }
+  \label{fig:blast_gordon}
+    \vspace{-0.4cm}
+\end{figure*}
+
+
+\begin{figure*}[htbp]
+  \centering
+  \subfloat[Performance overhead]{\includegraphics[width=0.4\textwidth]{figs/time_dmtcp.png}
+    \label{fig:time_dmtcp}}
+  \subfloat[Checkpoint overhead]{\includegraphics[width=0.4\textwidth]{figs/size_dmtcp.png}
+    \label{fig:size_dmtcp}}
+  \caption{\small \systemname overheads: (a) shows time required for checkpoint and
+    restart vs. the number of processes/tasks being tracked by \systemname, (b) shows total
+    storage required on filesystem for a checkpoint versus the number of processes/tasks
+    being tracked by \systemname.}
+  \label{fig:overheads}
+    \vspace{-0.4cm}
+\end{figure*}
+
+\noindent\textbf{Workflow core-hours.}
+Core-hours consumed with BLAST (on Cori) are detailed in Figure \ref{fig:blast_core-hour-new}. 
+Similar core-hours are observed 
+with and without \systemname and different values of $n$, e.g., the maximum %and 
+values differ less than 9\% from the average.
+This is caused by the domination of (\blastFirst)
+over the execution of the workflow that makes other
+non-scaling stages irrelevant in terms of core-hours.
+%As observed in Figure~\ref{fig:blast_turnaround-new},
+%this parallel stage runtime decreases significantly
+%when its parallelism is increased.
+
+The comparison between $n=32$ and $n=64$ 
+cases present an unexpected result: the core-hours are reduced
+when parallelism is increased.
+This is caused by the unexpected super-linear reduction
+of runtime in that step of $n$ observed in Figure~\ref{fig:blast_turnaround-new}.
+%\fix{I really liked these statements, but the language sounds very philosophical.}
+In the next steps of $n$, core-hours increase slowly
+from the expected imperfection of parallelism in the code.
+
+Comparison between using and not using \systemname
+%Comparison between \systemname and non\systemname
+shows that% for all values of $n$, 
+\systemname consumes
+1.5\% to 5\% more core-hours with no clear correlation to $n$. 
+Checkpointing overhead in all cases consumes
+less than 0.5\%.
+This leads to the conclusion that
+the additional core-hours consumed by \systemname
+are for DMTCP execution overhead.
+
+
+%We can see \systemname shows a small overhead.
+%\blastFirst stage in BLAST is parallel and \systemname had a low execution runtime overhead, thus making Non\systemname spend roughly the same core-hours as \systemname.
+%Core-hours are then mainly dominated by the Parallel \blastFirst stages.
+
+
+%as it is a file merge operation.
+
+\vspace{-0.25cm}
+\subsubsection{Synthetic}
+This section describes our evaluation of the Synthetic workflow with \systemname.
+
+\noindent\textbf{Workflow runtime.} 
+The runtimes observed of all experiments with Synthetic workflow are presented
+in Figure~\ref{fig:synthetic_turnaround-new}.
+%The Synthetic workflow was used for
+%illustrating a memory-allocation-intensive workload.
+When run without \systemname, the workflow runtime becomes shorter 
+for larger values of $n$.
+This reduction is the result of shorter stage runtimes
+of the \synSecond stage when more resources 
+are available (\synFirst is sequential and thus its
+runtime is constant): \synSecond  runtime
+is reduced $40-49\%$ each time $n$ is doubled.
+
+The Synthetic runs with \systemname present much
+longer runtimes than without \systemname.
+This is due to  %very important 
+DMTCP monitoring overhead that slows down 
+the execution of all stages by a $2.2-2.4$ factor.
+Detailed analysis of the workflow reveals 
+that most of the operations performed by the workflow
+were memory management
+(allocation and free). 
+These operations are heavily monitored
+by DTMCP that traps all the memory management calls. %The stage executions are consequently, slowed down.
+The workflow runtime evolution
+for larger values of $n$ is as expected:
+\synFirst runtimes remain constant, and
+\synSecond runtime is reduced significantly
+(again  $40-49\%$). 
+Finally, \systemname checkpoint overheads 
+are minimal (6 seconds for all values of $n$)
+and the queue times for the second job is typically a few minutes.
+
+\noindent\textbf{Workflow core-hours.}
+Core-hour consumed in all experiments with Synthetic
+are detailed in Figure \ref{fig:synthetic_core-hour-new}. 
+For  non\systemname, a larger resource allocation
+implies a significant increase in core-hours
+consumed by the workflow.
+This increase is mainly due to 
+the wastage of the resources by the \synFirst stage. 
+%The \synSecond also consumes a bit more resources for
+%larger values of $n$, but the increase is not significant.
+
+Runs of Synthetic with \systemname consume
+almost the same core-hours for all values of $n$.
+This is caused by the constant resource consumption
+of both stages in the workflow.
+\synFirst consumes the same core hours because
+elasticity % provided by the system
+allows to execute \synFirst over 32 cores in all cases.
+\synSecond  runtime decreases proportionally to
+the increase in assigned resources, keeping
+its core-hours consumption almost unchanged.
+
+%Comparison between \systemname and non\systemname
+%cases show a case of break-even.
+%For values of $n<128$ non\systemname
+%consume less core-hours.
+%This is because Synthetic workflow is memory-allocation-intensive and
+%suffers a great runtime overhead when executed with DMTCP.
+%However, as $n$ increases, the wasted core-hours 
+%in \synFirst with non\systemname
+%become larger than the DMTCP overhead,
+%and \systemname becomes more efficient. % in terms of core-hours.
+
+
+%For non\systemname we see high increases in \synFirst stage core-hour usage due to its sequential operations.
+%As the number of cores (X axis) is allocated for whole execution, only the \synSecond stage could effectively use all of them.
+%In \systemname we see nearly constant total core-hour usage for all
+%cases since all \synFirst stages used only one node and
+%\synSecond stages scaled linearly.  
+%These two compensating factors help \systemname having lower core-hour usage starting at 128 cores.
+%Even though runtimes for both stages in \systemname were $2.4x$ higher (see previous subsection), the number of cores used was more efficient, especially in the \synFirst parts, which are larger than \synSecond stages.  
+%This shows a use case where even though \systemname had a higher runtime overhead, it would still make efficient resource usage in relation to core-hours.  
+%Surprisingly, this is not always the case due to the high overhead introduced by DMTCP which tracks all memory allocations done in this workflow (explained in the previous subsection). 
+%
+%Core-hours for non\systemname and \systemname are detailed in Figure \ref{fig:synthetic_core-hour-new}. 
+%For non\systemname we see high increases in \synFirst stage core-hour usage due to its sequential operations.
+%As the number of cores (X axis) is allocated for whole execution, only the \synSecond stage could effectively use all of them.
+%In \systemname we see nearly constant total core-hour usage for all
+%cases since all \synFirst stages used only one node and
+%\synSecond stages scaled linearly.  
+%These two compensating factors help \systemname having lower core-hour usage starting at 128 cores.
+%Even though runtimes for both stages in \systemname were $2.4x$ higher (see previous subsection), the number of cores used was more efficient, especially in the \synFirst parts, which are larger than \synSecond stages.  
+%This shows a use case where even though \systemname had a higher runtime overhead, it would still make efficient resource usage in relation to core-hours.  
+%Surprisingly, this is not always the case due to the high overhead introduced by DMTCP which tracks all memory allocations done in this workflow (explained in the previous subsection). 
+%
+%the runtime of \synFirst is the same
+%for all values of $n$ ($\approx 600s$),
+%
+%For non\systemname, there is no scaling in \synFirst stages since its tasks are executed in only one node.  
+%For \synSecond stages, linear scaling is seen as
+%all task operations are equally divided among available compute nodes.
+%
+%The comparison between running Synthetic with or without \systemname shows that runtime is greatly longer for \systemname in all cases.
+%For \systemname, there is no scaling in \synFirst stages, similarly to
+%non\systemname.  
+%For \synSecond stages we see again a linear scaling in all
+%cases.  
+%Checkpoint and Restart times are negligible and it is due to
+%the small code memory footprint in the synthetic process.  
+%Finally, queue times were different among runs as they vary based on system utilization \cite{nurmi2006evaluation, nurmi2007qbets}. 
+%
+%The stage runtime overhead in the Synthetic workflow increases significantly when run with \systemname. 
+%For all experiments, sequential stage runtimes (\synFirst) more than doubled under \systemname.
+%Differently to other workflows, the Synthetic workflow has
+%no I/O and is fully written in Python.
+%Also, the main code running during most of its execution
+%is composed by a loop performing mathematical operations.
+%However, each loop iteration includes the creation of two list structures that are immediately discarded after the mathematical operation.
+%This forces two memory allocation system calls per iteration,
+%which, under \systemname, are inspected and slowed down by DMTCP.
+%Thus, the Synthetic workflow is memory allocation intensive
+%since, in each stage, it creates and immediately
+%destroys 5.6 billion Python list objects. 
+%We can then conclude that runtime overheads will be very significant
+%for application intensive in memory allocation operations.
+
+
+% Gonzalo: We cannot explain the overhead in the synthetic workflows
+% in detail. By now, I trim this out.
+%
+%\fix{This paragraph is hanging and does not flow with the above and
+%  the explanation comes too late} \fix{which- This} high overhead in
+%the Synthetic workflow is because its code calls the Python built-in
+%$sum()$ function in each of its stage tasks, either in $s-Sequential$
+%and in $s-Parallel$.  This function is implemented in C and is called
+%through Cython, and thus it is an external call provided through a
+%shared library outside to the Tigres Python process itself. \grfix{C
+%  calls should be faster so it is hard to believe this the way it is
+%  written} DMTCP tracks all system calls a user program does, except
+%file handler ones (as was the case for most of Montage and BLAST
+%operations).  Calling a function in a shared object triggers a system
+%call, thus triggering the DMTCP tracking system, which decreased
+%compute performance due to its complex internal logic for providing
+%checkpoint-restart mechanisms \cite{dmtcp_benchmarks}.  The $sum()$
+%function was called $28*10^8$ times in the $s-Sequential$ stage and
+%$11*10^7$ in the $s-Parallel$ stage.  Each one of these calls are
+%registered by the DMTCP tracking system, increasing the runtime
+%overhead for both stages. \grfix{this is both too detailed and too
+%  little detail - hard for me to understand really what is going on}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%\iffalse
+%\begin{figure}
+%	\centering
+%	\includegraphics[width=3.18in]{figs/blast_turn-around-new.pdf}
+%	\caption{Total turn-around time versus maximum cores utilized for BLAST with \systemname and without \systemname. Parallel stages scale linearly, while Sequential are very small due to its short operation. \systemname's sequential stages use 32 cores. }
+%	\label{fig:blast_turnaround-new}
+%\end{figure}
+%
+%\begin{figure}
+%	\centering
+%	\includegraphics[width=3.18in]{figs/blast_corehrs-new.pdf}
+%	\caption{Core-hour versus maximum cores utilized for BLAST with \systemname and without \systemname. \systemname's sequential stages use 32 cores and contribute to lower core-hour expenditure in \systemname. Parallel stages contribute roughly in the same way in \systemname and Non\systemname.  }
+%	\label{fig:blast_core-hour-new}
+%\end{figure}
+%\fi
+
+
+
+%\iffalse
+%\begin{figure}
+%	\centering
+%	\includegraphics[width=0.5\textwidth]{figs/synthetic_turn-around-new.pdf}
+%	\caption{Total turn-around time versus maximum cores utilized for Synthetic with \systemname and without \systemname. Parallel stages scale linearly, while Sequential stages are within same intervals for both cases. \systemname's sequential stages use 32 cores. }
+%	\label{fig:synthetic_turnaround-new}
+%\end{figure}
+%
+%\begin{figure}
+%	\centering
+%	\includegraphics[width=0.5\textwidth]{figs/synthetic_core-hours-new.pdf}
+%	\caption{Core-hour versus maximum cores utilized for Synthetic with \systemname and without \systemname. \systemname's sequential stages use 32 cores and contribute to lower core-hour expenditure in \systemname. Parallel stages contribute roughly in the same way in \systemname and Non\systemname.  }
+%	\label{fig:synthetic_core-hour-new}
+%\end{figure}
+%\fi

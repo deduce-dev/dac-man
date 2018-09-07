@@ -1,0 +1,29 @@
+Experiments leveraged task based method of execution, primarily through the use of Tigres, a software built with an integrated elastic distributed workflow\cite{hendrix2016tigres}.  Tigres allows for complex workflows such as Montage to be executed in a flexible environment suitable for end to end testing of EHPC. BLAST and Montage are strong candidates for EHPC due to BLAST's potential for elastic resource needs during parallel execution and Montage's numerous serial computations and large parallel task sections\cite{camp}\cite{montage}. The topology set for these applications allows EHPC to leverage adaptive resource utilization, queue efficiency from breaking up large jobs into subjobs or lower core hour allocation for the completion of jobs.  For benchmarking, a workflow simulation tool called Synthetic was utilized which is built on Tigres. Synthetic allows for the number of tasks for a sequential and parallel section to be specified in order to build applications with different topologies. The ability to construct a diverse topology with a varied landscape of effective node utilization provided an environment suited for finding where EHPC excels best.
+
+
+
+\begin{table}
+\begin{center}
+ \begin{tabular}{||c c c c c||} 
+ \hline
+  & Synthetic & BLAST & Montage \\ [0.5ex] 
+ \hline\hline
+ Percent Resources & 20 & ? & 80 \\ 
+ \hline
+ Speedup & 1.0 & ? & 1.2 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Effect of EHPC on common workflows. Speedup, where 1.0 measure no improvement. Efficiency, where 100 measure unchanged resource utilization.}
+\label{tab:speedup_efficiency}
+\end{table}
+
+
+Benchmarks testing the time and storage footprint of EHPC were performed on XSEDE's Gordon Compute Cluster by building various application topologies from Synthetic.  These topologies focused on varying the active processes being checkpointed during a transfer. The size of the total checkpoint directory was recorded in order to calculate the footprint of the checkpoint on the system. Time for checkpoint and restart implementations were recorded separately based on the system clock as reported by changes in Python's integrated time library. 
+
+Benchmarks evaluating the efficiency of core hour allocations for a job with and without EHPC were accomplished by creating an application through Synthetic with the topology of a serial section followed by a parallel section. Using the EHPC API, the application begins its serial portion on a single node and an expand was called directly before the parallel section on the EHPC controlled applications. The application would then checkpoint and queue for a larger allocation size to deploy and elastically expand on the larger job. The parallel version of synthetic was then run on the larger set of nodes from start to finish, where the difference between core hours charged was used to calculate the efficiency of EHPC.
+
+BLAST was used to exemplify the on demand elasticity possible with EHPC. In each sample utilizing EHPC with BLAST the application would start on a single node and then checkpoint at sixty seconds.  The application would then launch on a larger set of nodes after queue. This application was utilized to display the validity of expanding on demand combined with validating fast execution as a result of the expansion.  
+
+Montage was chosen as an application with potential for great cost savings throughout its execution. Montage consists of a set of parallel and sequential sections with A long portion at the end of Montage requires only a single node, meaning Montage has a great deal of oppurtunity for decreasing core hours charged while maintaining minimal overhead in execution time.  
+

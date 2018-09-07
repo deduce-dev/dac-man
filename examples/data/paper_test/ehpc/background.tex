@@ -1,0 +1,199 @@
+%\begin{figure}[htbp]
+%\centering
+%\subfloat[Traditional way of managing resources for workflows.]{\includegraphics[width=0.45\textwidth]{figs/nonehpc_turn-around-time_description.pdf}
+%\label{fig:ehpc_overview_a}}
+%\qquad
+%\subfloat[\systemname managed resources for workflows.]{\includegraphics[width=0.45\textwidth]{figs/ehpc_turn-around-time_description.pdf}
+%\label{fig:ehpc_overview_b}}
+%\caption{\small Traditional vs \systemname managed resource allocation
+% for scientific workflows in an HPC environment. a) statically allocates
+% a fixed set of resources for the entire duration of the workflow execution.
+% b) dynamically allocates only as many resources as required by a
+% particular stage of the workflow.}
+%\label{fig:ehpc_overview}
+%\end{figure}
+
+
+
+
+
+
+
+Figure~\ref{fig:ehpc_overview}a shows an example of the resource
+allocation while running workflows on HPC resources in the absence of
+\systemname. Traditionally, workflows are executed as a single
+batch job, where a set of HPC resources are allocated for the entire
+duration of the workflow. Workflows with different job resource
+requirements often end up wasting resources. Alternatively, users have
+to manually manage the different stages in the workflow by packaging
+them as separate jobs. In contrast, \systemname provides elasticity
+for running workflows on HPC
+resources. Figure~\ref{fig:ehpc_overview}b shows the resource
+allocationusing \systemname. \systemname allocates only as many
+resources as required by a specific stage of the
+workflow. In case of asynchronous parallel tasks, E-HPC
+is able to also grow or shrink during run-time. \systemname manages
+elasticity during workflow execution by dynamically resizing the
+allocated resources using checkpoint and restart.
+
+\vspace{-0.3cm}
+\subsection{Scientific Workflow Execution}
+\label{sec:ScientificWorkflows}
+Workflows are used to describe and execute tasks
+according to their data and control dependencies.
+%In particular, scientific workflows
+%support data-intensive discovery by
+%coordinating simulation and analysis tasks  \cite{hey2009fourth}.
+Today, HPC workflows are implemented through ad-hoc scripts and
+workflow tools \cite{deelman2005pegasus, wilde2011swift} with limited
+support for elastic resource management. Scientific workflows in HPC
+are run in static allocations as chained jobs (jobs with dependencies)
+or pilot jobs (the entire workflow contained in a job)
+\cite{rodrigo2017enabling}.  Chained workflows have very long and
+unpredictable turnaround times because their critical path includes
+intermediate wait times.  Pilot job workflows, i.e., the traditional
+method in Figure~\ref{fig:ehpc_overview}a, typically has shorter turnaround
+times because there is no wait time between jobs.  However, pilot jobs
+allocate the maximum resource set required by any task within the
+workflow, even if other tasks require significantly less resources,
+leading to resource wastage.  
+%Additionally, considering the unpredictable runtime of some workflows
+%\cite{montage}, workflows might incur resource wastage if they run
+%over the requested runtime and the job is killed. Our goal with
+\systemname facilitates workflows to consider resource
+slots as dynamic elastic resources. \systemname is able to eliminate
+resource wastage and job exceeding its allocation by dynamically adapting a
+workflow's resource allocation to its tasks resource requirements.
+
+\vspace{-0.3cm}
+\subsection{Elasticity and recovery use cases}
+%\subsection{Elasticity and recovery for scientific workflows}
+\label{sec:backgroundUseCases}
+Scientific workflows require elasticity and recovery. 
+However, there are different requirements on how
+and when they occur. In this section, we outline these requirements 
+in the context of \systemname.
+
+\noindent \textbf{Scaling Between and During Stage Execution.}
+Workflows are composed of stages with fixed but different resource
+requirements.  or workflows where resource requirements are discovered
+during execution \cite{klein2011rms}.
+\systemname is capable of scaling workflow resources between and
+during stages execution that support both cases.
+
+\noindent \textbf{Elasticity Triggers.}  Resource requirements of a
+workflow, might be known beforehand, discovered during its execution,
+or connected to external events (e.g., execution deadline)
+\cite{yu2005taxonomy}.  \systemname supports all three cases.  For
+known resource requirements, users may define an execution plan that
+will guide resource scaling operations (Section~\ref{subsec:user}).
+Users can express new resource needs for workflows using the \systemname API that
+will trigger a scaling process to support changes in resource
+requirements. The API can also be used from outside the workflow for
+externally driven events.
+
+\noindent \textbf{Recovery from Failures.}
+Scientific workflows are composed of multiple long running
+stages and work is lost in case of failure.
+\systemname transparently performs periodic checkpointing
+and recovery of the workflow.
+%The system supports programmable periodic checkpointing,
+%to limit work loss in case of random failures.
+\systemname is capable of successfully
+managing workflows where
+runtime might be unknown in advance \cite{montage} or workflow 
+failure might occur because of exceeding job boundaries on batch systems. 
+In this case, using E-HPC, 
+when a workflow job reaches its time limit,
+ it can be checkpointed and restarted.
+%\systemname will repeat this operation until the workflow
+%is completed.
+
+\vspace{-0.4cm}
+\subsection{Tigres Workflow Library}
+
+We use Tigres, a workflow library to evaluate \systemname.
+Tigres~\cite{hendrix2016tigres} is a programming library that allows
+users to compose large-scale scientific workflows and execute them on
+HPC environments.  Workflows can be composed from existing executable
+scripts and binaries or new Python code. Tigres workflows are Python
+programs that are submitted as jobs to the batch scheduler
+directly. It manages workflow execution from within the job scripts,
+where resources are managed through different batch schedulers. 
+% Slurm,
+%Torque, or SGE.
+
+Tigres provides \textit{``templates''} that enable scientists to
+easily compose, run, and manage computational tasks as
+workflows. These templates define common computation patterns used in
+processing and analyzing data and running scientific
+simulations. Currently, Tigres supports four basic templates to model
+serial (sequence), and concurrent (parallel, split and merge)
+execution.  During serial execution, although Tigres launches a task
+on a single compute node, it can expand to other compute nodes using
+MPI or other distributed libraries.  In concurrent stages, Tigres
+manages task parallelism and employs SSH to deploy workers on each
+available compute node.  \systemname tracks and checkpoints
+distributed processes in applications, such as Tigres, that rely on
+SSH and MPI to support elasticity.
+% through checkpointing in workflows
+%like Tigres',
+% to achieve multi-node parallelism.
+
+\vspace{-0.4cm}
+\subsection{DMTCP}
+
+%DMTCP is used in \systemname for checkpoint-restart.
+DMTCP (Distributed
+MultiThreaded Checkpointing) is a transparent user-level checkpoint
+restart library for distributed applications~\cite{dmtcp}
+used in \systemname.
+%- No changes are neede
+%- there is an API, scripts to run it.
+%- IT tracks distributed processes.
+%- It can re-start processes in a different resource set.
+DMTCP is transparent because no changes are required to
+the \textit{managed application} or the underlying operating
+system. The DMTCP managed application state is captured by monitoring
+system calls, processes, network communication, and open files.  Also,
+DMTCP supports distributed applications by intercepting the creation
+of new local or remote (SSH or MPI) process. Instances of DMTCP in
+these new processes connect through sockets to a central daemon that
+coordinates the distributed checkpointing and restart operations.
+
+DMTCP freezes the execution of all the processes of the application at
+checkpoint time.  Then, for each process, a copy of its memory
+allocation, network, and I/O states are dumped to the file system.
+During restart, a process is created for every process checkpointed and 
+its memory and state are restored from the copy in the file system.
+\systemname takes advantage of DMTCP to shrink or enlarge
+resource allocations of an HPC workflow.
+DMTCP will restart an application on different hosts, even if their
+number differs, as long as the hosts are homogeneous (typical in HPC
+systems) and a mapping of processes over resources is provided
+(calculated by \systemname).
+
+
+%%Also, it includes APIs and command line utilities to
+%%checkpoint-restart from within or outside an
+%%application.
+%%In our implementation of \systemname, 
+%%these utility scripts are used to checkpoint the stages of a workflow.
+%
+%The feature that is specially interesting for \systemname is the
+%capacity of DMTP to efficiently checkpoint a distributed application running
+%on resource set and restart it on a different resource set.
+%
+%DMTCP allows for an application to be efficiently checkpointed and transferred
+%to a new set of homogeneous nodes, which may differ in number to the original
+%set.  \systemname utilizes DMTCP to accomplish elasticity through application
+%transfer in HPC.
+%
+%
+%DMTCP allows for an application to be efficiently checkpointed and transferred
+%to a new set of homogeneous nodes, making HPC systems ideal for its use. \systemname
+%utilizes DMTCP to accomplish elasticity through application transfer in HPC.
+%DMTCP itself is \fix{contageous??} in its tracking of forked processes and ssh calls,
+%effectively allowing the software to checkpoint and transfer MPI, forked, and
+%distributed processes. \fix{Need a couple of sentences on how DMTCP stores its checkpoint file etc} 
+

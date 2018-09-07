@@ -1,0 +1,431 @@
+\begin{figure} [htbp]
+\vspace{-0.4cm}
+\begin{center}
+    \includegraphics[width=0.5\textwidth]{figs/ehpc_arch.pdf}
+\end{center}
+ \caption{\small \systemname architecture. \systemname has three
+ distinct control flows -- a) \emph{startup}: Users submit a workflow
+ through \systemname. \systemname coordinator generates job scripts
+ to request resources and run the workflow. Once the
+ resources are allocated to the job through the batch scheduler,
+ \systemname launches the workflow executable via DMTCP. b) \emph{resource management}:
+ \systemname tracker monitors the job execution and the states of
+ the workflow. When the workflow  issues an expand or a contract request through the
+ \systemname API, the tracker sends a checkpoint/kill signal to DMTCP.
+ c) \emph{termination/completion}: Once the job is killed, \systemname coordinator
+ resubmits another job script with a modified resource requirement. If the job
+ completes successfully, \systemname tracker notifies the coordinator.%\fix{let us number the arrows}
+ }
+ \label{fig:ehpc_arch}
+  \vspace{-0.4cm}
+\end{figure}
+
+
+Figure~\ref{fig:ehpc_arch} shows the architecture of
+\systemname. E-HPC has three main components - E-HPC Application
+Programming Interface (API), E-HPC Coordinator, and E-HPC Tracker. The
+E-HPC API provides the elastic functions that allows users to manage
+their resources dynamically. The E-HPC Coordinator accepts traditional
+user workflows and interacts with the E-HPC API to provide the
+elasticity needs. The E-HPC tracker tracks the execution of the
+workflow on the resources and manages the book keeping associated
+with the elastic resources.
+
+% Gonzalo: I re did this paragraph
+A user submits a workflow by employing  \systemname command-line utilities
+on the HPC system. Next, \systemname starts its coordinator, 
+and generates and submits a batch job script that drives
+the workflow execution. Once the batch scheduler allocates resources to the job,
+the script executes the workflow and initiates services needed in the compute
+nodes to support elasticity. These services include a DMTCP controller, responsible
+for managing low level distributed checkpoint-restart operations, and an \systemname
+tracker, which monitors the different states of the workflow. In this context, if
+the workflow requires resource scaling, it employs the \systemname API to issue an
+elastic request for increasing or decreasing the number of resources allocated to
+the job. The \systemname API relays the request to the \systemname tracker which
+issues checkpoint and kill requests to DMTCP. After the checkpoint is complete,
+and all the tasks are killed, \systemname tracker informs the coordinator of the
+new resource requirements and ends the current workflow job. \systemname coordinator
+generates a new job script that invokes DMTCP to restart the workflow using the checkpoint.
+%A user submits a workflow through \systemname on the login node of an
+%HPC system. 
+%A user submission launches the \systemname coordinator
+%that in turn generates an appropriate job script for the submitted
+%workflow and submits it through the batch scheduler. The generated job
+%script consists of the traditional workflow but also has commands that
+%launch appropriate services to manage the elasticity of the workflow.
+
+%The batch scheduler
+%allocates resources to the job on which the workflow is launched using
+%DMTCP.
+%%The job writes the host information
+%%in a file that the workflow uses for distributing the tasks across the
+%%compute nodes. 
+%The job also starts an \systemname tracker on one of
+%the compute nodes. The tracker monitors the different states of the
+%workflow. The workflow uses the \systemname API to issue an elastic
+%request to increase or decrease the number of resources allocated to
+%the job. The API uses \systemname tracker to issue checkpoint and kill
+%requests to DMTCP. After the checkpoint is complete and all the tasks
+%have been killed, \systemname tracker updates the new resource
+%requirements to the coordinator. \systemname coordinator generates a
+%new job script with the updated resources that restarts the workflow
+%using the checkpoint.
+
+\vspace{-0.3cm}
+\subsection{User Interface}
+\label{subsec:user}
+%\fix{Gonzalo: I understand that his is representative of the capacities, but would not
+%it be easier to say: EHPC can be used in "plan driven" (yaml file only) or "event driven" modes. 
+%I think users will use one or the other, combined seems strange. DG: I liked the names}
+
+\systemname is designed as a library and users can interact with it in
+two different ways -- a) plan-driven, or b) event-driven. In the plan-driven
+method, the user provides the elasticity plan, whereas in the event-driven
+method, external and internal events in the application trigger elasticity.
+Figure~\ref{fig:wf_template} provides an example of an elasticity plan that
+specifies the stages and resource requests for a workflow. The
+elasticity plan specifies the stages of the workflow and the associated
+resource requests.
+%The stages correspond to a sequential set of
+%events in the workflow, where each stage may contain several parallel tasks.
+The resource requests in the plan specify the amount of resources
+and the duration for which the resources are required. The
+plan-driven method is minimally invasive, and requires no change to
+existing application programs or scripts.
+
+\begin{figure}
+\begin{verbatim}
+workflow:
+  command: python stage1.py
+  stage1:
+    nodes: 4
+    ppn: 1
+    walltime: 00:15:00
+  stage2:
+    nodes: 1
+    walltime: 00:30:00
+\end{verbatim}
+\caption{\small Workflow descriptions contain execution commands and resource
+requirements for each stage.}
+\label{fig:wf_template}
+ \vspace{-0.5cm}
+\end{figure}
+
+The event-driven method allows users to modify their scripts using the \systemname
+API, which induces elasticity from within the application program. This allows
+users to scale up or down conditionally based on an event in application characteristics
+and on resource requirements. 
+%The API also allows users to update resource requirements for single-job workflows, where all
+%the stages of a workflow are submitted through a single script.
+We describe the API in detail in Section~\ref{subsec:api}.
+
+\begin{figure} [b]
+\begin{center}
+    \includegraphics[width=0.4\textwidth]{figs/ehpc_state_transition.pdf}
+\end{center}
+ \caption{\small State transitions of a workflow in \systemname.}
+ \label{fig:ehpc_state_transition}
+ \vspace{-0.3cm}
+\end{figure}
+
+In addition to the two different ways to interact with \systemname, a
+user can also request elastic resources in two different ways -- i)
+\textbf{stage elasticity}, where a user can opt to grow or shrink
+resources between the stages of a workflow, or ii) \textbf{runtime
+  elasticity}, where a user can request to change resources at any
+time during the execution. Stage elasticity is useful when different
+stages of the workflow have pre-defined, known resource
+requirements. On the other hand, runtime elasticity is useful when
+resource requirements can be changed due to external factors (e.g.,
+available resources, system failures). However, runtime elasticity may
+not be suitable for all applications. For example,
+applications that are checkpointed in the middle of an I/O operation
+may end up in an unknown or unpredictable state.
+%and can leave them in unknown states.
+% \fix{Mention runtime
+%  elasticity might not work for all applications and can leave
+%  applications in unknown state.}
+
+\vspace{-0.3cm}
+\subsection{Workflow States}
+
+
+
+%\fix{Gonzalo: About Figure~\ref{fig:ehpc_state_transition}, It is not clear
+%how the scaling happens. When the
+%checkpoint is completed the workflow passes a bit through "running"... to die
+%and fall in "Pending". The transition from checkpointed shoudl go to pending.
+%If the "regular checkpointing" is to be represetned, I would create a different
+%arc out of running "Time to checkpoint" to a new checkpointing state
+%and then an arc back to running. }
+Figure~\ref{fig:ehpc_state_transition} shows different states a
+workflow may go through when using \systemname. A workflow is
+at first in a \emph{pending} state
+and is put in the queue that the \systemname coordinator manages
+internally. Once the required resources are allocated for the job, it
+moves to the \emph{running} state, where the tasks are distributed and
+executed on HPC resources. If the resource requirements change during
+the execution of the workflow, or the execution terminates due to
+failure, the workflow state moves to a \emph{checkpoint} state.
+The workflow moves from the checkpoint state to the pending state,
+waiting for the new set of resources for the restart to happen. If
+the workflow execution terminates due to a failure, \systemname
+restarts the failed workflow using the checkpoint. The workflow
+transitions to \emph{completed} state when all the tasks of a workflow
+are executed successfully.
+
+\vspace{-0.3cm}
+\subsection{\systemname Coordinator}
+\systemname coordinator generates job scripts for running workflows on
+HPC resources, and coordinates the execution and dynamic resource
+allocation for workflows. When a user submits a workflow to
+\systemname, it starts the coordinator on the login node of an HPC
+system. 
+%\fix{Does this actually live through the life of the workflow?
+%We will need to discuss this more - because a facility person will
+%say, this will never work. DG: it exists as long as the apps that are submitted
+%through \systemname are not completed. WF: (semantic maybe) Note coordinator only needed 
+%if a checkpoint restart still need to be performed, otherwise it is just sitting 
+%their waiting for the app to say done} 
+Users specify the initial resources
+required to execute the workflow and \systemname coordinator generates
+a job script for running the workflow on HPC resources. The resource
+requirements are transformed into batch scheduler directives in the
+job script. The job script acts as a wrapper for launching the workflow
+tasks through DMTCP. \systemname coordinator sets up all the
+environment variables and directory paths for enabling distributed
+checkpointing through DMTCP. DMTCP requires a centralized coordinator
+for checkpointing and restarting distributed tasks, which the
+job script launches on a compute node.
+
+The state of the workflow tasks and the changes in resources are shared
+with \systemname coordinator through the shared file system. \systemname coordinator uses job status and resource
+requirements to determine the elasticity of workflows. If the job fails,
+terminates before completion, or the resource requirements change,
+\systemname coordinator checkpoints the workflow and generates a restart
+command to launch the unfinished workflow through a job script. The job script
+also sets up the required commands to update the host list, once new
+resources are allocated to the job.
+%\williamfix{same sentence in next section}This automatically introduces
+%fault tolerance in \systemname.
+
+\vspace{-0.3cm}
+\subsection{\systemname Tracker}
+The job script generated by \systemname coordinator starts a tracker
+on a compute node. Once the workflow job begins to execute, the
+tracker monitors the job progress. The workflow requests a change in
+resources through the \systemname API. The API triggers the 
+\systemname tracker to checkpoint the workflow and terminate
+execution. In cases where the workflow is specified through a workflow description,
+\systemname tracker checkpoints the execution prior to executing the
+next stage in the workflow. The workflow tasks run across multiple
+nodes, and \systemname tracker waits and monitors all the tasks to be
+correctly checkpointed and terminated before updating the job state. Once
+all the tasks of the workflow have terminated, \systemname tracker updates
+the resource plan to describe the number of resources required for the rest
+of the workflow and the expected time of execution. If there is no change in
+the resource requirements of a workflow, \systemname tracker simply
+monitors and checkpoints the tasks as the execution progresses.
+%\williamfix{same sentence in last section}This
+%is to ensure an incremental execution of the workflow in case of
+%workflows and hence, adds fault tolerance abilities to \systemname.
+
+%In order to restart a workflow on a different set of hosts, \systemname
+%shares a list of hosts with the workflow.
+During a restart, \systemname
+tracker reads the updated host file and sends a signal to the workflow
+in execution. It sends an updated host list along with the workflow
+so that new tasks can be launched on a different set of resources. Every
+workflow needs to be able to trap the signal to notify changes to
+an executing workflow. In our current implementation, \systemname sends
+a SIGUSR1 signal to share the updated information about the hosts. This
+provides a generic interface for any workflow or application to dynamically
+scale on a different set of HPC resources based on the requirements. 
+%\fix{Hanging - Our current implementation has been tested with the Tigres workflow library.} 
+
+%\fix{E-HPC is designed to be a library and not a service. Need to clarify earlier -intro and start of this section.} 
+
+
+\vspace{-0.3cm}
+\subsection{\systemname API}
+\label{subsec:api}
+\systemname provides command-line utilities and an API to manage elastic
+workflows on HPC resources (Table~\ref{tab:ehpc_api}). Users submit a workflow through the command-line
+as: \texttt{ehpc start <workflow-script>}.
+The \texttt{start} command triggers the launch of a workflow through the
+\systemname coordinator. It generates job submission scripts and submits them
+through a batch scheduler. It ensures that a workflow script is launched
+through DMTCP and hence, is checkpointed and can be restarted as needed.
+
+\begin{table}[htb]
+\begin{tabular}{|p{0.15\linewidth}|p{0.75\linewidth}|}
+\hline
+\textbf{Interface} & \textbf{Description} \\
+\hline \hline
+$init$ & registers a workflow to \systemname and returns a workflow-id \\ \hline
+$expand$ & grows the resource allocation to the amount specified\\ \hline
+$contract$ & shrinks the resource allocation by the amount specified\\ \hline
+$done$ & notifies \systemname about workflow completion\\
+\hline
+\end{tabular}
+\caption{\systemname API provides four interfaces to transform a simple workflow into an
+ elastic workflow.}
+\label{tab:ehpc_api}
+ \vspace{-0.4cm}
+\end{table}
+
+Users can use the \systemname API to add elastic calls in a workflow script
+to grow or shrink resources as the workflow executes.
+%\fix{Also who does these commands? Does the coordinator or is this in the Tigres workflow? Maybe the earlier section needs to come before this ...} 
+The \systemname API provides four simple functions to manage elasticity
+in a workflow. The \texttt{init} function registers a workflow through
+\systemname coordinator and returns a unique identifier for the workflow.
+The \texttt{expand} function is used to
+dynamically grow the number of resources for a workflow in execution.
+%Internally, it checkpoints the current workflow stage through DMTCP and
+%terminates the workflow execution. It then grows the number of resources
+%by the margin specified through the command.
+Similarly, the \texttt{contract}
+function allows for dynamically shrinking the number of resources for an
+executing workflow. Both \texttt{expand} and \texttt{contract} 
+checkpoint, kill and restart the workflow on a different set of resources
+based on the resource requirements of a workflow. Once a workflow completes
+execution, allocated resources are released and checkpoint data is removed
+using \texttt{done}, which updates the status of the workflow to completed.
+\systemname also calculates and collects performance and usage metrics for a workflow.
+\begin{figure*}[htbp]
+	\centering
+	\subfloat[Montage.]{\includegraphics[width=0.45\textwidth]{figs/montage_dag_new.pdf}
+		\label{fig:montage_dag}}
+	\qquad
+	\subfloat[BLAST.]{\includegraphics[width=0.18\textwidth]{figs/blast_dag.pdf}
+		\label{fig:blast_dag}}
+	\qquad
+	\subfloat[Synthetic.]{\includegraphics[width=0.22\textwidth]{figs/synthetic_dag.pdf}
+		\label{fig:synthetic_dag}}
+	\caption{\small
+	Workflow graphs, stages are logically combined.
+          Stages are combined together according to workflow resource requirements:
+          subsequent parallel stages are combined together as a single logical stage
+          and sequential stages are combined into a single sequential stage
+%	Workflow graphs showing logically combined workflow stages.
+%          Stages are combined together according to workflow resource requirements:
+%          subsequent parallel stages are combined together as a single logical stage
+%          and sequential stages are combined into a single sequential stage.
+          }
+	\label{fig:workflow_dags}
+	\vspace{-0.4cm}
+\end{figure*}
+
+\vspace{-0.3cm}
+\subsection{Minimizing Queue Wait Time}
+\label{sec:fastmode}
+%\fix{We need to start with saying what problem we are trying to solve here}
+The default mode of operation in \systemname is to submit a workflow job
+with the new resource allocation request, only after the previous job has
+been terminated. This may incur large queue wait times depending on the
+current workload of the system. In order to minimize the queue wait times,
+\systemname provides a \textbf{fast execution mode}, where the next stage
+of the workflow is submitted to the job queue, while the execution of 
+the workflow continues in its current resource allocation.
+%The placeholder job waits for the resources.
+Once the requested resources are allocated
+to the job, the running workflow is signaled to be checkpointed
+and killed, and the placeholder job restarts the workflow using the newly
+created checkpoint. This eliminates the queue wait time for
+applications that can dynamically scale up or down.
+%only if the specified resources can be allocated prior to job completion. 
+%\williamfix{why only if? The scaling still occurs if the job finished 
+%(or do you mean the application?), it just has perceived queue time then}
+
+Unlike the default \systemname method, the fast mode requires all proceeding 
+execution to be checkpoint-safe in order to function as expected. We
+define an execution as checkpoint-safe, if there are no active TCP
+%\williamfix{active connections, or initiating connections?}
+connections, or I/O operations.
+In such cases, a restart may result in data loss or even 
+%\williamfix{failure defined?  Is this walltime or a stalled ap.  If app has a failure that kills it, then E-HPC proceeds to "Error Exit" no?}
+failure to re-establish the TCP connections. 
+%In addition, a checkpoint-safe
+%execution requires at least the same amount of resources for the restart.
+This is a limitation of the DMTCP library and we plan to investigate alternative
+strategies in future to overcome this limitation. 
+
+The efficiency of the fast operation depends on the queue wait time of
+the placeholder job, the time required to finish the current job, and
+the checkpoint/restart overhead. If a job's runtime is small, the
+overhead of queue wait time and the cost of migrating to new resources
+might not justify the use of fast mode. 
+
+
+
+
+%Hence, jobs that have short runtimes
+%with large checkpoint overhead may incur long turnaround times. 
+%may result in longer turnaround times. 
+%This is because, if the current job is
+%checkpointed and killed just prior to completion, the checkpoint/restart time
+%may take longer than the normal execution time. For all other cases, the fast 
+%mode in \systemname is designed to improve the turnaround time.  
+
+%if active TCP connections are not being initiated and
+%that the resources being utilized prior to checkpoint can fit in the resource set provided
+%upon restart.
+%In addition, high levels of IO operations can cause high rates of failure of the
+%fast method, classifying applications such as Montage as not safe for Fast Mode of 
+%checkpoint restart.
+%\williamfix{Have we defined a checkpoint safe execution yet? I did so above a bit}
+
+%Fast Mode provides improved turnaround time at the cost of checkpoint
+%and restart time which is constant for a workflow related to Fig \ref{fig:time_dmtcp}.
+%The speed at which the workflow finishes utilizing fast is dependent
+%on the queue time and the time at which the expansion of resources is called,
+%where the later the request and longer the queue, the slower the turnaround.
+%In optimally unfavorable circumstances, the time of request plus queue time equals
+%near but prior to the application's finish time resulting in the fast method
+%finishing after the static lower resource state. The excess turnaround time can be 
+%denoted as less than the sum of the checkpoint, restart, and overhead timings.
+%\williamfix{I hope I cleared this up a bit? The last bit was in results secition (elasticity) and can be moved back}
+%\williamfix{A checkpoint-safe execution requires at least the same or more number of
+%resources available for the restart. This is a limitation of the DMTCP library and
+%we plan to investigate other options in future to overcome this limitation.}
+
+%\williamfix{may not need last line, though it should be noted somewhere or as future work to make this mode more stable}
+%\fix{Need to explain above in simpler language/be clearer} 
+%\fix{Need details of why or where this mode might fail.}
+\vspace{-0.3cm}
+\subsection{Workflow Plug-ins}
+\systemname is implemented in Python and generates job scripts to be
+run on HPC resources through batch schedulers.
+% \abelfix{Worth mentioning that \systemname actually uses job templates for each scheduler}
+It currently supports Slurm and Torque schedulers. Users specify the
+resource requirements and \systemname generates batch scripts with the
+respective scheduler directives. Workflow status and resource
+requirements are updated through a YAML file on a shared file
+system. \systemname is currently integrated with the Tigres workflow
+library and can be used with any Tigres workflow. However, workflow
+scripts written in Python can also be transformed into elastic
+workflows by using the \systemname API directly. 
+%In previous work, Tigres workflows have also been converted to
+%other formats~\cite{balderrama2015ginflow}.
+% repetition of what is said in User Interfaces.
+%Interacting with \systemname through a workflow description requires users
+%to specify the workflow stages and resource requirements using the YAML syntax.
+%Users can describe the commands to execute each stage of the workflow,
+%respective resource requirements, and expected execution times for the stages.
+%Through the description, users can specify any application in the workflow
+%on any HPC system. Since, many existing workflow systems use descriptions
+%to manage the workflows, the workflow description approach provides a simple
+%and generic interface to introduce elasticity in existing workflows and application
+%programs running on HPC platforms.
+\systemname currently uses DMTCP for checkpoint restart. However, the
+architecture of \systemname is independent of DMTCP and other checkpoint
+restart mechanisms might be used. Thus, \systemname has
+been designed such that it can be extended to work with other batch
+queue, workflow and checkpoint restart systems.
+
+%\fix{LR: check if this is really needed.}
+%\abelfix{Worth mentioning anything about ability to use a different CK mechanism? Suggested text follows as a \%comment}%As shown in Figure \ref{fig:ehpc_arch}, \systemname current implementation uses DMTCP for checkpoint-restart capabilities since it provides support for a generic pool of applications used in HPC systems. As it is shown in Section \ref{sec:results}, workflows have different resource and system demands and do not necessarly require a generic checkpoint-restart tool like DMTCP, which may impact in application performance overhead in unsuitable ways. In this sense, extensions to the current \systemname API can be easily provided to allow \systemname to support different checkpoint-restart mechanisms, like BLCR and CRIU.
+
+%\fix{I think we need to write this as - E-HPC supports workflows through three interfaces a) Tigres b) YAML c) USing E-HPC API in Python scripts. And that others are pluggable}

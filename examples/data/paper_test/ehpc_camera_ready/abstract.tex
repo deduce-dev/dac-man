@@ -1,0 +1,55 @@
+Next-generation data-intensive scientific workflows need to support
+streaming and real-time applications with dynamic resource needs on
+high performance computing (HPC) platforms. The static resource
+allocation model on current HPC systems that was designed for
+monolithic MPI applications is insufficient to support the elastic
+resource needs of current and future workflows. In this paper, we
+discuss the design, implementation and evaluation of Elastic-HPC (\systemname),
+an elastic framework for managing resources for scientific workflows
+on current HPC systems. \systemname considers a resource slot for a workflow
+as an elastic window that might map to different physical resources
+over the duration of a workflow. Our framework uses checkpoint-restart
+as the underlying mechanism to migrate workflow execution across the
+dynamic window of resources. \systemname provides the foundation necessary
+to enable dynamic resource allocation of HPC resources that are needed
+for streaming and real-time workflows.
+\revcomment{The abstract claims ``E-HPC... can minimize turnaround time of workflows by enabling dynamic scaling of resources''.. This is actually not supported in the results. The runtimes are actually 6-20\% higher. The authors should de-emphasize this in the abstract.}
+\systemname has negligible overhead
+beyond the cost of checkpointing. Additionally, E-HPC results in
+decreased turnaround time of workflows compared to traditional model
+of resource allocation for workflows, where resources are allocated
+per stage of the workflow. 
+%by enabling automated dynamic scaling of resources
+Our evaluation shows that \systemname improves
+core hour utilization for common workflow resource use patterns and
+provides an effective framework %that will provide substantial benefits
+for elastic expansion of resources for applications with dynamic
+resource needs.
+
+
+
+
+
+\if0
+High performance computing is full of constraints and tradeoffs when
+deploying complex software, where node requests in batch scripts are
+neither dynamic nor self aware.  Software has no control over the
+resources it requires as demand throughout a job increases. The lack
+of resource control causes major disadvantages on the scheduling side,
+where demand is artificially inflated by large serial portions of
+software requiring a brief period of highly parallel execution. In
+most cases, this degrades the usage of the the machine with regard to
+real compute time and increases wait times for other
+users. Intelligently breaking up a single job can have the effect of
+lowering wait times for the user running the job and all other users,
+in addition to increasing the efficient utilization of the HPC
+system. We propose a method where a flexible checkpointing system
+known as DMTCP is utilized in combination with our EHPC software in
+order to checkpoint active jobs at any point and, when ready, move the
+running processes into a larger, previously requested, set of
+nodes. The expansion can then be followed by contraction in order to
+elastically fit the resource requirements of an application. This
+modification allows for inherent failure recovery, new methods of
+workflow execution, and greater user control over resources in
+traditional HPC systems.
+\fi

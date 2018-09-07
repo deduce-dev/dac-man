@@ -1,0 +1,32 @@
+In this paper, we present the design, implementation and evaluation of
+\systemname, a flexible elastic framework that provides increased efficiency
+of resource utilization, failure recovery, elasticity, and faster
+execution times. The overheads of \systemname vary based on the
+characteristics of the application (e.g., amount of I/O), resource
+configuration and run-time characteristics (e.g., queue wait
+time). The overheads are from checkpoint and restart, while providing
+significant benefits in dynamic elastic resource
+management. \systemname is designed to work independently as well as
+with existing software ecosystems. \systemname provides an effective
+library for the fine tuned control of resources in HPC environment,
+where before now, real time control was difficult, if not
+impossible. \systemname is the foundational tool needed to address the
+resource management needs of next-generation real-time and streaming
+workflows.
+
+
+% at optimal moments of execution and produce predictable overhead
+% when being utilized in scenarios with a greater number of
+% checkpointed processes.  DMTCP and EHPC are both extremely flexible
+% in the frameworks and schedulers they can handle effectively
+% lowering the barrier of introducing elasticity within traditional
+% HPC environments and workflows. EHPC also has the
+%benefit of giving new insights into the topology of workflows being
+%run, including execution times of discreet sections of code and
+%process congestion throughout the workflow.  
+
+
+%Future work with EHPC will include testing on effects of EHPC on
+%overall queue times experienced by submitting smaller jobs, cost
+%saving possible on cloud based batch schedulers, and incorporation
+%into existing scientific applications.

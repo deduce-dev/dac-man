@@ -1,0 +1,126 @@
+%\begin{figure}
+%\centering
+%\includegraphics[width=3.18in]{figs/ehpc_sequence.png}
+%\caption{EHPC message passing for continuous execution during queue times before new node allocation}
+%\label{fig:ehpc_sequence}
+%\end{figure}
+
+Figure~\ref{fig:ehpc_arch} shows the architecture of \systemname. It has two main
+components -- i) coordinator and ii) tracker. The coordinator interfaces with
+the users and workflow engines, whereas the tracker keeps track of job
+execution and resource requirements. A user submits a workflow to \systemname,
+and the coordinator generates job submission scripts corresponding
+to the different stages of the workflow. The jobs are submitted to run on
+HPC resources through the batch scheduler. \systemname also creates a
+tracker for each job that runs on these HPC resources. It uses DMTCP for
+saving the execution state of workflow stages and restart the workflow
+on a different set of resources.
+
+\begin{figure} [htbp]
+\begin{center}
+    \includegraphics[width=0.4\textwidth]{figs/ehpc_state_transition.pdf}
+\end{center}
+ \caption{\small State transitions of a workflow in \systemname.}
+ \label{fig:ehpc_state_transition}
+\end{figure}
+
+\subsection{State Transition}
+Figure~\ref{fig:ehpc_state_transition} shows the state transitions of a workflow
+in \systemname. Each workflow stage goes from \emph{queued} to \emph{executing}
+to \emph{completed} state. Due to the inherent design of \systemname, it is
+capable of re-scheduling the incomplete workflow stages in case of job failures
+due to wall-time limits. \systemname launches a coordinator prior to submitting
+and executing the jobs via the batch scheduler. The coordinator internally
+maintains the description and execution status of workflow stages through a
+`tracking' file. It runs on the login node and transforms workflow stages into
+jobs. The jobs are maintained through an internal queue in the coordinator and
+are submitted in sequence to the batch scheduler. \systemname also starts a
+tracker daemon for each submitted job. The tracker runs on one of the compute
+nodes where the job executes. Once the workflow job begins to execute, the
+tracker monitors the job progress. When a workflow needs to grow or shrink its
+resources, the tracker checkpoints the workflow and terminates execution. The
+coordinator then submits a new job with the modified number or set of resources.
+The tracker for the newly submitted job updates the node list. The coordinator
+restarts the workflow execution on the new nodes from the last completed stage
+using the workflow checkpoint.
+
+%Upon receiving the signal to update resources from the coordinator, the
+%tracker checkpoints the workflow stage and terminates execution. The coordinator
+%then submits a new job with the modified number of resources. The tracker for
+%the newly submitted job updates the node list and restarts the workflow
+%execution on the new nodes from the last checkpointed stage.
+
+\subsection{Implementation}
+%\systemname provides both command line utilities and a programming interface
+%to add elasticity to workflows running in an HPC envrionment. The API consists
+%of five functions as listed below.
+\systemname is currently implemented in Python and generates job scripts to be
+run on HPC resources through batch schedulers. It currently supports Slurm and
+Torque schedulers. Users specify the resource requirements and \systemname
+generates batch scripts with the respective scheduler directives. \systemname
+uses batch script templates to generate the scripts. It also maintains a YAML
+tracker file in order to coordinate status and execution update of workflow
+stages between the coordinator and tracker.
+
+\systemname provides two ways to induce elasticity into a workflow
+running in an HPC environment. First, a workflow
+description is submitted through the \systemname command-line utility,
+where \systemname automatically controls the elasticity of the workflow
+by analyzing the resource requirements of individual workflow stages.
+Alternatively, workflows can use the programming interface that \systemname
+provides and selectively grow and shrink the resources as the workflow
+executes. Both the command-line utility and the API internally uses the
+functions that \systemname coordinator provides. There are several high-level
+commands that \systemname provides for building an elastic workflow.
+% Table~\ref{tab:ehpc_commands}
+%lists the major commands in \systemname for enabling elasticity to execute
+%workflows in HPC environments.  
+
+\noindent \textbf{Start.} The start command launches a workflow via the
+\systemname coordinator. It generates job submission scripts, submits them
+through a batch scheduler, and launches the \systemname tracker. 
+
+\noindent \textbf{Expand.} This command is used to dynamically grow the
+number of resources for a workflow in execution. It checkpoints the current
+workflow stage and terminates the workflow execution. It then grows the
+number of resources by the margin specified through the command.  
+
+\noindent \textbf{Contract.} This command allows for dynamically shrinking
+the number of resources for an executing workflow. It checkpoints, kills and
+restarts the workflow on a reduced number of resources based on the resource
+requirements of the workflow.
+
+\noindent \textbf{Checkpoint.} The checkpoint command allows workflow stages
+to be explicitly checkpointed, but does not terminate the workflow execution.
+It only keeps the last successful checkpoint, but does not explicitly terminate
+the execution. 
+
+\noindent \textbf{Kill.} The kill command is preferably used with the checkpoint
+command and immediately terminates the workflow execution.
+
+\noindent \textbf{Restart.} This allows for explicitly restarting a checkpointed
+workflow. This command also allows for explicitly increasing or decreasing
+the number of resources for the restarted workflow. The checkpoint, kill and
+restart commands provide users with the capability of explictly handling
+the elastic execution of workflows.
+
+In order to restart the workflow on a different number of hosts, \systemname
+is required to be integrated with a workflow manager that is capable
+of distributing tasks across the nodes of an HPC system. \systemname
+maintains the list of nodes allocated to a workflow job. On each elastic
+request (expand or contract), it updates this list to the new set of allocated
+nodes. \systemname tracker sends a signal to the workflow manager, which
+is currently a SIGUSR1 signal, after resetting the node list. The workflow
+manager needs to trap the signal and read the new set of nodes on which
+the workflow tasks will be executed. In our current implementation, we
+use and modify the Tigres workflow library to trap the signal and update
+the list of nodes on which the workflow stage gets restarted.
+
+%- kill
+%- checkpoint
+%- restart
+
+%\subsection{Implementation}
+%Python
+%Tigres
+%DMTCP

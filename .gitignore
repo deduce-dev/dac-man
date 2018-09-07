@@ -1,0 +1,13 @@
+*.log
+*.pyc
+.AppleDouble
+.DS_Store
+_build
+*~
+MTS_WfM.egg-info
+dist
+build
+__pycache__
+outdir
+old
+venv

@@ -1,0 +1,97 @@
+
+
+
+%\begin{figure*}
+%  \centering
+%  \subfloat[Turn-around time.]{\includegraphics[width=0.5\textwidth]{figs/wastage_new_runtime.pdf}
+%    \label{fig:synthetic_time_gordon}}
+%  \subfloat[Core-hour usage.]{\includegraphics[width=0.5\textwidth]{figs/wastage_new_core-hours.pdf}
+%    \label{fig:synthetic_corehrs_gordon}}
+%  \caption{\small \fix{This graph is actually showing nothing- 1. This is not for runtime elasticity, 2. The non-EHPC version ran under DMTCP, but without checkpointing; so had all the overheads of DMTCP monitoring and system call traps} Effect of runtime elasticity on synthetic workflow: The
+%    total core hour requirements versus maximum cores
+%    utilized of s-parallel application with a sequential step followed
+%    by a parallel section. \systemname is shown to be more efficient as cores
+%    are scaled up due to wastage from the non-\systemname sequential portion of the application.}
+%  \label{fig:wastage}
+%\end{figure*}
+
+%\if0
+%\begin{figure}
+%  \centering
+%  \includegraphics[width=0.5\textwidth]{figs/synthetic_ehpcoverhead.pdf}
+%  \caption{\small Percentile runtime increase of
+%  Synthetic workflow  run with EHPC (including a scale down operation inside)
+% compared running it staticaly wrapped with DTMCP.
+%  Overall workflow runtime overhead induced by \systemname operations only.
+%  Runn in Gordon. Workflow is Synthetic composed by a parallel and
+%  sequential stage. Workflow was run with \systemname
+%  and DMTCP, percentages. Figure express the increase in runtime when running
+%  Synthetic with EHPC (and a scale operation inside) over a DTMCP static run.
+%  With \systemname a scale down operation was performed between stages, runtime includes
+%  checkpointing and queue wait time. \fix{To Be Removed- New data in Table~\ref{table:ehpc_overhead}} }
+%%  \small \fix{This graph is actually showing nothing- 1. This is not for runtime elasticity, 2. The non-EHPC version ran under DMTCP, but without checkpointing; so had all the overheads of DMTCP monitoring and system call traps} Effect of runtime elasticity on synthetic workflow: The
+%%    total core hour requirements versus maximum cores
+%%    utilized of s-parallel application with a sequential step followed
+%%    by a parallel section. \systemname is shown to be more efficient as cores
+%%    are scaled up due to wastage from the non-\systemname sequential portion of the application.
+%        \label{fig:synthetic_ehcp_overhead_synth_gordon}
+%\end{figure}
+%\fi
+
+\subsection{Effect of Runtime Elasticity}
+%\fix{Added section commented out that was on wrong graphs.}
+%Fig \ref{fig:synthetic_corehrs_gordon} represents a prototypical 
+%example of core hour efficiency that can be gained by incorporating E-HPC into
+%an application with a varied topology of resources.  In the case of Fig
+%\ref{fig:synthetic_corehrs_gordon} it can be seen that E-HPC maintains 
+%core hour utilization within 22 percent of the single core execution. The
+%Non E-HPC 128 core version shows a core hour utilization over five times as high as its
+%16 core Non E-HPC execution. 
+
+Figure \ref{fig:blast_execution} shows the use of \systemname
+%at runtime on BLAST, a highly parallel workflow, where the 
+for inducing elasticity in the middle of a workflow stage (runtime
+elasticity), as it expands from 16 cores (one node on Gordon) into a
+larger set.  Although \systemname is capable of scaling up in the
+middle of a workflow stage, the results in the figure show that the
+total workflow runtime is affected when using \systemname. The
+sequential stages in BLAST are extremely short in comparison to the
+longer parallel stage. The runtime for 16 cores with and without
+\systemname are similar because in both cases, all the stages use 16
+cores (one node on Gordon). However, as we scale up to 32 cores,
+\systemname takes $\approx 6\%$ more time. When using \systemname the
+first sequence stage, 1-BLAST is executed on one node %\fix{16 cores (= 1  node)},
+and the elasticity is induced after 60 seconds. During this
+time, some of the tasks in the second stage, 2-BLAST-Scaled, which is
+a parallel stage, have already started executing. The higher degree of
+parallelism during the initial parallel stage and the
+checkpoint/restart overhead of DMTCP, the overall runtime performance
+deteriorates with \systemname.  The pattern continues for larger
+cores, and for up to 256 cores (with \systemname taking $\approx 20\%$
+more time than without \systemname), \systemname runtime elasticity
+performs poorly compared to when executed without \systemname.  This
+is a significant result, because it shows that the time when
+elasticity is induced is also critical to certain workflows, and may
+result in performance degradation if the required resources are not
+allocated at the right time.
+
+%\if0
+%Figure~\ref{fig:synthetic_corehrs_gordon} shows the core-hours used with and
+%without \systemname, when using runtime elasticity. As the sequential stage,
+%1-BLAST is extremely small, and the parallel stage, 2-BLAST-Scaled is extremely
+%large, there are more resources allocated to the parallel stage for a longer
+%duration when the workflow is executed with \systemname. Since, there is an
+%increased runtime of $\approx 6\% - 20\%$ with \systemname for the parallel stage,
+%the overall core-hours usage also increases significantly when scaling from 32 to
+%256 cores.
+%\fi
+%The effect of performing this expansion is variable. In the transition to 32 cores, improvement in turnaround time is observed versus
+%maintaining the inlitial resources.  This improvement is at a cost of 28 percent 
+%in efficiency of core hour utilization and improvement of 40 percent in time.
+%Looking at the larger core resource request, queue times increment dramatically, showing slower 
+%turnaround in addition to wasted resources as demonstrated by the cost 
+%of higher resource requests in Fig \ref{fig:blast_charged}.  
+%The drawbacks of large queue times utilizing E-HPC is why Fast Mode 
+%of E-HPC was devised.
+%\fix{Add runtime elasticity (Gordon) results here.}
+

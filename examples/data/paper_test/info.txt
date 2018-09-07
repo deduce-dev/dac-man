@@ -1,0 +1,7 @@
+This example compares two directories that contain LaTex source files
+for a paper. `ehpc_camera_ready' contains the camera-ready version of
+the original source directory `ehpc'.
+
+Command to find diff:
+
+deduce diff -o <path_to_ehpc>/ehpc -n <path_to_camera_ready>/ehpc_camera_ready

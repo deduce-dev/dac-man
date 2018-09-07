@@ -1,0 +1,169 @@
+
+
+%\if0
+%\begin{table}[]
+%  \centering
+%  \caption{Collected Metrics for each experiment}
+%  \label{tab:metrics}
+%  \begin{tabular}{|c|c| }
+%    \hline
+%    \textbf{Metric (unit)}                                                       & \textbf{Description}                                                                                                                                                                                                                                             \\ \hline
+%    \textit{\begin{tabular}[c]{@{}c@{}}Stage Execution \\ Time (s)\end{tabular}} & Execution run-time for a workflow stage.                                                                                                                                                                                                                         \\ \hline
+%    \textit{\begin{tabular}[c]{@{}c@{}}Checkpoint \\ Time (s)\end{tabular}}      & \begin{tabular}[c]{@{}c@{}}Time to checkpoint a stage. It is calculated as the \\ difference between when the Stage Job finishes \\ and when the checkpoint call is triggered.\end{tabular}                                                                      \\ \hline
+%    \textit{\begin{tabular}[c]{@{}c@{}}Restart \\ Time (s)\end{tabular}}         & \begin{tabular}[c]{@{}c@{}}Time necessary to restart a workflow stage. \\ It is calculated as the difference between the \\ time when a stage starts and the time when the \\ job related to stage starts.\end{tabular}                                          \\ \hline
+%    \textit{\begin{tabular}[c]{@{}c@{}}Process Kill \\ Time (s)\end{tabular}}    & \begin{tabular}[c]{@{}c@{}}Total time needed to kill all processes in all \\ compute nodes. It is calculated only for Contractions\\  as the difference between the time a Contract \\ command is issued and the time a stage \\ checkpoint starts.\end{tabular} \\ \hline
+%    \textit{Queue Time (s)}                                                               & \begin{tabular}[c]{@{}c@{}}Total time a workflow job stage waits before \\ starting its execution.\end{tabular}                                                                                                                                                  \\ \hline
+%  \end{tabular}
+%\end{table}
+%\fi
+
+\newcommand{\montageFirst}{\textit{1-Parallel}\xspace}
+\newcommand{\montageSecond}{\textit{2-Sequence}\xspace}
+\newcommand{\montageThird}{\textit{3-Parallel}\xspace}
+\newcommand{\montageFourth}{\textit{4-Sequence}\xspace}
+
+\newcommand{\blastFirst}{\textit{1-Parallel}\xspace}
+\newcommand{\blastSecond}{\textit{2-Sequence}\xspace}
+
+\newcommand{\synFirst}{\textit{1-Sequence}\xspace}
+\newcommand{\synSecond}{\textit{2-Parallel}\xspace}
+
+In this section, we evaluate the performance and resource usage of
+scientific workflows through \systemname. We compare our results
+against running the workflows without \systemname (i.e., they are
+submitted through a single large job -- see Figure~\ref{fig:ehpc_overview}a). 
+
+\vspace{-0.3cm}
+\subsection{Systems} 
+We evaluated the impact of elasticity on HPC workflows through
+\systemname on two systems -- i) Gordon and ii) Cori.  Gordon~\cite{gordon} is a
+dedicated XSEDE cluster with 1024 compute nodes.  Each compute node
+contains two 8-core 2.6 GHz Intel EM64T Xeon E5 (Sandy Bridge)
+processors and 64 GB of DDR3 RAM. The file system is Lustre with a peak
+I/O bandwidth of 100 GB/s and the
+resources are managed by TORQUE. Cori~\cite{cori} is a Cray XC40 supercomputer
+hosted at the National Energy Research Scientific Computing Center
+(NERSC), which has 2388 compute nodes, each with two sockets and
+32-core Intel Xeon "Haswell" processor at 2.3 GHz per socket and 128
+GB DDR4 memory (2133 MHz, four 16 GB DIMMs per socket). The file
+system used during job execution is a Lustre file system with
+a peak performance of $~$ 700 GB/s.
+
+%\systemname is executed on the login node, where it creates and submits
+%job scripts using \systemname pre-defined templates according to the
+%scheduler used in each site, TORQUE in Gordon and Slurm in Cori.
+%All \systemname and non\systemname files reside in the Lustre Parallel File System.
+
+\vspace{-0.3cm}
+\subsection{Workflows}
+We use two real science workflows (Montage and BLAST) and one synthetic
+workflow to evaluate \systemname (Figure~\ref{fig:workflow_dags}). All the workflows
+are built using the Tigres templates. The different stages in the workflows
+are logically grouped together into parallel and sequential stages based
+on the resource requirements at each stage of the workflow. 
+%Below, we provide a brief overview of the workflows we evaluate.
+%in each of the stage types, Parallel or Sequential (see rectangles in Figure \ref{fig:workflow_dags}).
+
+\noindent \textbf{Montage} \cite{jacob2009montage} is an I/O intensive
+workload \cite{juve2013characterizing} that constructs a JPEG image from
+sky survey data formatted as Flexible Image Transport System (FITS) files
+\cite{pence2010definition}. As shown in Figure \ref{fig:montage_dag},
+Montage is composed of nine stages, and we logically group them into
+four stages -- i) \montageFirst, ii) \montageSecond, iii) \montageThird, and iv) \montageFourth.
+%and has different resource requirements in each of them. 
+%There are four logical stages labeled \montageFirst\footnote{The \textit{'N'} used in this and all other stage labels indicates the number of cores allocated to the referred workflow stage during experiments. Labels' literal number refers to the workflow logical stages and are ordered as depicted in Figure \ref{fig:workflow_dags}.} and \montageThird, which are parallel stages requiring one or more compute nodes, and \montageSecond and \montageFourth, which are sequential stages and require only one node.  
+%All input data needs to be in a unique directory before executing the workflow.  
+%Each FITS file sizes 1 MB in total and at the end, a total of 55 GB of output data is generated.
+All experimental runs of Montage construct the image for survey \textit{M17}
+on \textit{band j} and degree 8.0 from \textit{2mass} Atlas images. 
+
+\noindent \textbf{BLAST} is a memory-intensive workflow that matches DNA
+sequences against a large sequence database ( $>$ 6 GB). The workflow splits
+an input file (a few KBs) into several small files and then uses parallel tasks
+to compare the input against the large sequence database. The database is loaded
+in-memory on all the compute nodes during the parallel stage. Finally, all the
+outputs from the parallel stage are merged into a single file. 
+ As shown in Figure \ref{fig:blast_dag},
+BLAST is composed of three stages. As the first stage runtime is short, we logically group them into
+two stages -- i) \blastFirst and ii) \blastSecond.
+BLAST is used to illustrate the resource usage for an use-case where a parallel stage execution
+time is substantially larger than the sequential one. 
+%The split operation is a
+%small stage in the workflow, and is hence, grouped with the parallel were combined in one logical stage
+%herein called \blastFirst.  
+
+\noindent \textbf{Synthetic} workflow is composed
+of sequence and a parallel stages (Figure \ref{fig:synthetic_dag}).
+%, herein called \synFirst and \synSecond, respectively.  
+The workflow is written in Python. The memory-intensive version of
+the synthetic workflow consists of tasks that do a large number
+of memory allocations for over one billion integers, prior to
+calculating the values of their sum and multiplication.
+% and then many sum and multiplication operations.  
+The first stage contains one billion tasks, calculating the sum in sequence,
+whereas the second parallel stage contains ten million tasks, calculating the multiplication
+in parallel. In contrast to the other two workflows, this workflow is designed to have
+a longer sequential stage, followed by a shorter parallel stage.
+We also use the memory-intensive version of the synthetic workflow that consists of 10 thousand parallel tasks. Unless otherwise specified, we use the two stage memory-intensive
+synthetic workflow for our evaluation, and use the single stage memory-intensive fully parallel workflow for measuring \systemname overheads.
+
+\begin{table}[t]
+\centering
+%\begin{tabular}{p{0.2\linewidth}|p{0.7\linewidth}}
+\begin{tabular}{p{0.33\linewidth}|p{0.6\linewidth}}
+\textbf{Metric (unit)} & \textbf{Description} \\
+\hline \hline
+\textbf{Stage execution time(s)} & Execution time for a workflow stage \\ \hline
+\textbf{Workflow runtime(s)} & Workflow end time - Workflow start time \\ \hline
+\textbf{Checkpoint time(s)} & Time to checkpoint a stage \\ \hline
+\textbf{Restart time(s)} & Time to restart a workflow stage \\ \hline
+\textbf{Queue time(s)} &  Time a workflow stage waits in queue prior to execution \\\hline
+\textbf{Core-hours used(hrs)} & $\sum$ Task execution time * Number of cores allocated \\
+\hline
+\end{tabular}
+\caption{\small Metrics for evaluation.}
+\label{tab:metrics}
+\vspace{-0.5cm}
+\end{table}
+
+%\subsection{Metrics}
+Table \ref{tab:metrics} lists and summarizes the metrics for our experiments.
+It includes workflow runtime, stage execution time, stage checkpoint and restart
+times, process kill times, core-hours used and queue time (inter-stage queue wait time).
+The runtime of a workflow is calculated as the time between the execution
+start of the first stage and completion of the last stage of the workflow.
+The core-hours measured correspond to the resource allocated for the entire duration, including possibly resources
+left unused by a workflow. Wait time values are not included since jobs
+do not consume core-hours when they wait. 
+\revcomment{In figure 7-10, which version of E-HPC is used - E-HPC or E-HPC fast ?}
+In our evaluation, we use \systemname's regular mode, unless otherwise specified. 
+
+
+%Additionally, we also calculate core-hours used for each workflow execution
+%based on the time and resources the workflow used throughout its execution lifespan.
+
+% where it calculated slightly 
+%differently for non\systemname and \systemname. \fix{Why is it different?}  
+%
+%\fix{I don't think we should be mentioning 3600 - i.e.., just to get right unit} 
+%
+%\fix{Frankly core hour calculation is how much time the workflow used. This should be rewritten more in what it represents and what is included than the exact math.}
+%
+%\noindent \textbf{non\systemname} - Calculated as the total sum of
+%stage times divided by 3600, then multiplied by the number of CPUs
+%allocated for the workflow.
+%
+%\noindent \textbf{\systemname} - It is calculated as in non\systemname only for parallel stages, which is then summed with Core-hour from Sequential stages. Sequential stages are computed differently since they allocate only one node:
+%
+%\noindent{\textit{\systemname Sequential Stage}} - Calculated as the total sum of sequential stage times divided by 3600 and then multiplied by the number of CPUs in one node (16 for Gordon and 32 for Cori).
+
+%\vspace{-0.3cm}
+\input{results-ehpc-fast}
+
+%\vspace{-0.3cm}
+\input{results-stage-elasticity}
+
+%\vspace{-0.3cm}
+\input{results-runtime-elasticity}
+
+\input{results-overhead}

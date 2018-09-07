@@ -1,0 +1,106 @@
+Today, scientific workflows with experiment data are increasingly processed on High
+Performance Computing (HPC) systems. Next-generation scientific
+workflows have to support streaming data and real-time constraints with
+varying resource needs.  Today, HPC platforms are primarily designed
+to support monolithic MPI applications and provide a static resource
+allocation model i.e., a resource allocation is fixed for the duration
+of the entire job. The static resource allocation model 
+presents challenges to scientific workflows where every stage of the
+workflow may have different resource needs. Current allocation
+methods attempt to either split the workflow and incur queue wait
+times for each stage, or request one big allocation resulting in
+wastage of resources.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figs/NonEHPCvsEHPCTurnAroundTime.png}
+\caption{\small Comparison of traditional and \systemname managed resource allocation
+ for scientific workflows in HPC: a) shows the static allocation of 
+ resources for the entire duration of the workflow execution.
+ b) shows the dynamic allocation where resources are requested as per the needs of a 
+ particular stage.}
+% Gonzalo edit
+% \caption{\small Traditional vs \systemname managed resource allocation
+% for scientific workflows in an HPC environment. a) statically allocates
+% a fixed set of resources for the entire duration of the workflow execution.
+% b) dynamically allocates only as many resources as required by a
+% particular stage of the workflow.}
+\label{fig:ehpc_overview}
+\vspace{-0.5cm}
+\end{figure}
+ 
+Current methods result in loss of efficiency or utilization, and the
+problems will only be exacerbated with next-generation dynamic
+workflows. We need a dynamic resource management model that considers
+resources to be elastic that can grow and shrink based on
+requirements of a scientific workflow. Resource elasticity has
+been extensively studied in the context of
+clouds~\cite{sharma2011cost, galante2012survey, paraiso2016socloud}.
+However, unlike HPC environments, cloud resources are not managed
+through batch schedulers. Elastic resource management in HPC environments
+has also been explored for specific applications~\cite{hpc_elastic_example1},
+but general methods are still not available.
+
+In this paper, we present \textbf{Elastic-HPC (\systemname)}, an
+elastic framework for managing resources for scientific workflows in
+an HPC environment. It provides dynamic, adaptable resource
+management and supports workflow execution. E-HPC is capable of
+growing and shrinking the allocated resources for a workflow during
+execution. It considers the resource slot to be an elastic window that
+maps to different physical resources based on availability.
+\systemname uses checkpoint-restart mechanism to save and relaunch
+workflows on different resources when needed. Users can either submit a
+workflow description to \systemname, or instrument existing workflows to
+use \systemname to manage elastic resources. Thus, \systemname can fit
+into current software ecosystems available in scientific collaboration
+or at HPC facilities. In this paper, we make two contributions.
+
+\begin{itemize}  
+\item We design and implement an elastic framework to manage resources
+for scientific workflows in HPC environments.
+\item We evaluate the performance of the \systemname framework across two
+HPC systems, and several synthetic and real scientific workflows to
+understand the performance of workflows and overheads in \systemname. 
+\end{itemize}  
+
+The rest of the paper is organized as follows. In
+section~\ref{sec:background}, we describe background on workflows
+and current methods of resource management. We describe the
+design and implementation of \systemname framework in
+Section~\ref{sec:arch} and results of our evaluation in
+Section~\ref{sec:results}. We present related work in
+Section~\ref{sec:related} and conclusions in
+Section~\ref{sec:conc}.
+
+
+
+%Scientific workflows are
+%often executed by chaining multiple jobs together and allocating the
+%required resources prior to their execution on HPC
+%resources~\cite{}. The rigidity of managing resources for scientific
+%workflows is the major hindrance to incorporate elasticity in HPC
+%environments.
+
+
+
+%There is a need for an elastic
+%framework to support the dynamic and real-time needs of scientific workflows
+%running on HPC resources.
+
+%On existing HPC systems, workflow and resource management techniques are
+%disconnected and result in static allocation of resources for the entire
+%duration of the workflow. Current approaches for running workflows in an HPC
+%environment have several major issues. First, they have high latency
+%and turnaround time due to resource limitations of the traditional
+%batch queue systems. Second, they often result in an inefficient and
+%underutilized system due to over allocation of resources during
+%workflow execution. Third, users often incorrectly estimate the execution
+%time of their workflows, resulting in job failures and manual restarts.
+%Finally, existing tools do not allow workflows to dynamically scale and
+%hence, do not adapt to the varying data and resource requirements
+%of long-running scientific workflows.
+%\fix{where do the triggers come from? what happens when inside the app?
+%what happens when outside the app?}
+
+
+

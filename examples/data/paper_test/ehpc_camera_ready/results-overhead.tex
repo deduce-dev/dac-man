@@ -1,0 +1,230 @@
+\vspace{-0.3cm}
+\subsection{\systemname Overheads}
+\label{section:ehpc_overheads}
+%\fix{WF:Still needs to be consolidated, but this summarizes the graphs a little better if not more succintly}
+%\fix{LR:Mostly Good text but hanging a bit. Let us consolidate and rearrange the
+%  Gordon and Cori parts.}
+%\fix{Devarshi: should possibly go at the beginning of results}
+
+In this section, we evaluate the different overheads in \systemname.
+Table~\ref{table:ehpc_overhead} shows the runtime overhead of various
+workflows, with and without the queue wait times, when running with
+\systemname on both Cori (C) and Gordon (G).  As \systemname resubmits
+a job while scaling up, it incurs an additional queue wait time in
+addition to the checkpoint and restart overheads of DMTCP. As can be
+seen from the table, the overheads including the queue wait time are
+significantly higher than excluding the wait time (for e.g., runtimes
+are $86.3 \%$ longer with queue wait time vs $10.3\%$ longer without
+the queue wait time for Montage on Cori). This is because the queue
+wait time dominates the overheads in these cases and is a
+system-dependent variable on which neither \systemname, nor DMTCP have
+any control. On the other hand, the overheads without the queue wait
+time only include DMTCP checkpoint and restart times, which has a
+maximum of $\approx 36 \%$ overhead (for BLAST on 256 cores on
+Gordon). BLAST is a memory-intensive application, with a large memory
+footprint that generates large checkpoint images. The overheads are
+smaller on Cori ($\approx 13 \%$) than on Gordon, because of the large
+I/O bandwidth of the Lustre file system (700 GB/s), as compared to the
+peak I/O bandwidth on Gordon (100 GB/s). % \fix{ADD THE LINK}.
+For all other workflows, the runtime overhead varies between $0.2 \% - 11 \%$,
+when there are no queue wait times. Hence, with current advancements
+in storage system (e.g., burst buffers) and checkpoint restart
+systems, \systemname overheads can be minimized.
+% by speeding up
+%the checkpoint and restart process.
+%In all cases, the total runtime overhead in \systemname is less than $1\%$. The table measures
+%purely the overheads in \systemname for managing the workflow
+%migration across the resource slots. Hence, the runtime
+%overhead consists of checkpoint and restart overheads in DMTCP,
+%inter-stage queue wait times etc.
+\begin{table}[!t]
+\centering
+\begin{tabularx}{0.48\textwidth}{cc|XXXX}
+\hline
+& & \multicolumn{4}{c}{\% Overhead, Wait (Without wait)} \\ \hline
+Workflow & Sys. & 32 & 64 & 128 & 256\\
+%\%Over.(nowait) & Sys. & n=32 & n=64 & n=128 & n=256\\
+\hline
+Montage & C & $N/A$ & $86.1(10.3)$ &$32.8(10.3)$ & $42.3(11.1)$\\
+%Montage & Cori (no wait) & $N/A$ & $10.3$ &$10.3$ & $11.1$\\
+BLAST & C & $N/A$ & $5.7(3.9)$ & $10.5(7.6)$ & $18.3(13.6)$\\
+%BLAST & Cori (no wait) & $N/A$ & $3.9$ & $7.6$ & $13.6$\\
+Synth& C & $N/A$ & $13.8(0.29)$ & $21.4(0.36)$ & $3.5(0.37)$\\
+%Synth Expand & Cori (no wait) & $N/A$ & $0.29$ & $0.36$ & $0.37$\\
+BLAST & G & $13.11(9.3)$ & $448(10.9)$ & $2085(13.4)$ & $5210(36.3)$\\
+%BLAST & Gordon (no wait) & $9.3$ & $10.9$ & $13.4$ & $36.3$\\
+Synth & G & $4.5(0.8)$ & $4.7(1.8)$ & $5(2.0)$ & $N/A$\\
+%Synth Contract & Gordon (no wait) & $0.8$ & $1.8$ & $2.0$ & N/A\\
+\hline
+\end{tabularx}
+\caption{
+\small \systemname overheads including (left)
+and excluding system dependent wait times (brackets).
+ \systemname controlled overheads vary between $0.2 \% - 36\%$.
+BLAST supports higher overheads due to its larger memory footprint and
+hence, larger checkpoints.
+%Gonzalo edit
+%\small \systemname overheads. Overheads including
+%the queue wait time are higher (values on the left) due to
+%the skewness of system workloads, which can not be controlled
+%by \systemname. Overheads excluding the queue wait time (values
+%on the right), are solely due to the checkpoint and restart overhead
+%in DMTCP. BLAST has high overheads due to a large memory footprint and
+%hence, large checkpoints. \systemname overheads vary between $0.2 \% - 36\%$,
+%when excluding queue wait times, depending upon the workflow characteristics
+%and the file system performance. 
+%%EHPC-over-DMTCP runtime overhead 
+%%for Montage, BLAST, Synthetic in Cori and Gordon,
+%%run with resource caps of 32, 64, 128, and 256 cores:
+%%%EHCP-only overhead in workflow's runtime.
+%%Each value represents the runtime increase in percentile
+%%because of using EHPC (checkpointing/restart) with
+%%and without wait times.
+%%It does not include DMTCP monitoring overhead that might
+%%slow down code execution.
+%%
+%% Lines in this figure coorpond to data from
+%% Figs, 7,8,9,10,11 (defunct soon)
+%%
+%%
+}
+\label{table:ehpc_overhead}
+\vspace{-0.6cm}
+\end{table}
+
+Figure~\ref{fig:time_dmtcp}) shows the overheads in \systemname
+due to the checkpoint and restart phases.  Both checkpoint and restart
+overheads are proportional to the number of workflow tasks in
+execution, and the overheads increase linearly up to 150
+tasks/processes. The overhead is due to the added communication between the
+workflow tasks and the DMTCP coordinator, and the I/O overhead of
+writing the checkpoint image to disk.
+
+%This is due to the added communication between
+%the workflow tasks and the DMTCP coordinator. Hence, the time overhead
+%is proportional to the number of workflow tasks in execution, and
+%keeps increasing with increasing number of tasks. However,
+%DMTCP's efficient checkpoint/restart mechanism incurs relatively
+%small time overheads with increasing multi-node tasks/processes. 
+
+Figure~\ref{fig:size_dmtcp}) shows that the storage space overhead
+also increases linearly with the increasing number of tasks. 
+The total amount of memory and compute requirements increase
+with increasing tasks, thereby increasing the total checkpoint size.
+An important observation from Figure~\ref{fig:size_dmtcp} is that the
+checkpoint size may become so large that it can result in I/O performance
+bottlenecks that can significantly affect the overall \systemname performance. 
+%\fix{DG: the sentence below may go in future work.}
+DMTCP provides optimizations for writing checkpoint images to memory,
+and also provides compressed checkpointing to minimize the memory and storage
+footprint of checkpoints and restarts. These optimizations can be used to
+minimize the overheads in \systemname. 
+
+%We plan to address these optimizations
+%in future versions of \systemname.
+
+%This provides further support for utilizing expand and contract at model low thread count locations in a process. This applies to the Blastall process where checkpoint and restart often occurs during parallel stages of execution.  \fix{WF: (Hesitant to include the obvious/following) Combined, a user would sacrifice compute efficiency, potentially throttle I/O performance of the system, in order to gain access to a greater number of cores and possibliy reduce turnaround time. }
+
+%The minimum required time for a checkpoint and restart, disregarding
+%the queue wait time, is under ten seconds when checkpointing a single
+%task of the workflow. It was also shown that the type of
+%application can have predictable but varying overhead as shown in Fig
+%\ref{fig:size_dmtcp} and Fig \ref{fig:time_dmtcp}. Due to DMTCPs
+%efficient methods, as a job grows across nodes, the rate of change
+%of overhead time and size decreases.
+%
+%Blastall in Fig \ref{fig:blast_execution} shows that when initiating a highly scalable process currently in a parallel section, improved turnaround time can be obtained by scaling to 128 cores as opposed to having started with 64 cores in the first place. Improved turnaround time incurrs a resource efficiency cost where Fig \ref{fig:blast_charged} displays the resource cost of performing an elastic expansion from 16 cores to the relative peak value. Looking at a more realistic scenario Fig \ref{fig:elastic_demand} shows proof of concept that ehpc expanding from a high core count to a higher core count improves turnaround over staying at the lower core count. 
+%
+%An important observation from Fig \ref{fig:size_dmtcp} is that the footprint of a checkpoint on disk grows to a size large enough where I/O congestion on the cluster can have significant detrimental impacts to the overall performance of EHPC. This provides further support for utilizing expand and contract at model low thread count locations in a process. This applies to the Blastall process where checkpoint and restart often occurs during parallel stages of execution.  \fix{WF: (Hesitant to include the obvious/following) Combined, a user would sacrifice compute efficiency, potentially throttle I/O performance of the system, in order to gain access to a greater number of cores and possibliy reduce turnaround time. }
+%\begin{figure}
+%\centering
+%\includegraphics[width=3.18in]{figs/time_dmtcp.png}
+%\caption{Time required for checkpoint and restart vs. the number of threads being tracked by EHPC.}
+%\label{fig:time_dmtcp}
+%\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=3.18in]{figs/size_dmtcp.png}
+%\caption{Total storage required on filesystem for a checkpoint versus the number of threads being tracked by EHPC.}
+%\label{fig:size_dmtcp}
+%\end{figure}
+
+%\if0
+%\fix{Why is this labelled summary} 
+%
+%\noindent\textbf{Summary} \fix{This part needs to be fixed. I will
+%  discuss it with Devarshi, since they are related to William's
+%  experiments in Gordon}
+%
+%\fix{Overall this text reads well... I think questions is where does it fit.} 
+%
+%\fix{Figure X shows ...} \fix{Also need to be explicit this was on Gordon.}
+%The overall efficiency of resource utilization for each application is
+%shown to allow for significant improvement under \systemname as shown
+%in Fig \ref{fig:wastage}.  When tracking core hours, \systemname was
+%shown to maintain nearly even efficiency of resource utilization, even
+%when the total number of cores required was increased eight fold.  The
+%increased wall time, or slowdown, was shown to be within 0.2 and 1.7
+%percent of the total wall time, where losses through \systemname were
+%primarily due to the checkpoint and restart phase, when excluding
+%queue times.
+%
+%The total observed efficiencty in Fig \ref{fig:wastage} shows that a
+%single node without \systemname is the baseline for optimal resource
+%utilization of the synthetic benchmarks.  As resources grow, it is
+%shown that without \systemname resource utilization increases by a
+%factor of five, while incorporating \systemname with matched resource
+%availability shows an increase of resource utilization of 20
+%percent. As cores are increased and jobs become more dynamic in their
+%resource uses, \systemname proves to become increasingly effective at
+%maintaining resource availability, while decreasing resource wastage.
+%\fi
+
+\vspace{-0.2cm}
+\subsection{Summary}
+In this section, we summarize the experimental results.
+%\fix{reverify this once because of changes to table}
+%\begin{tightItemize}
+%\item 
+The workflow runtimes are $\approx 6\% - 20\%$ time longer in \systemname as compared
+to running the workflow without \systemname. The runtime results for
+the workflows show that the performance of workflows with \systemname
+is affected due to the checkpoint-restart overhead, queue wait time and the underlying
+application characteristics (Figure~\ref{fig:montage_turnaround-new}, Figure~\ref{fig:montage_core-hour-new}). 
+
+%\item 
+\systemname improves the core-hours used for running the workflows by up to
+$76 \%$. The core-hour results show that with increasing parallelism,
+and longer sequential stages, \systemname utilizes resources more efficiently
+than its counterpart by allocating only as many resources as needed for
+a stage in the workflow (Figure~\ref{fig:blast_turnaround-new}, Figure~\ref{fig:blast_core-hour-new}).
+%\item 
+
+The runtime overheads in \systemname vary between $0.2 \% - 36 \%$, when excluding the
+highly variable queue wait times. Further evaluation shows that the overheads are solely
+due to the underlying file system, and DMTCP (checkpoint/restart library) (Table~\ref{table:ehpc_overhead}).
+%\end{tightItemize}
+
+%\if0
+%
+%\item \systemname is shown to maintain nearly even efficiency of resource
+%utilization, even when the total number of cores required was increased eight
+%fold. (\fix{Figure~\ref{}})
+%\item The increased wall time, or slowdown, is shown to be within 0.2 and 1.7
+%percent of the total wall time, where losses through \systemname are
+%primarily due to the checkpoint and restart phase, when excluding
+%queue wait times. (\fix{Figure~\ref{}})
+%\item The total observed efficiency between non-\systemname and \systemname
+%shows non-\systemname workflow execution on a single node is the baseline
+%for optimal resource utilization of the synthetic benchmarks. (\fix{Figure~\ref{}})
+%%\item The results also show that without \systemname, resource utilization
+%%increases by a factor of five, while incorporating \systemname with matched resource
+%%availability shows an increase of resource utilization of 20
+%%percent. 
+%\item As cores are increased and jobs become more dynamic in their
+%resource uses, \systemname proves to become increasingly effective at
+%maintaining resource availability, while decreasing resource wastage.
+%(\fix{Figure~\ref{}})
+%
+%\fi
+

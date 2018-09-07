@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH -J slurmJob
+#SBATCH -e slurmJob.%j.err
+#SBATCH -o slurmJob.%j.out
+#SBATCH -t 00:05:00
+#SBATCH -N 2
+#SBATCH -q debug
+
+# Configuring Python execution environment
+module load python
+source activate myenv
+
+# Setting runtime information
+nodes=2
+ncores_per_node=32
+ncores=$((${nodes} * ${ncores_per_node}))
+
+oldpath=${SLURM_SUBMIT_DIR}/data/simple/v0
+newpath=${SLURM_SUBMIT_DIR}/data/simple/v1
+
+t1=$(date +%s.%N)
+
+# Dac-Man parallel indexing
+mpirun -n $ncores dacman index $oldpath -m mpi
+mpirun -n $ncores dacman index $newpath -m mpi
+
+t2=$(date +%s.%N)
+
+# Dac-Man parallel change capture
+mpirun -n $ncores dacman diff $oldpath $newpath -e mpi 
+
+t3=$(date +%s.%N)
+   
+tIndex=$(echo "$t2 - $t1" | bc -l)
+tDiff=$(echo "$t3 - $t2" | bc -l)
+
+echo "Time to Index: ${tIndex} s"
+echo "Time to Diff: ${tDiff} s"

@@ -1,0 +1,146 @@
+%Things to say:
+%- Elasticity is not new.
+%- Cloud was designed to support it as a fundamental feature:
+%  resources and schedulers include support for it (horizontal scaling).
+%- in cloud, data intensive workflows have long took advantage of it.
+%- In HPC there are some efforts to achieve this:
+%  - Job bundling
+%  - some more to less theoretical Scheduerls: A2L2, Koala, Slurm,
+%  - However Slurm feature is rarely used because of unpredictable
+%    wait times.
+%- IN summary, there are not scheduler that supports today eslaticity
+%  and it requires a workflow tool to hack this.
+\noindent \textbf{Elasticity.}
+%Different mechanisms to satisfy variable resource demand
+%have been studied in distributed computing.
+In cloud computing, schedulers  \cite{verma2015large}, \cite{burns2016borg},
+\cite{armbrust2009above},  satisfy user performance demands 
+by dynamically altering the resource allocation to jobs \cite{mell2011nist}.
+Also, cloud workflow managers \cite{vavilapalli2013apache},
+\cite{kulkarni2015twitter}, perform fine-grained allocation for each workflow stage.
+%dynamically altering the resources assigned to each
+%workflow stage.
+In all cases, dynamic resource allocation presents a key challenge of
+resource liberation, i.e., deallocation of occupied resources to enlarge 
+allocations when the required amount is not free.
+%2) new allocation enforcement, i.e., application operations
+%to take advantage of new resources allocated to it.
+In cloud environments, resource liberation is achieved by
+applying workload consolidation \cite{srikantaiah2008energy},
+workload preemption \cite{verma2015large},
+or resource oversubscription \cite{tomas2013improving}.
+These techniques imply a potential performance reduction
+or cancellation of some applications to benefit others \cite{sharma2011cost}.
+%However, the economic nature of cloud provides
+%a framework to maximize overall profit 
+%by the boosting some
+%applications' performance while hurting others 
+
+%New allocation enforcement is solved by adding
+%specific mechanisms in the application to harness
+%the power of new resources or by running applications
+%over frameworks that provide primitives to perform such operation.
+
+In HPC, individual application performance is subordinated to
+overall objectives such us high utilization and
+performance efficiency \cite{efficient_scheduling}. 
+%Thus, cloud resource
+%liberation techniques are rarely applicable since they
+%usually carry an overall performance degradation.
+%Resource sharing in consolidation and over subscription 
+%might reduce overall applications performance dramatically,
+%while preemption implies the destruction of work done.
+Elasticity in the HPC space has
+shown progress through the creation of applications built for malleability 
+\cite{rodrigo2015a2l2}, \cite{mohamed2008koala} or
+moldability \cite{feitelson1997theory}, \cite{klein2011rms}.
+ Others methods include elastic job bundling, where numerous smaller jobs are submitted in order
+to deploy a large set of nodes more quickly~\cite{elastic_job_bundling}.
+Finally, some modern schedulers support special jobs which
+aggregate resources to a running job upon start \cite{zhou2013exploring}.
+However, effectiveness of these techniques depends on the
+synchronization between the start of different jobs,
+which is hard to accomplish. \systemname provides elasticity in HPC without the caveats of the techniques described
+in this section. \systemname does not  significantly impact  the overall system
+performance since preemption is not required, and
+it enables the automatic restart of jobs that run over their time limit.
+
+\noindent \textbf{Resource management in scientific workflows.}
+Systems like Pegasus \cite{deelman2004pegasus}, Askalon \cite{Askalon},
+Koala \cite{KOALA}, VGRaDS \cite{ramakrishnan2009vgrads}, 
+or DAGMan \cite{couvares2007workflow}
+are used to run scientific workflows.
+They provide functions such as workflow
+mapping (i.e., task grouping for efficient execution), monitoring,
+fault tolerance, execution, and meta-scheduling.
+These systems usually schedule workflow tasks across different
+sites and rely on the local scheduler for
+fine-grained resource management.
+However,
+local HPC scheduler rarely incorporate workflow aware 
+mechanisms \cite{rodrigo2017enabling} and workflow tasks might be scheduled
+inefficiently.%, elongating workflow turnaround time or wasting resources.
+\systemname does not provide the high level functions of other workflow
+systems.
+However, it enables fine grained resource allocation to workflows
+by providing elastic execution of tasks.
+
+%\fix{Need a paragraph on how workflow tools today do resource management. E.g., CondorDAGman (name might not be correct?), Pegasus, etc...} 
+%One of the most attractive features of cloud computing is the
+%elastic possibilities of workflows to expand upon demand. This
+%has been shown to be feasible repeatedly~\cite{cloud_example1,cloud_example2}.
+%One barrier to the elastic cloud environment is the lack of cost effective
+%options for scientific purposes where numerous allocations to HPC facilities
+%come without cost~\cite{cloud_inneficient}. Elasticity in the HPC space has
+%shown progress through the creation of applications built for malleability or
+%moldability \cite{}\cite{}.  Others have pursued more flexible methods such
+%as elastic job bundling, where numerous smaller jobs are submitted in order
+%to deploy a large set of nodes more quickly~\cite{elastic_job_bundling}.
+%One of the more significant reasons for a lack of interest is due to the
+%unpredicatability of the queue system of HPC's, where the congestion of
+%jobs on a system may cause queue times to be hours or seconds~\cite{unpredictable_queue}.
+%With this in mind, an effective method of elasticity must have minimal overhead in
+%order to minimize performance loss when congestion is low while having noticeable
+%performance benefits when congestion is high.
+%
+%The variability in queue times combined with applications that experience a variable
+%amount of improvement from the introduction of elastic characteristics means that
+%elasticity cannot be generalized as an improvement for all applications. 
+
+
+\noindent \textbf{Workflow turnaround time reduction.}
+Previous work studied methods to reduce 
+initial and intermediate job wait times that 
+elongate turnaround time in workflows.
+For example, Mesos \cite{hindman2011mesos}, Omega \cite{schwarzkopf2013omega},
+Koala \cite{mohamed2008koala}, or A2L2 \cite{rodrigo2015a2l2}
+describe schedulers that minimize intermediate wait times
+by managing workflows separately from the rest of the workload.
+Approaches like WoAS \cite{rodrigo2017enabling},
+bring workflow aware scheduling to classical
+HPC schedulers
+by extending the queue model.  % sentence candidate for commenting.
+%without modifying the  scheduling or prioritization algorithms.
+Other systems propose job bundling \cite{elastic_job_bundling}
+and task clustering \cite{singh2008workflow} to
+efficiently execute workflows with multiple tasks.
+Workflow runtime in \systemname can be increased by intermediate job
+wait times.  This effect is eased by submitting jobs before their
+precursors are completed (i.e., \emph{fast mode}).  However, effective
+use of this technique requires further investigation in combination
+with queue wait time prediction methods.
+
+%\systemname provides elasticity to avoid resource
+%wastage in workflows by sometimes increasing turnaround time.
+%However, some of its mechanisms
+% might reduce workflows wait time. 
+%For instance, the first job submitted by \systemname
+%is smaller, and thus suffers shorter wait time, that the pilot job containing 
+%the whole workflow.
+%Also, intermediate wait times are reduced with \systemname's \emph{fast} 
+%mode  described in Section~\ref{sec:fastmode}.
+%This mechanism automates and monitors the
+%submissions of workflow jobs before previous ones are completed.
+%Efficient use of these mechanisms and queue wait time
+%prediction will be investigated togehter to reduce workflow wait times.
+

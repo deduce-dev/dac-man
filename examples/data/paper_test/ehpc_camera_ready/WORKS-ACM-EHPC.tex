@@ -1,0 +1,280 @@
+\documentclass[sigconf]{acmart}
+
+
+\usepackage[skip=0pt]{caption}
+\usepackage{listings}
+\usepackage{color}
+%\usepackage[table]{xcolor}
+\usepackage{url}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{caption}
+%\usepackage[cmex10]{amsmath}
+\usepackage{algorithmic,algorithm}
+
+%\usepackage[caption=false,font=footnotesize]{subfig}
+%\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry} 
+\usepackage{subfig}
+\usepackage{xspace}
+
+
+% uncomment lines below to get draft watermark 
+%\usepackage[letterpaper]{geometry}
+%\usepackage{draftwatermark} 
+
+%\setlength{\parindent}{0in}
+%\setlength{\parskip}{0.15cm} 
+% line spacing 
+\newcommand{\fix}[1]{\textcolor{red}{\bf #1}}
+%\newcommand{\revcomment}[1]{\textcolor{blue}{Comment: \bf #1}}
+\newcommand{\revcomment}[1]{}
+\newcommand{\abelfix}[1]{\textcolor{blue}{\bf #1}}
+\newcommand{\grfix}[1]{\textcolor{magenta}{\bf #1}}
+\newcommand{\williamfix}[1]{\textcolor{green}{\bf #1}}
+\newcommand{\systemname}{E-HPC\xspace}
+
+\usepackage[british]{babel} 
+\hyphenation{op-tical net-works semi-conduc-tor in-crea-sing-ly infra-structures geo-me-try turn-around 
+		  sche-du-ling da-ta-in-ten-si-ve ad-mi-nis-tra-tor des-crip-tion a-llows sche-du-led si-mu-la-tor in-di-ca-te
+		  e-va-lua-ted}
+
+
+
+
+
+
+\newenvironment{tightItemize}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+
+\colorlet{punct}{red!60!black}
+\definecolor{background}{HTML}{EEEEEE}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{numb}{magenta!60!black}
+
+\lstdefinelanguage{json}{
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{background},
+    literate=
+     *{0}{{{\color{numb}0}}}{1}
+      {1}{{{\color{numb}1}}}{1}
+      {2}{{{\color{numb}2}}}{1}
+      {3}{{{\color{numb}3}}}{1}
+      {4}{{{\color{numb}4}}}{1}
+      {5}{{{\color{numb}5}}}{1}
+      {6}{{{\color{numb}6}}}{1}
+      {7}{{{\color{numb}7}}}{1}
+      {8}{{{\color{numb}8}}}{1}
+      {9}{{{\color{numb}9}}}{1}
+      {:}{{{\color{punct}{:}}}}{1}
+      {,}{{{\color{punct}{,}}}}{1}
+      {\{}{{{\color{delim}{\{}}}}{1}
+      {\}}{{{\color{delim}{\}}}}}{1}
+      {[}{{{\color{delim}{[}}}}{1}
+      {]}{{{\color{delim}{]}}}}{1},
+}
+
+\lstdefinelanguage{Python2}{
+    basicstyle=\small,
+    language=Python,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt
+}
+%\usepackage{booktabs} % For formal tables
+
+
+% Copyright
+%\setcopyright{usgovmixed} 
+%%\setcopyright{none}
+%%\setcopyright{acmcopyright}
+%%\setcopyright{acmlicensed}
+%%\setcopyright{rightsretained}
+%%\setcopyright{usgov}
+%%\setcopyright{usgovmixed}
+%%\setcopyright{cagov}
+%%\setcopyright{cagovmixed}
+%\copyrightyear{2017}
+%\acmYear{2017}
+%\setcopyright{usgovmixed}
+%\acmConference{HPDC '17}{June 26-30, 2017}{Washington , DC, USA}\acmPrice{15.00}\acmDOI{http://dx.doi.org/10.1145/3078597.3078604}
+%\acmISBN{978-1-4503-4699-3/17/06}
+
+\copyrightyear{2017} 
+\acmYear{2017} 
+\setcopyright{licensedusgovmixed}
+\acmConference[WORKS'17]{WORKS'17: 12th Workshop on Workflows in Support of Large-Scale Science}{November 12--17, 2017}{Denver, CO, USA}
+\acmBooktitle{WORKS'17: WORKS'17: 12th Workshop on Workflows in Support of Large-Scale Science, November 12--17, 2017, Denver, CO, USA}
+\acmPrice{15.00}\acmDOI{10.1145/3150994.3150996}
+\acmISBN{978-1-4503-5129-4/17/11}
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10002944.10011123.10011673</concept_id>
+<concept_desc>General and reference~Design</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10002944.10011123.10011130</concept_id>
+<concept_desc>General and reference~Evaluation</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{General and reference~Design}
+\ccsdesc[300]{General and reference~Evaluation}
+
+%% DOI
+%\acmDOI{10.475/123_4}
+%
+%% ISBN
+%\acmISBN{123-4567-24-567/08/06}
+%
+%%Conference
+%\acmConference{HPDC '17}{June 26--30}{Washington D.C., USA}
+%\acmYear{2017}
+%\copyrightyear{2017}
+
+%\acmPrice{15.00}
+
+%\acmConference{WORKS '17}{November 13}{Denver, CO, USA}
+%\setcopyright{none}
+
+\begin{document}
+\title{\systemname: A Library for Elastic Resource Management in HPC Environments}
+%\titlenote{Produces the permission block, and
+%  copyright information}
+%\subtitle{Extended Abstract}
+%\subtitlenote{The full version of the author's guide is available as
+%  \texttt{acmart.pdf} document}
+
+%\author{Gonzalo P. Rodrigo, Per-Olov {\"O}stberg, Erik Elmroth, Lavanya Ramakrishnan}
+%\affiliation{
+%  \institution{Dept. Computing Science, Ume\aa  University, SE-901 87, Ume\aa, Sweden}
+%%  \streetaddress{Lawrence Berkeley National Lab, 94720, Berkeley, California}
+%  
+%%  \streetaddress{SE-901 87, Ume\aa, Sweden}
+%  %\city{Ume\aa} 
+%  %\state{Sweden} 
+%  %\postcode{SE-901 87}
+%}
+%\email{{gonzalo, p-o, elmroth}@cs.umu.se}
+%\authornote{Work performed while working at the Lawrence Berkeley National Lab}
+
+\author{William Fox$^+$*, Devarshi Ghoshal, Abel Souza$^-$*, Gonzalo P. Rodrigo, Lavanya Ramakrishnan}
+\affiliation{%
+  \institution{Lawrence Berkeley National Lab, 94720, Berkeley, California}
+  \city{$^+$School of Computer Science, Georgia Institute of Technology, Atlanta, Georgia\\}
+  \city{$^-$Dept. Computing Science, {Ume\aa}  University, SE-901 87, {Ume\aa}, Sweden}
+  \state{} 
+  \postcode{}
+}
+\email{wfox7@gatech.edu, dghoshal@lbl.gov, abel.souza@umu.se, gprodrigoalvarez@lbl.gov, lramakrishnan@lbl.gov}
+%\email{wfox7@gatech.edu}
+%\email{{dghoshal, gprodrigoalvarez, lramakrishnan}@lbl.gov}
+%\email{abel.souza@lbl.gov}
+\thanks{* Work performed at Lawrence Berkeley National Lab}
+
+%\fix{Work performed doesn't show up.}
+
+%
+%\author{Gonzalo P. Rodrigo, Per-Olov {\"O}stberg,Erik Elmroth}
+%\affiliation{%
+%  \institution{Dept. Computing Science, {Ume\aa}  University}
+%%  \streetaddress{SE-901 87, Ume\aa, Sweden}
+%  \city{Ume\aa} 
+%  \state{Sweden} 
+%  \postcode{SE-901 87}
+%}
+%\email{{gonzalo, p-o, elmroth}@cs.umu.se}
+%
+%\author{Lavanya Ramakrishnan}
+%\affiliation{%
+%  \institution{Lawrence Berkeley National Laby}
+%%  \streetaddress{SE-901 87, Ume\aa, Sweden}
+%  \city{Berkeley} 
+%  \state{USA} 
+%  \postcode{CA 94720}
+%}
+%\email{{gonzalo, p-o, elmroth}@cs.umu.se}
+% The default list of authors is too long for headers}
+\renewcommand{\shortauthors}{W. Fox et al.}
+
+%\settopmatter{printacmref=false}
+
+% removes footnote, copywright and conference information in first column
+%\renewcommand\footnotetextcopyrightpermission[1]{} 
+% removes running headers
+%\pagestyle{plain} 
+
+\begin{abstract}
+\input{abstract.tex}
+\end{abstract}
+
+\keywords{Elastic resource management, scientific workflows, HPC systems}
+
+\maketitle
+\vspace{-0.2cm}
+
+\section{Introduction}
+\label{sec:intro}
+\input{intro}
+
+\section{Background}
+\label{sec:background}
+\input{background}
+
+\section{Design and Implementation} 
+\label{sec:arch} 
+\input{design} 
+
+\section{Evaluation}
+\label{sec:results}
+\input{results}
+
+%\section{Discussion}
+%\label{sec:discussion}
+%\input{discussion}
+
+\vspace{-0.4cm}
+\section{Related Work} 
+\label{sec:related} 
+\input{related} 
+
+\vspace{-0.4cm}
+\section{Conclusions and Future Work}
+\label{sec:conc}
+\input{conc}
+
+
+\vspace{-0.4cm}
+\section{Acknowledgments}
+This material is based on work supported by the U.S. Department of
+Energy, Office of Science, Office of Advanced Scientific Computing
+Research (ASCR) and resources used at the National Energy Research
+Scientific Computing Center, a DOE Office of Science User Facility,
+supported by the Office of Science of the U.S. Department of Energy,
+both under Contract No. DE-AC02-05CH11231.  The authors also thank the
+Brazil National Council for Scientific and Technological Development
+(CNPq) for their support of author Abel Souza's time under project
+No. 207555/2014-1.
+
+\bibliographystyle{ACM-Reference-Format} \bibliography{paper} 
+%\bibliographystyle{ACM-Reference-Format}
+%\bibliography{sigproc} 
+
+\end{document}
