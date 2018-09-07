@@ -7,7 +7,7 @@ in large scientific data sets.
 
 You can find the changes between two datasets using the command-line utility:
 
-        dac-man diff <old datapath> <new datapath>
+        dacman diff <old datapath> <new datapath>
 
 Features
 --------
