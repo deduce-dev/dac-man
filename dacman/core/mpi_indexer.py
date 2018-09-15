@@ -70,7 +70,7 @@ def read_filelist(metafile):
     return filelist
 
     
-def check_deducedir(custom_deducedir, datapath):
+def check_stagingdir(custom_stagingdir, datapath):
     if not os.path.exists(datapath):
         logger.error('Datapath %s does not exist!', datapath)
         sys.exit()
@@ -79,30 +79,35 @@ def check_deducedir(custom_deducedir, datapath):
         logger.error('Cannot index a standalone file, only data directories can be indexed')
         sys.exit()
 
-    if not custom_deducedir:        
-        #deducedir = os.path.join(datapath, '.deduce')
-        deducedir = dacman_utils.DACMAN_STAGING_LOC
+    if not custom_stagingdir:        
+        #stagingdir = os.path.join(datapath, '.deduce')
+        stagingdir = dacman_utils.DACMAN_STAGING_LOC
     else:
-        deducedir = custom_deducedir
+        stagingdir = custom_stagingdir
 
-    deducedir = os.path.join(deducedir, get_hash_id(datapath))
+    if not os.path.exists(stagingdir):
+        os.makedirs(stagingdir)
 
-    if not os.path.exists(deducedir):
-        os.makedirs(deducedir)
-
-    return deducedir
+    return stagingdir
 
 
-def index(datapath, custom_deducedir):
+def index(datapath, custom_stagingdir):
     logger.info('Indexing %s', datapath)
+    indexdir = None
     if __AVAIL_MPI__:
         logger.info('Using MPI for parallel indexing')
-        mpi_index(custom_deducedir, datapath)
+        indexdir = mpi_index(custom_stagingdir, datapath)
     else:
         logger.error('mpi4py is not installed or not in path')
         sys.exit()
 
-def save_indexes(deducedir, indexes):
+    index_metafile = os.path.join(stagingdir, 'indexes/INDEXED_PATHS')
+    indexing_info = {datapath: os.path.basename(indexdir)}
+    dacman_utils.update_yaml(indexing_info, index_metafile)
+
+    return indexdir
+
+def save_indexes(indexdir, indexes):
     '''
     There are two types of indexes created for each data path.
     First, a hash of the data in a file to the file path.
@@ -110,12 +115,11 @@ def save_indexes(deducedir, indexes):
     A map of filename to all the paths is also created.
     '''
     logger.info('Building two-way hash indexes')
-    indexpath = os.path.join(deducedir, 'indexes')
-    if not os.path.exists(indexpath):
-        os.makedirs(indexpath)
-    path_index_file = os.path.join(indexpath, 'PATH.idx')
-    data_index_file = os.path.join(indexpath, 'DATA.idx')
-    name_path_map_file = os.path.join(indexpath, 'PATHNAME.map')
+    if not os.path.exists(indexdir):
+        os.makedirs(indexdir)
+    path_index_file = os.path.join(indexdir, 'PATH.idx')
+    data_index_file = os.path.join(indexdir, 'DATA.idx')
+    name_path_map_file = os.path.join(indexdir, 'PATHNAME.map')
     path_indexes = dict(indexes)
     data_indexes = {}
     name_path_map = {}
@@ -137,7 +141,7 @@ def save_indexes(deducedir, indexes):
 function to index file paths in parallel using MPI for scaling
 across multiple nodes in a cluster
 '''
-def mpi_index(custom_deducedir, datapath):    
+def mpi_index(custom_stagingdir, datapath):    
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
@@ -150,15 +154,16 @@ def mpi_index(custom_deducedir, datapath):
         EXIT = 3
 
     if rank == 0:
-        deducedir = check_deducedir(custom_deducedir, datapath)
+        stagingdir = check_stagingdir(custom_stagingdir, datapath)
         '''
-        deduce_metadata = os.path.join(deducedir, 'METADATA')
+        deduce_metadata = os.path.join(stagingdir, 'METADATA')
         if not os.path.exists(deduce_metadata):
-        scanner.scan(datapath, deducedir)
+        scanner.scan(datapath, stagingdir)
         '''
-        deduce_file = os.path.join(deducedir, 'FILEPATHS')
+        indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(datapath))
+        deduce_file = os.path.join(indexdir, 'FILEPATHS')
         if not os.path.exists(deduce_file):
-            scanner.scan(datapath, os.path.dirname(deducedir))
+            scanner.scan(datapath, stagingdir)
 
         filelist = []
         file_num = 0
@@ -185,7 +190,9 @@ def mpi_index(custom_deducedir, datapath):
             elif tag == States.EXIT:
                 closed_workers += 1
 
-        save_indexes(deducedir, indexes)
+        save_indexes(indexdir, indexes)
+
+        return indexdir
     else:
         while True:
             comm.send(None, dest=0, tag=States.READY)
@@ -201,16 +208,16 @@ def mpi_index(custom_deducedir, datapath):
 
 def main(args):
     datapath = os.path.abspath(args.datapath)
-    deducedir = args.deducedir
-    index(datapath, deducedir)
+    stagingdir = args.stagingdir
+    index(datapath, stagingdir)
 
 def s_main(args):
     datapath = args['datapath']
-    deducedir = None
-    if 'deducedir' in args:
-       deducedir = args['deducedir']
+    stagingdir = None
+    if 'stagingdir' in args:
+       stagingdir = args['stagingdir']
 
-    index(datapath, deducedir)
+    index(datapath, stagingdir)
 
 if __name__ == '__main__':
    args = {'datapath': sys.argv[1]}

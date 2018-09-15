@@ -54,7 +54,7 @@ def read_filelist(metafile):
     return filelist
 
     
-def check_deducedir(custom_deducedir, datapath):
+def check_stagingdir(custom_stagingdir, datapath):
     if not os.path.exists(datapath):
         logger.error('Datapath %s does not exist!', datapath)
         sys.exit()
@@ -63,37 +63,41 @@ def check_deducedir(custom_deducedir, datapath):
         logger.error('Cannot index a standalone file, only data directories can be indexed')
         sys.exit()
 
-    if not custom_deducedir:        
-        deducedir = dacman_utils.DACMAN_STAGING_LOC
+    if not custom_stagingdir:        
+        stagingdir = dacman_utils.DACMAN_STAGING_LOC
     else:
-        deducedir = custom_deducedir
+        stagingdir = custom_stagingdir
 
-    deducedir = os.path.join(deducedir, get_hash_id(datapath))
+    #stagingdir = os.path.join(stagingdir, 'indexes', get_hash_id(datapath))
 
-    if not os.path.exists(deducedir):
-        os.makedirs(deducedir)
+    if not os.path.exists(stagingdir):
+        os.makedirs(stagingdir)
 
-    return deducedir
+    return stagingdir
 
 '''
 main function to call different managers for parallel indexing
 '''
-def index(datapath, custom_deducedir=None, manager='python'):
+def index(datapath, custom_stagingdir=None, manager='python'):
     logger.info('Indexing %s', datapath)
-    deducedir = check_deducedir(custom_deducedir, datapath)
+    stagingdir = check_stagingdir(custom_stagingdir, datapath)
     if manager == 'tigres':
         if not TIGRES_IMPORT:
             logger.error('Tigres is not installed or not in path')
             sys.exit()
         logger.info('Using Tigres for parallel indexing')
-        tigres_index(deducedir, datapath)
+        indexdir = tigres_index(stagingdir, datapath)
     else:
         logger.info('Using Python multiprocessing for parallel indexing')
-        mp_index(deducedir, datapath)
+        indexdir = mp_index(stagingdir, datapath)
 
-    return deducedir
+    index_metafile = os.path.join(stagingdir, 'indexes/INDEXED_PATHS')
+    indexing_info = {datapath: os.path.basename(indexdir)}
+    dacman_utils.update_yaml(indexing_info, index_metafile)
 
-def save_indexes(deducedir, indexes):
+    return indexdir
+
+def save_indexes(indexdir, indexes):
     '''
     There are two types of indexes created for each data path.
     First, a hash of the data in a file to the file path.
@@ -101,12 +105,11 @@ def save_indexes(deducedir, indexes):
     A map of filename to all the paths is also created.
     '''
     logger.info('Building two-way hash indexes')
-    indexpath = os.path.join(deducedir, 'indexes')
-    if not os.path.exists(indexpath):
-        os.makedirs(indexpath)
-    path_index_file = os.path.join(indexpath, 'PATH.idx')
-    data_index_file = os.path.join(indexpath, 'DATA.idx')
-    name_path_map_file = os.path.join(indexpath, 'PATHNAME.map')
+    if not os.path.exists(indexdir):
+        os.makedirs(indexdir)
+    path_index_file = os.path.join(indexdir, 'PATH.idx')
+    data_index_file = os.path.join(indexdir, 'DATA.idx')
+    name_path_map_file = os.path.join(indexdir, 'PATHNAME.map')
     path_indexes = dict(indexes)
     data_indexes = {}
     name_path_map = {}
@@ -128,10 +131,11 @@ def save_indexes(deducedir, indexes):
 function to index file paths in parallel using python multiprocessing
 module
 '''
-def mp_index(deducedir, datapath):
-    deduce_file = os.path.join(deducedir, 'FILEPATHS')
+def mp_index(stagingdir, datapath):
+    indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(datapath))
+    deduce_file = os.path.join(indexdir, 'FILEPATHS')
     if not os.path.exists(deduce_file):
-        scanner.scan(datapath, os.path.dirname(deducedir))
+        scanner.scan(datapath, stagingdir)
 
     filelist = read_filelist(deduce_file)
     
@@ -147,15 +151,18 @@ def mp_index(deducedir, datapath):
     pool.join()
     indexes = [result.get() for result in results]
 
-    save_indexes(deducedir, indexes)
+    save_indexes(indexdir, indexes)
+
+    return indexdir
 
 '''
 indexing using Tigres API for scaling across multiple nodes
 '''
-def tigres_index(deducedir, datapath):
-    deduce_file = os.path.join(deducedir, 'FILEPATHS')
+def tigres_index(stagingdir, datapath):
+    indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(datapath))
+    deduce_file = os.path.join(indexdir, 'FILEPATHS')
     if not os.path.exists(deduce_file):
-        scanner.scan(datapath, os.path.dirname(deducedir))
+        scanner.scan(datapath, os.path.dirname(stagingdir))
 
     filelist = read_filelist(deduce_file)
     
@@ -180,7 +187,7 @@ def tigres_index(deducedir, datapath):
         logger.info('Indexing %d files', len(filelist))
         indexes = tigres.parallel('index_files', input_array=input_array, task_array=task_array)
 
-        save_indexes(deducedir, indexes)
+        save_indexes(indexdir, indexes)
 
     except tigres.utils.TigresException as e:
         print(str(e))
@@ -188,24 +195,25 @@ def tigres_index(deducedir, datapath):
 
     tigres.end()
 
+    return indexdir
 
 def main(args):
     datapath = os.path.abspath(args.datapath)
-    deducedir = None
+    stagingdir = None
     if args.stagingdir is not None:
-        #deducedir = os.path.join(args.stagingdir, os.path.basename(args.datapath)) 
-        deducedir = args.stagingdir
+        #stagingdir = os.path.join(args.stagingdir, os.path.basename(args.datapath)) 
+        stagingdir = args.stagingdir
     #args.stagingdir
     manager = args.manager
-    index(datapath, deducedir, manager)
+    index(datapath, stagingdir, manager)
 
 def s_main(args):
     datapath = args['datapath']
-    deducedir = None
-    if 'deducedir' in args:
-       deducedir = args['deducedir']
+    stagingdir = None
+    if 'stagingdir' in args:
+       stagingdir = args['stagingdir']
 
-    index(datapath, deducedir)
+    index(datapath, stagingdir)
 
 if __name__ == '__main__':
    args = {'datapath': sys.argv[1]}

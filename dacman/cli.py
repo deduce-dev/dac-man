@@ -33,6 +33,7 @@ def _addScanParser(subparsers):
     parser_worker.add_argument('-i', '--ignore', help='(optional) ignores files of specific types', nargs='*')
     parser_worker.add_argument('--nonrecursive', help='(optional) only scans specified directory contents, ignoring subdirectory contents', action='store_true')
     parser_worker.add_argument('--symlinks', help='(optional) allows recursive scanning symbolic links', action='store_true')
+    parser_worker.add_argument('--metadata-details', dest='metadetails', help='(optional) capture detailed filesystem metadata', action='store_true')
     #parser_worker.add_argument('-U','--usermeta', help='optional user-level metadata <to be implemented>')    
 
 def _addIndexParser(subparsers):
@@ -57,6 +58,7 @@ def _addChangeParser(subparsers):
     parser_worker.add_argument(dest='oldpath', help='path to the old dataset')    
     parser_worker.add_argument(dest='newpath', help='path to the new dataset')    
     parser_worker.add_argument('-s','--stage', dest='stagingdir', help='(optional) directory where indexes and metadata information will be saved')    
+    parser_worker.add_argument('-F', '--force', help='(optional) force data comparison even if the changes are pre-calculated', action='store_true')
     #parser_worker.add_argument('-N','--newdeducedir', help='optional directory for saving indexes and metadata for new datapath (for read-only data directories)')    
 
 def _addDiffParser(subparsers):

@@ -55,29 +55,32 @@ Algo:
 - for all remaining filepaths in OLD_PATH_INDEX:
    -- add to deleted
 '''
-def compare(old_datapath, new_datapath, custom_deducedir):
+def compare(old_datapath, new_datapath, custom_stagingdir):
     logger = logging.getLogger(__name__)
 
     logger.info('Starting directory comparison')
-    if not custom_deducedir:        
-        #old_deducedir = os.path.join(old_datapath, '.deduce')
-        deducedir = dacman_utils.DACMAN_STAGING_LOC
+    if not custom_stagingdir:        
+        #old_stagingdir = os.path.join(old_datapath, '.deduce')
+        stagingdir = dacman_utils.DACMAN_STAGING_LOC
     else:
-        deducedir = custom_deducedir
+        stagingdir = custom_stagingdir
 
-    old_deducedir = os.path.join(deducedir, get_hash_id(old_datapath))
-    new_deducedir = os.path.join(deducedir, get_hash_id(new_datapath))
+    old_indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(old_datapath))
+    new_indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(new_datapath))
 
-    old_index_file = os.path.join(old_deducedir, 'indexes', 'PATH.idx')
-    new_index_file = os.path.join(new_deducedir, 'indexes', 'PATH.idx')
+    old_index_file = os.path.join(old_indexdir, 'PATH.idx')
+    new_index_file = os.path.join(new_indexdir, 'PATH.idx')
     
     if not os.path.exists(old_index_file):
-        indexer.index(old_datapath, deducedir)
+        indexer.index(old_datapath, stagingdir)
     if not os.path.exists(new_index_file):
-        indexer.index(new_datapath, deducedir)
+        indexer.index(new_datapath, stagingdir)
 
-    old_data_index_file = os.path.join(old_deducedir, 'indexes', 'DATA.idx')
-    old_pathname_map_file = os.path.join(old_deducedir, 'indexes', 'PATHNAME.map')
+    old_data_index_file = os.path.join(old_indexdir, 'DATA.idx')
+    old_pathname_map_file = os.path.join(old_indexdir, 'PATHNAME.map')
+
+    old_metafile = os.path.join(old_indexdir, 'METADATA')
+    new_metafile = os.path.join(new_indexdir, 'METADATA')
 
     #cprint(__modulename__, 'Loading Indexes')
     logger.info('Loading indexes for fast comparison')
@@ -85,6 +88,9 @@ def compare(old_datapath, new_datapath, custom_deducedir):
     new_path_indexes = dacman_utils.file_to_dict(new_index_file)
     old_data_indexes = dacman_utils.file_to_dict(old_data_index_file)
     name_path_map = dacman_utils.file_to_dict_list(old_pathname_map_file)
+
+    old_metadata = dacman_utils.file_to_dict(old_metafile)
+    new_metadata = dacman_utils.file_to_dict(new_metafile)
 
     _unchanged = []
     _metachange = {}
@@ -102,10 +108,16 @@ def compare(old_datapath, new_datapath, custom_deducedir):
         datahash = new_path_indexes[filepath]
         if filepath in old_path_indexes:
             '''
-            if filepaths are same, but data changed
+            if filepaths are same, but data or metadata changed
             '''
             if datahash == old_path_indexes[filepath]:
-                _unchanged.append(filepath)
+                if filepath in old_metadata and filepath in new_metadata:
+                    if old_metadata[filepath] == new_metadata[filepath]:
+                        _unchanged.append(filepath)
+                    else:
+                        _metachange[filepath] = filepath
+                else:
+                    _unchanged.append(filepath)
             else:
                 _modified[filepath] = filepath
             old_path_indexes.pop(filepath)
@@ -209,39 +221,55 @@ def compare(old_datapath, new_datapath, custom_deducedir):
     """
 
     #cprint(__modulename__, 'Calculating change')        
-    logger.info('Calculating metrics for quantifying changes')
-    change_file = os.path.join(new_deducedir, 'CHANGE')
+    #logger.info('Calculating metrics for quantifying changes')
+    #change_file = os.path.join(new_stagingdir, 'CHANGE')
     #change_id = str(uuid.uuid4())
+    '''
+    Saving change information in cache
+    '''
+    logger.info('Updating change cache entries')
     change_id = dacman_utils.hash_comparison_id(old_datapath, new_datapath)
+    cachedir = os.path.join(stagingdir, 'cache')
+    if not os.path.exists(cachedir):
+        os.makedirs(cachedir)
+    change_file = os.path.join(cachedir, 'ENTRIES')
     change_info = {new_datapath : {old_datapath: change_id}}
     dacman_utils.update_yaml(change_info, change_file)
 
-    #cprint(__modulename__, 'Saving change information')            
     logger.info('Saving change measurements')
-    change_dir = os.path.join(new_deducedir, 'changes', change_id)
+
+    change_dir = os.path.join(cachedir, change_id)
     if not os.path.exists(change_dir):
         os.makedirs(change_dir)
+
+    _meta_info = {'base': {'dataset_id': old_datapath,
+                           'nfiles': dacman_utils.get_nfiles(old_datapath, stagingdir)},
+                  'revision': {'dataset_id': new_datapath,
+                               'nfiles': dacman_utils.get_nfiles(new_datapath, stagingdir)}}
+    _metafile = os.path.join(change_dir, 'META_INFO')
     _ufile = os.path.join(change_dir, 'UNCHANGED')
     _afile = os.path.join(change_dir, 'ADDED')
     _dfile = os.path.join(change_dir, 'DELETED')
     _mfile = os.path.join(change_dir, 'MODIFIED')
     _mcfile = os.path.join(change_dir, 'METACHANGE')
+    dacman_utils.dump_yaml(_meta_info, _metafile)
     dacman_utils.list_to_file(_unchanged, _ufile)
     dacman_utils.list_to_file(_added, _afile)
     dacman_utils.list_to_file(_deleted, _dfile)
     dacman_utils.dict_to_file(_modified, _mfile)
     dacman_utils.dict_to_file(_metachange, _mcfile)
-    #cprint(__modulename__, 'Directory comparison complete')            
+
     logger.info('Directory comparison complete')
 
     return change_id
          
+
 def main(args):
     oldpath = os.path.abspath(args['oldpath'])
     newpath = os.path.abspath(args['newpath'])
-    deducedir = args['deducedir']
+    stagingdir = args['stagingdir']
 
-    compare(oldpath, newpath, deducedir)
+    compare(oldpath, newpath, stagingdir)
 
 if __name__ == '__main__':
    args = {'oldpath': sys.argv[1], 'newpath': sys.argv[2]}

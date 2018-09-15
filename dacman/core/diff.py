@@ -56,9 +56,7 @@ class Differ(object):
     def __init__(self, diff_all=False, custom_analyzer=None, executor=DEFAULT_EXECUTOR, outdir=None):
         self.old_path = None
         self.new_path = None
-        self.deducedir = dacman_utils.DACMAN_STAGING_LOC
-        self.old_deducedir = None
-        self.new_deducedir = None
+        self.stagingdir = dacman_utils.DACMAN_STAGING_LOC
         self._diff_all = diff_all
         self.custom_analyzer = custom_analyzer
         self.diff_analyzer = analyzer.Analyzer()
@@ -67,18 +65,19 @@ class Differ(object):
         self.executor = executor
         self.outdir = outdir
         self.save_changes = False
+
+        self.old_path_is_file = False
+        self.new_path_is_file = False
+
         if outdir is not None:
            self.save_changes = True
         self.logger = logging.getLogger(__name__)
 
-    def set_paths(self, old_path, new_path, custom_deducedir=None):
+    def set_paths(self, old_path, new_path, custom_stagingdir=None):
         self.old_path = os.path.abspath(old_path)
         self.new_path = os.path.abspath(new_path)
-        if custom_deducedir:
-           self.deducedir = custom_deducedir
-        self.old_deducedir = os.path.join(self.deducedir, get_hash_id(self.old_path))
-        self.new_deducedir = os.path.join(self.deducedir, get_hash_id(self.new_path))
-
+        if custom_stagingdir:
+           self.stagingdir = custom_stagingdir
 
     '''
     calculating longest common substring between two paths to avoid relative path queries
@@ -90,93 +89,113 @@ class Differ(object):
 
 
     '''
-    find the old and new base directories which are indexed through deduce
-    '''
-    def get_path_prefixes(self):
-       deduce_change = os.path.join(self.new_deducedir, 'CHANGE')
-       with open(deduce_change, 'r') as f:
-          change_info = yaml.load(f)
-          for new_basepath in change_info:
-             if self.new_path.startswith(new_basepath):
-                for old_basepath in change_info[new_basepath]:
-                   if self.old_path.startswith(old_basepath):
-                      return (new_basepath, old_basepath)
-                    
-
-
-       '''
-       #TODO: this needs to be changed as it won't work for custom deduce dirs 
-       deducepath = change.find_deduce(os.path.abspath(path))
-       path_prefix = os.path.dirname(deducepath)
-       return path_prefix
-       '''
-
-    '''
     get the file pairs that have changed
     '''
     def get_change_pairs(self):
         if not (self.old_path and self.new_path):
-            #cprint(__modulename__, 'Old and new datapaths are not specified!')
             self.logger.error('Old and new datapaths are not specified!')
             sys.exit()
 
-        if not os.path.exists(self.old_path):
-           #cprint(__modulename__, 'Path `{}` does not exist'.format(self.old_path))
-           self.logger.error('Path %s does not exist', self.old_path)           
-           sys.exit()
+        '''
+        check if indexes on the data are present
+        else, check for data types and invoke parallel comparison
+        '''
+        indexdir = os.path.join(self.stagingdir, 'indexes')
+        index_metafile = os.path.join(indexdir, 'INDEXED_PATHS')
+        indexed_paths = dacman_utils.load_yaml(index_metafile)
+        paths_indexed = [False, False]
+        is_indexed = False
+        for path in indexed_paths:
+           p = path + os.sep
+           if self.old_path.startswith(p) or self.old_path == path:
+              paths_indexed[0] = True
+           if self.new_path.startswith(p) or self.new_path == path:
+              paths_indexed[1] = True
+           if all(paths_indexed):
+              is_indexed = True
+              break
 
-        if not os.path.exists(self.new_path):
-           #cprint(__modulename__, 'Path `{}` does not exist'.format(self.new_path))
-           self.logger.error('Path %s does not exist', self.new_path)           
-           sys.exit()
 
-        old_path_is_file = os.path.isfile(self.old_path)
-        new_path_is_file = os.path.isfile(self.new_path)
-        old_base = self.old_path
-        new_base = self.new_path
+        old_basepath = ''
+        new_basepath = ''
+
         change_pairs = []
-        self.logger.info('Starting diff calculation')
-        if old_path_is_file and new_path_is_file:
-            old_base = os.path.dirname(self.old_path)
-            new_base = os.path.dirname(self.new_path)
-            if old_base == new_base:
-               change_pairs.append((self.old_path, self.new_path))
-               return change_pairs
-        elif old_path_is_file != new_path_is_file:
-            #cprint(__modulename__, 'Datapaths are of different types')
-            self.logger.error('Datapaths are of different types')
-            sys.exit()
-                    
 
-        '''
-        The code below allows to check for a diff between any two random files
-        '''
-        #cprint(__modulename__, 'Starting diff calculation')
-        
-        change_data = change.changes(old_base, new_base, self.deducedir)
-                                     #self.old_deducedir,
-                                     #self.new_deducedir)
+        if is_indexed:
+           self.logger.info('Datapaths are indexed. Using indexes to find diff...')
+           old_datapath_file = os.path.join(indexdir, get_hash_id(self.old_path), 'DATAPATH')
+           new_datapath_file = os.path.join(indexdir, get_hash_id(self.new_path), 'DATAPATH')
+
+           change_data = change.changes(self.old_path, self.new_path, self.stagingdir)
+           old_filelist = os.path.join(self.stagingdir, 'indexes', get_hash_id(self.old_path), 'FILEPATHS')
+           new_filelist = os.path.join(self.stagingdir, 'indexes', get_hash_id(self.new_path), 'FILEPATHS')
+           
+           with open(old_datapath_file) as f:
+              old_basepath = f.readline().split('\n')[0]
+
+           with open(new_datapath_file) as f:
+              new_basepath = f.readline().split('\n')[0]
+
+           with open(old_filelist) as f:
+              for relpath in f:
+                 filepath = os.path.join(old_basepath, relpath)
+                 if filepath == self.old_path:
+                    self.old_path_is_file = True
+                    break
+
+           with open(new_filelist) as f:
+              for relpath in f:
+                 filepath = os.path.join(new_basepath, relpath)
+                 if filepath == self.old_path:
+                    self.new_path_is_file = True
+                    break                 
+        else:
+           self.logger.warn('Datapaths are not indexed. Trying to locate and index the data...')
+              
+           self.old_path_is_file = os.path.isfile(self.old_path)
+           self.new_path_is_file = os.path.isfile(self.new_path)
+           old_base = self.old_path
+           new_base = self.new_path
+           self.logger.info('Starting diff calculation')
+           if self.old_path_is_file and self.new_path_is_file:
+              old_base = os.path.dirname(self.old_path)
+              new_base = os.path.dirname(self.new_path)
+              '''
+              if these are two files in the same directory
+              '''
+              if old_base == new_base:
+                 change_pairs.append((self.old_path, self.new_path))
+                 return change_pairs
+           elif self.old_path_is_file != self.new_path_is_file:
+              self.logger.error('Datapaths are of different types')
+              sys.exit()                    
+           '''
+           The code below allows to check for a diff between any two random files
+           '''
+           change_data = change.changes(old_base, new_base, self.stagingdir)
+
+           old_datapath_file = os.path.join(indexdir, get_hash_id(self.old_path), 'DATAPATH')
+           new_datapath_file = os.path.join(indexdir, get_hash_id(self.new_path), 'DATAPATH')
+
+           with open(old_datapath_file) as f:
+              old_basepath = f.readline().split('\n')[0]
+
+           with open(new_datapath_file) as f:
+              new_basepath = f.readline().split('\n')[0]
+
         changes = change_data.modified
 
         self.logger.info('Searching for path indexes')
 
-        if not self.old_deducedir:
-           #self.old_deducedir = change.find_deduce(old_base)
-           self.old_deducedir = os.path.join(self.deducedir, get_hash_id(old_base))
-        if not self.new_deducedir:
-           #self.new_deducedir = change.find_deduce(new_base)
-           self.new_deducedir = os.path.join(self.deducedir, get_hash_id(new_base))
-
         '''
-        find the old and new base directories which are indexed through deduce
+        find the old and new base directories which are indexed through
         '''
-        path_prefixes = self.get_path_prefixes()
-        path_prefix_new = path_prefixes[0]
-        path_prefix_old = path_prefixes[1]
+        path_prefix_new = new_basepath
+        path_prefix_old = old_basepath
         '''
         save the metadata about the high-level diff between the directories
         '''
-        if not old_path_is_file:
+        if not self.old_path_is_file:
            if self.save_changes:
               self.__save_dir_diff__(change_data)
               self.logger.info('Change summary saved in: %s', self.outdir)
@@ -202,21 +221,13 @@ class Differ(object):
     '''
     def diff_summary(self, change_pairs):
         if len(change_pairs) == 0:
-           #cprint(__modulename__, 'There is no data change between files in datasets: {} -> {}'.format(self.old_path, self.new_path))
            print('There is no change in the datasets')
         elif len(change_pairs) == 1:
-           if os.path.isfile(self.old_path):
-              #cprint(__modulename__, 'Files {} and {} differ'.format(self.new_path, self.old_path))
+           if self.old_path_is_file:
               print('Files {} and {} changed'.format(self.new_path, self.old_path))
            else:
-              #cprint(__modulename__, '1 file differs in {} and {}'.format(self.new_path, self.old_path))
-              #print('Total modified: 1')
               pass
         else:
-           #cprint(__modulename__, '{} files differ in {} and {}'.format(len(change_pairs),
-           #                                                             self.new_path,
-           #                                                             self.old_path))
-           #print('Total modified: {}'.format(len(change_pairs)))
            pass
 
 
@@ -231,12 +242,10 @@ class Differ(object):
        METADATA_ONLY_METAFILE = 'metaonly'
        UNCHANGED_METAFILE = 'unchanged'
 
-       #cprint(__modulename__, 'Saving directory-level changes')
-       #cprint(__modulename__, 'Saving file changes')
        self.logger.info('Saving summary of changes')
        curdir = os.getcwd()
        #outdir = hashlib.md5('{}{}'.format(self.old_path, self.new_path).encode('utf-8')).hexdigest()
-       #outdir = utils.hash_comparison_id(self.old_path, self.new_path)
+       #outdir = dacman_utils.hash_comparison_id(self.old_path, self.new_path)
        #outdir = os.path.join(curdir, outdir)
        outdir = self.outdir
 
@@ -254,7 +263,7 @@ class Differ(object):
        #change_summary['degree'] = change_data.degree
        # REMOVED: change_factor, as it is not a useful change metric 
        #change_summary['change_factor'] = change_data.degree # * 100
-       utils.dump_yaml(change_summary, summary_file)
+       dacman_utils.dump_yaml(change_summary, summary_file)
 
        '''
        info_file = os.path.join(outdir, 'change.info')
@@ -262,7 +271,7 @@ class Differ(object):
                       'deleted': change_data.deleted,
                       'added': change_data.added,
                       'metaonly': change_data.metachange}
-       utils.dump_yaml(change_info, info_file)
+       dacman_utils.dump_yaml(change_info, info_file)
        '''
        add_change_file = os.path.join(outdir, ADDED_METAFILE)
        del_change_file = os.path.join(outdir, DELETED_METAFILE)
@@ -271,15 +280,15 @@ class Differ(object):
        unchanged_meta_file = os.path.join(outdir, UNCHANGED_METAFILE)
        
        if len(change_data.added) > 0:
-          utils.list_to_file(change_data.added, add_change_file)
+          dacman_utils.list_to_file(change_data.added, add_change_file)
        if len(change_data.deleted) > 0:
-          utils.list_to_file(change_data.deleted, del_change_file)
+          dacman_utils.list_to_file(change_data.deleted, del_change_file)
        if len(change_data.modified) > 0:
-          utils.dict_to_file(change_data.modified, mod_change_file)
+          dacman_utils.dict_to_file(change_data.modified, mod_change_file)
        if len(change_data.metachange) > 0:
-          utils.dict_to_file(change_data.metachange, meta_change_file)
+          dacman_utils.dict_to_file(change_data.metachange, meta_change_file)
        if len(change_data.unchanged) > 0:
-          utils.list_to_file(change_data.unchanged, unchanged_meta_file)
+          dacman_utils.list_to_file(change_data.unchanged, unchanged_meta_file)
 
        #change.display(change_data)
        #cprint(__modulename__, 'Change information saved in: {}'.format(outdir))
@@ -296,30 +305,24 @@ class Differ(object):
           sys.exit()
 
        if self.executor == Differ.DEFAULT_EXECUTOR:
-          #self.logger.info('Calculating summary of changes')
           change_pairs = self.get_change_pairs()
           self.diff_summary(change_pairs)
           if self._diff_all and len(change_pairs) > 0:
-              #cprint(__modulename__, 'Comparing diffs between all files in the directory using Python multiprocessing')
               self.logger.info('Using Python multiprocessing for calculating data changes in modified files')
               self.collection_diff_default(change_pairs)
        elif self.executor == Differ.MPI_EXECUTOR:
           if not MPI4PY_IMPORT:
-             #cprint(__modulename__, 'mpi4py not installed (required for the mpi executor). Exiting...')
              self.logger.error('mpi4py is not installed or possibly not in the path')
              sys.exit()
           self.logger.info('Using MPI for calculating data changes in modified files')
           self.collection_diff_mpi()
        elif self.executor == Differ.TIGRES_EXECUTOR:
           if not TIGRES_IMPORT:
-             #cprint(__modulename__, 'Tigres not installed (required for the tigres executor). Exiting...')
              self.logger.error('Tigres is not installed or possibly not in the path')
              sys.exit()
-          #self.logger.info('Calculating summary of changes')
           change_pairs = self.get_change_pairs()
           self.diff_summary(change_pairs)
           if self._diff_all and len(change_pairs) > 0:
-              #cprint(__modulename__, 'Comparing diffs between all files in the directory using Tigres')
               self.logger.info('Using Tigres for calculating data changes in modified files')
               self.collection_diff_tigres(change_pairs)
        
@@ -332,28 +335,23 @@ class Differ(object):
     function to calculate diffs between two files using the specified analyzer
     '''
     def file_diff(self, new_file, old_file):
-       #cprint(__modulename__, 'Calculating diffs between {} and {}'.format(new_file, old_file))
        self.logger.info('Calculating changes in %s and %s', new_file, old_file)
        self.diff_pairs.append((new_file, old_file))
        if not self.custom_analyzer:
-          #cprint(__modulename__, 'Using default deduce analyzer')
           logger.info("Using default analyzer")
           output = self.diff_analyzer.analyze(new_file, old_file)
           if output != None and output.strip() != '':
              print(output)
        elif callable(self.custom_analyzer):
-          #cprint(__modulename__, 'Using custom function analyzer: {}'.format(self.custom_analyzer.__name__))
           logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
           output = self.custom_analyzer(new_file, old_file)
           if output != None and output.strip() != '':
              print(output)
        elif isinstance(self.custom_analyzer, str):
           self.logger.info('Using custom executable analyzer %s', custom_analyzer)
-          #cprint(__modulename__, 'Using custom executable analyzer: {}'.format(self.custom_analyzer))
           logger.info("Using custom executable analyzer %s", self.custom_analyzer)
           output = self.executable_diff(new_file, old_file)
           if output != None and output.strip() != '':
-             #print(output)
              print(output.decode(sys.stdout.encoding).strip())
        else:
           self.logger.error('Analyzer type %s is not supported', type(custom_analyzer))
@@ -369,11 +367,9 @@ class Differ(object):
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         if err:
-            #cprint(__modulename__, 'Error: {}'.format(err))
             self.logger.error('Error analyzing changes: %s', err)
             return None
         else:
-            #cprint(__modulename__, 'Output: {}'.format(out))
             self.logger.info('Change calculation completed with output: %s', out)
             return out
 
@@ -384,7 +380,6 @@ class Differ(object):
     the default executor (Python multiprocessing)
     '''
     def collection_diff_default(self, change_pairs):
-       #cprint(__modulename__, 'Using Python multiprocessing for parallel change calculation')
        num_procs = multiprocessing.cpu_count()
        results = []
        pool = multiprocessing.Pool(processes=num_procs)
@@ -416,11 +411,9 @@ class Differ(object):
           closed_workers = 0
           num_workers = size - 1
           
-          #self.logger.info('Calculating summary of changes')
           change_pairs = self.get_change_pairs()
           self.diff_summary(change_pairs)
           if self._diff_all:
-              #cprint(__modulename__, 'Comparing diffs between all files in the directory using MPI')
               change_pairs = self.get_change_pairs()
 
               while closed_workers < num_workers:
@@ -487,7 +480,6 @@ class Differ(object):
                 task_array.append(task_diff)
             elif isinstance(self.custom_analyzer, list):
                 if len(self.custom_analyzer) != len(change_pairs):
-                    #cprint(__modulename__, 'Number of analyzers do not match the number of comparisons')
                     self.logger.error('Number of Tigres analyzers do not match the number of comparisons')
                     sys.exit()
                 for a in self.custom_analyzer:
@@ -534,9 +526,6 @@ def file_diff_mp(new_file, old_file, custom_analyzer, diff_analyzer):
       output = executable_diff_mp(new_file, old_file, custom_analyzer)
       if output != None and output.strip() != '':
          print(output.decode(sys.stdout.encoding).strip())
-         #sys.stdout.write(output)
-         #sys.stdout.flush()
-      #logger.info("Output: %s", output)
    else:
       logger.error('Analyzer type %s is not supported', type(custom_analyzer))
       raise TypeError('Analyzer type {} not supported'.format(type(custom_analyzer)))
@@ -565,7 +554,7 @@ def myanalyzer(file1, file2):
 def main(args):
     oldpath = args.oldpath
     newpath = args.newpath
-    deducedir = args.stagingdir
+    stagingdir = args.stagingdir
     analyzer = args.analyzer
     recursive = args.datachange
     outdir = args.outdir
@@ -576,29 +565,27 @@ def main(args):
     executor = executor_map[args.executor]
 
     differ = Differ(recursive, analyzer, executor, outdir)
-    differ.set_paths(oldpath, newpath, deducedir)
+    differ.set_paths(oldpath, newpath, stagingdir)
     differ.diff()
 
 def s_main(args):
     oldpath = args['oldpath']
     newpath = args['newpath']
-    olddeducedir = None
-    newdeducedir = None
-    #analyzer = myanalyzer
+    oldstagingdir = None
+    newstagingdir = None
     analyzer = None
     recursive = False
-    if 'olddeducedir' in args:
-       olddeducedir = args['olddeducedir']
-    if 'newdeducedir' in args:
-       newdeducedir = args['newdeducedir']
+    if 'oldstagingdir' in args:
+       oldstagingdir = args['oldstagingdir']
+    if 'newstagingdir' in args:
+       newstagingdir = args['newstagingdir']
     if 'analyzer' in args:
        analyzer = args['analyzer']
     if 'datachange' in args:
        datachange = args['datachange']
 
-    #differ = Differ(oldpath, newpath, olddeducedir, newdeducedir, recursive, analyzer)
     differ = Differ(recursive, analyzer)
-    differ.set_paths(oldpath, newpath, olddeducedir, newdeducedir)
+    differ.set_paths(oldpath, newpath, oldstagingdir, newstagingdir)
     differ.diff()
 
 if __name__ == '__main__':

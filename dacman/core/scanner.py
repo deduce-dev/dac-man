@@ -22,6 +22,7 @@ import sys
 import pwd
 import grp
 import fnmatch
+#from datetime import datetime
 from dacman.core.persistence import DirectoryTree
 from dacman.core.utils import cprint, get_hash_id
 import dacman.core.utils as dacman_utils
@@ -65,7 +66,7 @@ def get_metadata(entry):
 '''
 scans a data directory
 '''
-def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ignorelist=[]):
+def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, details=False, ignorelist=[]):
    logger = logging.getLogger(__name__)
 
    if not os.path.exists(datapath):
@@ -79,15 +80,15 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
       logger.error('Indexing currently allowed only for data in a directory.')
       sys.exit()
       
-   if not custom_deducedir:
-      deducedir = dacman_utils.DACMAN_STAGING_LOC
+   if not custom_stagingdir:
+      stagingdir = dacman_utils.DACMAN_STAGING_LOC
    else:
-      deducedir = custom_deducedir
+      stagingdir = custom_stagingdir
 
-   deducedir = os.path.join(deducedir, get_hash_id(datapath))
+   indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(datapath))
 
-   if not os.path.exists(deducedir):
-      os.makedirs(deducedir)
+   if not os.path.exists(indexdir):
+      os.makedirs(indexdir)
 
    entries = []
    follow_symlinks = symlinks
@@ -95,7 +96,7 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
    metainfo = {}
 
    # keeping this for feature enhancements and future optimizations
-   #dirtree = DirectoryTree(datapath, deducedir)
+   #dirtree = DirectoryTree(datapath, stagingdir)
    #cprint(__modulename__, 'Scanning datapath {}'.format(datapath))
    logger.info('Scanning datapath %s', datapath)
 
@@ -117,7 +118,7 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
    #dirtree.close()
 
    '''
-   meta_path = os.path.join(deducedir, 'METADATA')    
+   meta_path = os.path.join(stagingdir, 'METADATA')    
    cprint(__modulename__, 'Dumping metadata')
    dump(metainfo, meta_path)
    '''
@@ -125,7 +126,10 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
    scan_funcs = {False: scantree, True: scan_only_dir}
    scan_fn = scan_funcs[nonrecursive]
 
-   paths_file = os.path.join(deducedir, 'FILEPATHS')    
+   paths_file = os.path.join(indexdir, 'FILEPATHS')    
+   meta_file = os.path.join(indexdir, 'METADATA')
+   # open the metadata file
+   mf = open(meta_file, 'w')
 
    if nonrecursive:
       logger.info('Ignoring subdirectory scans: scanning files only in the present directory')
@@ -144,6 +148,18 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
             if not entry.is_dir(follow_symlinks=symlinks):
                line = '{}\n'.format(relative_path)
                f.write(line)
+               if details:
+                  file_stats = entry.stat()
+                  owner = pwd.getpwuid(file_stats.st_uid).pw_name
+                  group = grp.getgrgid(file_stats.st_gid).gr_name
+                  size = file_stats.st_size
+                  #mtime = datetime.fromtimestamp(file_stats.st_mtime).strftime("%d %B %Y %I:%M:%S")
+                  # File modification time doesn't make sense here, because we compare two versions
+                  #mtime = file_stats.st_mtime
+                  metadata = relative_path+':owner='+owner+',group='+group+ ',size='+str(size)+'\n'
+                  #metadata = relative_path+':owner='+owner+',group='+group+\
+                  #    ',size='+str(size)+',mtime='+str(mtime)+'\n'
+                  mf.write(metadata)
    else:
       with open(paths_file, 'w') as f:
          for entry in scan_fn(datapath, excluded_dirs, follow_symlinks):
@@ -160,16 +176,31 @@ def scan(datapath, custom_deducedir=None, nonrecursive=False, symlinks=False, ig
             if not (ignore_file or entry.is_dir(follow_symlinks=symlinks)):
                line = '{}\n'.format(relative_path)
                f.write(line)
-      
+               if details:
+                  file_stats = entry.stat()
+                  owner = pwd.getpwuid(file_stats.st_uid).pw_name
+                  group = grp.getgrgid(file_stats.st_gid).gr_name
+                  size = file_stats.st_size
+                  #mtime = datetime.fromtimestamp(file_stats.st_mtime).strftime("%d %B %Y %I:%M:%S")
+                  #mtime = file_stats.st_mtime
+                  metadata = relative_path+':owner='+owner+',group='+group+ ',size='+str(size)+'\n'
+                  #metadata = relative_path+':owner='+owner+',group='+group+\
+                  #    ',size='+str(size)+',mtime='+str(mtime)+'\n'
+                  mf.write(metadata)
+
    logger.info('Saving path metadata and directory scan information')
 
-   basepath_file = os.path.join(deducedir, 'DATAPATH')
+   basepath_file = os.path.join(indexdir, 'DATAPATH')
    with open(basepath_file, 'w') as f:
       f.write('{}\n'.format(datapath))
+
+   # close the metadata file
+   mf.close()
 
    #cprint(__modulename__, 'Scan complete')
    logger.info('Directory scan complete')
 
+   return indexdir
 
 def dump(metainfo, meta_path):
    with open(meta_path, 'w') as f:
@@ -178,24 +209,25 @@ def dump(metainfo, meta_path):
     
 def main(args):
    datapath = os.path.abspath(args.datapath)
-   deducedir = None
+   stagingdir = None
    if args.stagingdir is not None:
-      deducedir = os.path.join(args.stagingdir, os.path.basename(args.datapath))
+      stagingdir = os.path.join(args.stagingdir, os.path.basename(args.datapath))
    nonrecursive = args.nonrecursive
    symlinks = args.symlinks
+   details = args.metadetails
    if args.ignore is None:
       ignorelist = []
    else:
       ignorelist = args.ignore   
-   scan(datapath, deducedir, nonrecursive, symlinks, ignorelist)
+   scan(datapath, stagingdir, nonrecursive, symlinks, details, ignorelist)
 
 def s_main(args):
    datapath = args['datapath']
-   deducedir = None
-   if 'deducedir' in args:
-      deducedir = args['deducedir']
+   stagingdir = None
+   if 'stagingdir' in args:
+      stagingdir = args['stagingdir']
 
-   scan(datapath, deducedir)
+   scan(datapath, stagingdir)
 
 if __name__ == '__main__':
    args = {'datapath': sys.argv[1]}

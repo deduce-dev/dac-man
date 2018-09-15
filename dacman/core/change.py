@@ -102,19 +102,27 @@ class Change():
 #################
 
 class FilesystemChange(Change):
-    def __init__(self, old_path, new_path, old_deducedir, new_deducedir):
+    def __init__(self, old_path, new_path, stagingdir):
         Change.__init__(self, [], [], [], [])
         self._old_path = old_path
         self._new_path = new_path
-        self._old_nfiles = self.__get_nfiles__(old_deducedir)
-        self._new_nfiles = self.__get_nfiles__(new_deducedir)
+        self._old_nfiles = 0
+        self._new_nfiles = 0
+        self._stagingdir = stagingdir
         self._metachange = []
 
-    def __get_nfiles__(self, deducedir):
-        deduce_file = os.path.join(deducedir, 'FILEPATHS')
-        with open(deduce_file) as f:
+    '''
+    def __get_nfiles__(self, path):
+        print(path)
+        scan_file = os.path.join(self._stagingdir, 'indexes', get_hash_id(path), 'FILEPATHS')
+        with open(scan_file) as f:
            nlines = sum(1 for line in f)
         return nlines
+
+    def set_path_files(self, path):
+       self._old_nfiles = self.__get_nfiles__(self._old_path)
+       self._new_nfiles = self.__get_nfiles__(self._new_path)
+    '''
 
     def add_changes(self, added=[], deleted=[], modified=[], unchanged=[], metachange=[]):
         self._added = added
@@ -171,6 +179,13 @@ class FilesystemChange(Change):
        return change_map
 
 
+class CacheStatus(object):
+   ALL_CACHED = 0
+   NEW_PARENT_CACHED = 1
+   OLD_PARENT_CACHED = 2
+   BOTH_PARENTS_CACHED = 3
+   NOT_CACHED = 4
+
 ######################################################################################
 '''
 utility function to find directory entries
@@ -185,66 +200,213 @@ def find_direntries(dir):
         entries[entry.name] = entry
     return entries
     
-
 '''
-(deprecated) utility function to find the path where .deduce directory exists
+This will be the future way of invoking change calculation.
+The module function will be removed 
 '''
-def find_deduce(datapath):
-    relative_datadir = ''
-    rootdir = '/'
+class ChangeManager(object):
 
-    olddir_ = datapath
-    deducedir = os.path.join(datapath, '.deduce')
-    if not os.path.exists(deducedir):
-       deducedir = None
+   def __init__(self, old_datapath, new_datapath, force=False, custom_stagingdir=None):
+      self._old_datapath = old_datapath
+      self._new_datapath = new_datapath
+      self._force = force
+      if not custom_stagingdir:
+         self._stagingdir = dacman_utils.DACMAN_STAGING_LOC
+      else:
+         self._stagingdir = custom_stagingdir
+
+      self._cachedir = os.path.join(self._stagingdir, 'cache')
+      self._cache_entries = os.path.join(self._cachedir, 'ENTRIES')
+
+
+   @property
+   def old_datapath(self):
+      return self._old_datapath
+
+   @property
+   def new_datapath(self):
+      return self._new_datapath
+
+   @property
+   def force(self):
+      return self._force
+   
+   @property
+   def stagingdir(self):
+      return self._stagingdir
+      
+   @property
+   def cachedir(self):
+      return self._cachedir
+   
+   @property
+   def cache_entries(self):
+      return self._cache_entries
+      
+   '''
+   get cache status: check where in the cache is the change stored
+   '''
+   def get_cached_paths(self):
+      logger = logging.getLogger(__name__)
+
+      if self.old_datapath == self.new_datapath:
+         logger.error('Comparison paths are the same')
+         sys.exit()
+
+      is_subdir_oldpath = False
+      is_subdir_newpath = False
+      cached_old_path = self.old_datapath
+      cached_new_path = self.new_datapath
     
-    '''
-    get to the topmost directory where .deduce exists
-    - this is to ensure consistent diff results once parent directories are deduce'd
-    - else, deduce diff (for the first time) an inner directory first and then the
-      parent directory, would result in inconsistent diff results 
-    '''
-    while olddir_ != rootdir:
-       parent_dir = os.path.dirname(olddir_)
-       cur_dir = os.path.basename(olddir_)
-       '''
-       save the relative path from deduce-dir to the specified data directory,
-       might be used when fetching and displaying changes
-       '''
-       relative_datadir = os.path.join(cur_dir, relative_datadir)
-       entries = find_direntries(parent_dir)
-       if '.deduce' in entries:
-          deducedir = os.path.join(parent_dir, '.deduce')
-       olddir_ = parent_dir
+      status = CacheStatus.NOT_CACHED
+      logger.info('Checking cache status.')
 
-    return deducedir
+      '''
+      This is the caching logic where change information is saved and subsequently retrieved
+      If no high-level diff exists for the data, then do a comparison
+      - do the comparison for the all the indexed data
+      - at runtime, decide if the comparison is between any subdirectories of the total diff
+      '''
+      if os.path.exists(self.cache_entries):
+         logger.info('Cache exists... checking cache entries.')
+         '''
+         if the high-level diff exists,
+         then check if it exists for the two data versions provided here
+         '''
+         with open(self.cache_entries, 'r') as f:
+            cache = yaml.load(f)
+            '''
+            if changes for the newpath are in cache, then
+            check if they are for the compared oldpath 
+            '''
+            if self.new_datapath in cache:
+               '''
+               if the diff paths are already compared, then get the corresponding directory;
+               else, do the comparisons/diff
+               '''
+               if self.old_datapath in cache[self.new_datapath]:
+                  '''
+                  if both oldpath and newpath are in the cache
+                  '''
+                  logger.info('Changes are present in cache...')
+                  status = CacheStatus.ALL_CACHED
+               else:
+                  '''
+                  check if the oldpath is a subdirectory of a cached path change
+                  '''
+                  for o in cache[self.new_datapath]:
+                     parent_path = o + os.sep
+                     if self.old_datapath.startswith(parent_path):
+                        logger.info('Changes can be derived from the cache.')
+                        status = CacheStatus.OLD_PARENT_CACHED
+                        cached_old_path = os.path.abspath(parent_path)
+                        break
+            else:
+               '''
+               if changes for the original newpath are not in cache,
+               check if any parent directory changes are in cache
+               '''
+               d = os.path.dirname(self.new_datapath)
+               '''
+               check if any parent dir changes are calculated and cached
+               '''
+               while d != '/' and d not in cache:
+                  d = os.path.dirname(d)
+                  
+               '''
+               if changes for a matching parent are found,
+               then check if oldpath changes are cached 
+               '''
+               if d != '/':
+                  if self.old_datapath in cache[d]:
+                     status = CacheStatus.NEW_PARENT_CACHED
+                     cached_new_path = d
+                  else:
+                     for o in cache[d]:
+                        parent_path = o + os.sep
+                        if self.old_datapath.startswith(parent_path):
+                           logger.info('Subdirectory changes can be derived from cache.')
+                           status = CacheStatus.BOTH_PARENTS_CACHED
+                           cached_old_path = os.path.abspath(parent_path)
+                           cached_new_path = d
+                           break
 
-'''
-initialize deduce for a datapath: if already indexed by deduce then return the deduce directory
-else index the datapath and return
-'''
-def init_deduce(datapath, custom_deducedir):
-   if not custom_deducedir:        
-      #deducedir = find_deduce(datapath)
-      #deducedir = os.path.join(os.getenv('HOME'), '.dacman', get_hash_id(datapath))
-      deducedir = os.path.join(dacman_utils.DACMAN_STAGING_LOC, get_hash_id(datapath))
-   else:
-      deducedir = os.path.join(custom_deducedir, get_hash_id(datapath))
+      return status, cached_old_path, cached_new_path
 
-   indexdir = os.path.join(deducedir, 'indexes')
-   if not os.path.exists(indexdir):
-      deducedir = indexer.index(datapath, os.path.dirname(deducedir))
 
-   return deducedir
+   '''
+   find the high-level changes between two paths
+   - if indexed and compared, then just fetch the comparison data
+   - else scan and index all the data sets (files/directories) recursively
+   '''
+   def get_changes(self, cache_status, cached_old_path, cached_new_path):
+      logger = logging.getLogger(__name__)
 
+      is_subdir_oldpath = False
+      is_subdir_newpath = False
+
+      logger.info('Checking for changes between %s and %s', self.old_datapath, self.new_datapath)
+
+      if cache_status == CacheStatus.NOT_CACHED:
+         change_dir = comparator.compare(self.old_datapath, self.new_datapath, self.stagingdir)
+      else:
+         with open(self.cache_entries, 'r') as f:
+            cache = yaml.load(f)
+            change_dir = cache[cached_new_path][cached_old_path]
+
+      if cached_old_path != self.old_datapath:
+         is_subdir_oldpath = True
+         
+      if cached_new_path != self.new_datapath:
+         is_subdir_newpath = True
+         
+      logger.info('Retrieving changes between %s and %s', self.old_datapath, self.new_datapath)
+      
+      change = FilesystemChange(cached_old_path, cached_new_path, self.stagingdir)
+
+      if is_subdir_newpath:
+         indexdir = os.path.join(self.stagingdir, 'indexes', get_hash_id(cached_new_path))
+         subdir_nfiles = get_subdir_nfiles(self.new_datapath, indexdir)
+         change.new_nfiles = subdir_nfiles
+
+      if is_subdir_oldpath:
+         indexdir = os.path.join(self.stagingdir, 'indexes', get_hash_id(cached_old_path))
+         subdir_nfiles = get_subdir_nfiles(self.old_datapath, indexdir)
+         change.old_nfiles = subdir_nfiles
+
+      change_data_dir = os.path.join(self.cachedir, change_dir)
+      if not (is_subdir_oldpath or is_subdir_newpath):
+         set_change_from_cache(change, change_data_dir)
+      else:
+         compare_hash = dacman_utils.hash_comparison_id(self.old_datapath, self.new_datapath)
+         change_data_subdir = os.path.join(self.cachedir, compare_hash)
+         if os.path.exists(change_data_subdir):
+            set_change_from_cache(change, change_data_subdir)
+         else:
+            save_subdir_changes_to_cache(change, self.stagingdir,
+                                         cached_old_path, cached_new_path,
+                                         self.old_datapath, self.new_datapath,
+                                         is_subdir_oldpath, is_subdir_newpath,
+                                         change_data_dir, change_data_subdir)
+
+            logger.info('Updating change cache entries')
+            change_id = dacman_utils.hash_comparison_id(self.old_datapath, self.new_datapath)
+            change_info = {self.new_datapath : {self.old_datapath: change_id}}
+            dacman_utils.update_yaml(change_info, self.cache_entries)
+
+      logger.info('Change retrieval completed')
+
+      return change
+
+######################################################################################
 
 '''
 find the high-level changes between two paths
 - if indexed and compared, then just fetch the comparison data
 - else scan and index all the data sets (files/directories) recursively
 '''
-#def changes(old_path, new_path, custom_old_deducedir=None, custom_new_deducedir=None):
-def changes(old_datapath, new_datapath, custom_deducedir=None):
+## deprecated
+def changes(old_datapath, new_datapath, force=False, custom_stagingdir=None):
     logger = logging.getLogger(__name__)
 
     #old_datapath = os.path.abspath(old_path)
@@ -254,185 +416,168 @@ def changes(old_datapath, new_datapath, custom_deducedir=None):
        logger.error('Comparison paths are the same')
        sys.exit()
 
-    if not custom_deducedir:
-       deducedir = dacman_utils.DACMAN_STAGING_LOC
+    if not custom_stagingdir:
+       stagingdir = dacman_utils.DACMAN_STAGING_LOC
     else:
-       deducedir = custom_deducedir
-    old_deducedir = init_deduce(old_datapath, custom_deducedir)
-    new_deducedir = init_deduce(new_datapath, custom_deducedir)
+       stagingdir = custom_stagingdir
 
-    '''
-    vars that contain the actual datapaths where indexing was done
-    '''
-    old_deducepath = ''
-    new_deducepath = ''
-
-    datapath_info = os.path.join(old_deducedir, 'DATAPATH')
-    abs_old_path = '{}/'.format(os.path.abspath(old_datapath))
-    if not os.path.exists(datapath_info):
-        scanner.scan(old_datapath, custom_deducedir)
-    with open(datapath_info) as f:
-       old_deducepath = f.readline().strip()
-       old_retrieved_datapath = '{}/'.format(old_deducepath)
-       if old_retrieved_datapath not in abs_old_path:
-          #cprint(__modulename__, 'Datapath `{}` is not a valid, indexed datapath!'.format(abs_old_path))
-          logger.error('%s is not a valid, indexed datapath!', abs_old_path)
-          sys.exit()
-
-    datapath_info = os.path.join(new_deducedir, 'DATAPATH')
-    abs_new_path = '{}/'.format(os.path.abspath(new_datapath))
-    if not os.path.exists(datapath_info):
-        scanner.scan(new_datapath, custom_deducedir)
-    with open(datapath_info) as f:        
-       new_deducepath = f.readline().strip()
-       new_retrieved_datapath = '{}/'.format(new_deducepath)
-       if new_retrieved_datapath not in abs_new_path:
-          #cprint(__modulename__, 'Datapath `{}` is not a valid, indexed datapath!'.format(abs_new_path))
-          logger.error('%s is not a valid, indexed datapath!', abs_new_path)
-          sys.exit()
-    
-    
-    change_dir = ''
-    deducepath = new_datapath # default prefix to search for diff data; will be updated if only subdirs are diff'd
-    #is_subdir = False # true, if the diff is for some data inside the subdirectories
     is_subdir_oldpath = False
     is_subdir_newpath = False
-    deduce_change = os.path.join(new_deducedir, 'CHANGE')
+    cached_old_path = old_datapath
+    cached_new_path = new_datapath
 
-    #cprint(__modulename__, 'Retrieving change between {} and {}'.format(old_datapath,
-    #                                                                    new_datapath))
+    cachedir = os.path.join(stagingdir, 'cache')
+    cache_entries = os.path.join(cachedir, 'ENTRIES')
 
     logger.info('Checking for changes between %s and %s', old_datapath, new_datapath)
 
     '''
-    if no high-level diff exists for the data, the do a comparison
+    This is the caching logic where change information is saved and subsequently retrieved
+    If no high-level diff exists for the data, then do a comparison
     - do the comparison for the all the indexed data
-    - at runtime, decide is the comparison is between any subdirectories of the total diff
+    - at runtime, decide if the comparison is between any subdirectories of the total diff
     '''
-    if not os.path.exists(deduce_change):
-        logger.info('Changes are not pre-calculated, directories have to be compared')
-        change_dir = comparator.compare(old_deducepath, new_deducepath, deducedir)
+    if not os.path.exists(cache_entries) or force:
+        logger.info('Cache is empty... starting dataset comparison')
+        change_dir = comparator.compare(old_datapath, new_datapath, stagingdir)
     else:
-        logger.info('Changes are already calculated')
+        logger.info('Checking for pre-calculated and cached changes.')
         '''
         if the high-level diff exists, then check if it exists for the two data versions provided here
         '''
-        with open(deduce_change, 'r') as f:
-            change_info = yaml.load(f)
+        with open(cache_entries, 'r') as f:
+            cache = yaml.load(f)
             '''
-            if the diff path is where deduce indexing (deduce path) was done
+            if changes for the newpath are in cache, then
+            check if they are for the compared oldpath 
             '''
-            if new_datapath in change_info:
+            if new_datapath in cache:
                '''
                if the diff paths are already compared, then get the corresponding directory;
                else, do the comparisons/diff
                '''
-               if old_datapath in change_info[new_datapath]:
+               if old_datapath in cache[new_datapath]:
                   '''
-                  if both oldpath and newpath are in resp. deduce paths
+                  if both oldpath and newpath are in the cache
                   '''
-                  change_dir = change_info[new_datapath][old_datapath]
+                  logger.info('Changes are present in cache... fetching change information.')
+                  change_dir = cache[new_datapath][old_datapath]
                else:
                   '''
-                  if the oldpath is a subdirectory, and the newpath is in deduce path
+                  check if the oldpath is a subdirectory of a cached path change
                   '''
-                  for o in change_info[new_datapath]:
+                  for o in cache[new_datapath]:
                      parent_path = o + os.sep
                      if old_datapath.startswith(parent_path):
-                        change_dir = change_info[new_datapath][o]
+                        logger.info('Changes can be derived from the cache.')
+                        change_dir = cache[new_datapath][o]
+                        cached_old_path = os.path.abspath(parent_path)
                         break
-
-                  '''
-                  if the oldpath is neither a deduce path nor a subdir, then it's a new comparison
-                  '''
-                  if change_dir == '':
                      '''
-                     if the deduce paths are custom paths, then there exists only one deduce dir
-                     and hence, needs to be deleted as the previous indexes were on subdirectories
-                     of the queried path (needs to be recalculated from the beginning)
+                     if the oldpath is neither in cache nor is a subdir of a cache entry,
+                     then it's a new comparison
                      '''
-                     if custom_new_deducedir:
-                        shutil.rmtree(new_deducedir)
-                     change_dir = comparator.compare(old_deducepath, new_deducepath, deducedir)
-            elif new_deducepath in change_info:
-               '''
-               if the datapaths are not compared, but the corr deducepaths are,
-               then the datapaths are subdirectories and changes can be derived
-               from the deducepath changes
-               '''
-               if old_deducepath in change_info[new_deducepath]:
-                  change_dir = change_info[new_deducepath][old_deducepath]
-               else:
-                  change_dir = comparator.compare(old_deducepath, new_deducepath, deducedir)
+                  else:
+                     logger.info('Changes are not cached... initiating dataset comparison.')
+                     change_dir = comparator.compare(old_datapath, new_datapath, stagingdir)
             else:
                '''
-               if neither the datapath nor the deducepaths are in changeinfo,
-               then there's something wrong
+               if changes for the original newpath are not in cache,
+               check if any parent directory changes are in cache
                '''
-               #cprint(__modulename__, 'The deducedir only contains changes used for {}'.format(new_deducepath))
-               logger.error('Indexes do not match the data directory; re-indexing required')
-               sys.exit()
-            #print('CHANGEDIR: {}'.format(change_dir))       
+               d = os.path.dirname(new_datapath)
+               '''
+               check if any parent dir changes are calculated and cached
+               '''
+               while d != '/' and d not in cache:
+                  d = os.path.dirname(d)
+                  
+               '''
+               if changes for a matching parent are found,
+               then check if oldpath changes are cached 
+               '''
+               if d != '/':
+                  if old_datapath in cache[d]:
+                     change_dir = cache[d][old_datapath]
+                     cached_new_path = d
+                  else:
+                     for o in cache[d]:
+                        parent_path = o + os.sep
+                        if old_datapath.startswith(parent_path):
+                           logger.info('Subdirectory changes can be derived from cache.')
+                           change_dir = cache[d][o]
+                           cached_old_path = os.path.abspath(parent_path)
+                           cached_new_path = d
+                           break
+                     else:
+                        logger.info('Changes are not pre-calculated... initiating dataset comparison.')
+                        change_dir = comparator.compare(old_datapath, new_datapath, stagingdir)
+               else:
+                  '''
+                  if changes are not present in the cache, then compare
+                  '''
+                  logger.info('Changes are not pre-calculated... initiating dataset comparison.')
+                  change_dir = comparator.compare(old_datapath, new_datapath, stagingdir)
 
-    if old_deducepath != old_datapath:
+    if cached_old_path != old_datapath:
        is_subdir_oldpath = True
 
-    if new_deducepath != new_datapath:
+    if cached_new_path != new_datapath:
        is_subdir_newpath = True
 
     logger.info('Retrieving changes between %s and %s', old_datapath, new_datapath)
 
-    change = FilesystemChange(old_datapath, new_datapath, old_deducedir, new_deducedir)
+    #change = FilesystemChange(old_datapath, new_datapath, stagingdir)
+    change = FilesystemChange(cached_old_path, cached_new_path, stagingdir)
 
-    change_data_dir = os.path.join(new_deducedir, 'changes', change_dir)
+    if is_subdir_newpath:
+       indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(cached_new_path))
+       subdir_nfiles = get_subdir_nfiles(new_datapath, indexdir)
+       change.new_nfiles = subdir_nfiles
+
+    if is_subdir_oldpath:
+       indexdir = os.path.join(stagingdir, 'indexes', get_hash_id(cached_old_path))
+       subdir_nfiles = get_subdir_nfiles(old_datapath, indexdir)
+       change.old_nfiles = subdir_nfiles
+
+    change_data_dir = os.path.join(cachedir, change_dir)
+    #print(change_data_dir)
     if not (is_subdir_oldpath or is_subdir_newpath):
        set_change_from_cache(change, change_data_dir)
     else:
        compare_hash = dacman_utils.hash_comparison_id(old_datapath, new_datapath)
-       change_data_subdir = os.path.join(change_data_dir, compare_hash)
+       change_data_subdir = os.path.join(cachedir, compare_hash)
        if os.path.exists(change_data_subdir):
           set_change_from_cache(change, change_data_subdir)
        else:
-          save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
+          save_subdir_changes_to_cache(change, stagingdir,
+                                       cached_old_path, cached_new_path,
                                        old_datapath, new_datapath,
                                        is_subdir_oldpath, is_subdir_newpath,
                                        change_data_dir, change_data_subdir)
 
-    if is_subdir_newpath:
-       subdir_nfiles = get_subdir_nfiles(new_datapath, new_deducedir)
-       change.new_nfiles = subdir_nfiles
-       #print("Subdir files: {}".format(subdir_nfiles))
+          logger.info('Updating change cache entries')
+          change_id = dacman_utils.hash_comparison_id(old_datapath, new_datapath)
+          change_file = os.path.join(cachedir, 'ENTRIES')
+          change_info = {new_datapath : {old_datapath: change_id}}
+          dacman_utils.update_yaml(change_info, change_file)
 
-    if is_subdir_oldpath:
-       subdir_nfiles = get_subdir_nfiles(old_datapath, old_deducedir)
-       change.old_nfiles = subdir_nfiles
-
-    '''
-    _added = collect_list(deducepath, new_datapath, change_data_dir, is_subdir, 'ADDED')
-    _deleted = collect_list(deducepath, new_datapath, change_data_dir, is_subdir, 'DELETED')
-    _modified = collect_dict(deducepath, new_datapath, change_data_dir, is_subdir, 'MODIFIED')
-    _metachange = collect_dict(deducepath, new_datapath, change_data_dir, is_subdir, 'METACHANGE')
-    _unchanged = collect_list(deducepath, new_datapath, change_data_dir, is_subdir, 'UNCHANGED')
-    '''
-    #change = Change(_added, _deleted, _modified, _unchanged, _metachange)
-
-    #cprint(__modulename__, 'Retrieved change information')
     logger.info('Change retrieval completed')
 
     return change
 
 
-def get_subdir_nfiles(datapath, deducedir):
-   paths_file = os.path.join(deducedir, 'FILEPATHS')
-   datapath_file = os.path.join(deducedir, 'DATAPATH')
-   deducepath = ''
+def get_subdir_nfiles(datapath, indexdir):
+   paths_file = os.path.join(indexdir, 'FILEPATHS')
+   datapath_file = os.path.join(indexdir, 'DATAPATH')
+   parent_path = ''
    with open(datapath_file) as f:
-      deducepath = f.readline().strip()
+      parent_path = f.readline().strip()
 
    nfiles = 0
    with open(paths_file) as f:
       for path in f:
-         abspath = os.path.join(deducepath, path)
+         abspath = os.path.join(parent_path, path)
          if abspath.startswith(datapath):
             nfiles += 1
 
@@ -440,7 +585,7 @@ def get_subdir_nfiles(datapath, deducedir):
 
 
 '''
-if change is already calcualted, just retrieve it
+if change is already calculated, just retrieve it
 '''
 def set_change_from_cache(change, change_dir):
    change_types = {'ADDED': list, 'DELETED': list, 
@@ -465,32 +610,26 @@ def set_change_from_cache(change, change_dir):
                       change_data['MODIFIED'], change_data['UNCHANGED'],
                       change_data['METACHANGE'])
    change.calculate_degree()
+
+   metainfo = dacman_utils.load_yaml(os.path.join(change_dir, 'META_INFO'))
+   change.old_nfiles = metainfo['base']['nfiles']
+   change.new_nfiles = metainfo['revision']['nfiles']
    
 
 def display(change):
-    #cprint(__modulename__,
-    #       "Added: {}, Deleted: {}, Modified: {}, Metachange: {}, Unchanged: {}".
-    #       format(len(change.added),
-    #              len(change.deleted),
-    #              len(change.modified),
-    #              len(change.metachange),
-    #              len(change.unchanged)))
-    #cprint(__modulename__, "Degree change: {}".format(change.degree))
-    #print("Added: {}, Deleted: {}, Modified: {}, Metadata: {}, Unchanged: {}".
     print("Additions: {}, Deletions: {}, Modifications: {}, Metadata changes: {}, Unchanged: {}".
           format(len(change.added),
                  len(change.deleted),
                  len(change.modified),
                  len(change.metachange),
                  len(change.unchanged)))
-    # REMOVED: degree change, as it is not a useful change metric
-    #print("Degree change: {}".format(change.degree))
 
 
 '''
-derives subdirectory-level changes
+derives subdirectory-level changes from cached parent directory changes
 '''
-def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
+def save_subdir_changes_to_cache(change, stagingdir,
+                                 cached_old_path, cached_new_path,
                                  old_datapath, new_datapath,
                                  is_subdir_oldpath, is_subdir_newpath,
                                  change_dir, change_subdir):
@@ -498,10 +637,9 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
                   'MODIFIED': {}, 'METACHANGE': {},
                   'UNCHANGED': []}
 
-   cprint(__modulename__, 'Subdirectory level changes not cached. Calculating and caching the changes')
    if is_subdir_oldpath and not is_subdir_newpath:
       '''
-      if oldpath is a subdir of the deducepath, then mark all the files that are
+      if oldpath is a subdir of an indexed path, then mark all the files that are
       not in oldpath as added w.r.t the newpath
       '''
       for change_type in change_data:
@@ -510,10 +648,10 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                lines = f.readlines()
                change_data[change_type] = [line.strip() for line in lines]
-         if change_type == 'DELETED':
+         elif change_type == 'DELETED':
             with open(base_change_file) as f:
                for line in f:
-                  path = os.path.join(old_deducepath, line.strip())
+                  path = os.path.join(cached_old_path, line.strip())
                   if path.startswith(old_datapath):
                      rel_subpath = os.path.relpath(path, old_datapath)               
                      change_data[change_type].append(rel_subpath)
@@ -522,14 +660,13 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
          elif change_type == 'UNCHANGED':
             with open(base_change_file) as f:
                for line in f:
-                  path = os.path.join(old_deducepath, line.strip())
+                  path = os.path.join(cached_old_path, line.strip())
                   if path.startswith(old_datapath):
                      '''
                      there's nothing unchanged anymore, everything is metachange
                      because the directory depths have changed and so have the relative
                      file paths
                      '''
-                     #change_data[change_type].append(line.strip())
                      rel_subpath = os.path.relpath(path, old_datapath)               
                      change_data['METACHANGE'][line.strip()] = rel_subpath
                   else:
@@ -538,7 +675,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   kv = line.split(':')
-                  path = os.path.join(old_deducepath, kv[1].strip())
+                  path = os.path.join(cached_old_path, kv[1].strip())
                   if path.startswith(old_datapath):
                      rel_subpath = os.path.relpath(path, old_datapath)
                      if kv[0] == rel_subpath: # if the filepath is now at the same level, then unchanged
@@ -551,7 +688,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   kv = line.split(':')
-                  path = os.path.join(old_deducepath, kv[1].strip())
+                  path = os.path.join(cached_old_path, kv[1].strip())
                   if path.startswith(old_datapath):
                      rel_subpath = os.path.relpath(path, old_datapath)
                      change_data[change_type][kv[0]] = rel_subpath
@@ -559,7 +696,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
                      change_data['ADDED'].append(kv[0])
    elif not is_subdir_oldpath and is_subdir_newpath:
       '''
-      if newpath is a subdir of the deducepath, then mark all the files that are
+      if newpath is a subdir of an indexed path, then mark all the files that are
       not in newpath as deleted
       '''
       for change_type in change_data:
@@ -567,7 +704,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
          if change_type == 'ADDED':
             with open(base_change_file) as f:
                for line in f:
-                  path = os.path.join(new_deducepath, line.strip())
+                  path = os.path.join(cached_new_path, line.strip())
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)               
                      change_data[change_type].append(rel_subpath)            
@@ -579,7 +716,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   orig_path = line.strip()
-                  path = os.path.join(new_deducepath, orig_path)
+                  path = os.path.join(cached_new_path, orig_path)
                   if path.startswith(new_datapath):
                      #change_data[change_type].append(rel_subpath)
                      rel_subpath = os.path.relpath(path, new_datapath)
@@ -590,7 +727,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   kv = line.split(':')
-                  path = os.path.join(new_deducepath, kv[0])
+                  path = os.path.join(cached_new_path, kv[0])
                   old_path = kv[1].strip()
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
@@ -604,7 +741,7 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   kv = line.split(':')
-                  path = os.path.join(new_deducepath, kv[0])
+                  path = os.path.join(cached_new_path, kv[0])
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
                      change_data[change_type][rel_subpath] = kv[1].strip()
@@ -620,14 +757,14 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
          if change_type == 'ADDED':
             with open(base_change_file) as f:
                for line in f:
-                  path = os.path.join(new_deducepath, line.strip())
+                  path = os.path.join(cached_new_path, line.strip())
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
                      change_data[change_type].append(rel_subpath)
          elif change_type == 'DELETED':
             with open(base_change_file) as f:
                for line in f:
-                  path = os.path.join(old_deducepath, line.strip())
+                  path = os.path.join(cached_old_path, line.strip())
                   if path.startswith(old_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
                      change_data[change_type].append(rel_subpath)
@@ -635,8 +772,8 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
             with open(base_change_file) as f:
                for line in f:
                   orig_path = line.strip()
-                  path = os.path.join(new_deducepath, orig_path)
-                  old_path = os.path.join(old_deducepath, orig_path)
+                  path = os.path.join(cached_new_path, orig_path)
+                  old_path = os.path.join(cached_old_path, orig_path)
                   if path.startswith(new_datapath): # if the path is in new_datapath
                      rel_subpath = os.path.relpath(path, new_datapath)
                      if old_path.startswith(old_datapath): # if the path is in old_datapath
@@ -657,8 +794,8 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
                   kv = line.split(':')
                   orig_new_path = kv[0]
                   orig_old_path = kv[1].strip()
-                  path = os.path.join(new_deducepath, orig_new_path)
-                  old_path = os.path.join(old_deducepath, orig_old_path)
+                  path = os.path.join(cached_new_path, orig_new_path)
+                  old_path = os.path.join(cached_old_path, orig_old_path)
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
                      if old_path.startswith(old_datapath):
@@ -678,8 +815,8 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
                   kv = line.split(':')
                   orig_new_path = kv[0]
                   orig_old_path = kv[1].strip()
-                  path = os.path.join(new_deducepath, orig_new_path)
-                  old_path = os.path.join(old_deducepath, orig_old_path)
+                  path = os.path.join(cached_new_path, orig_new_path)
+                  old_path = os.path.join(cached_old_path, orig_old_path)
                   if path.startswith(new_datapath):
                      rel_subpath = os.path.relpath(path, new_datapath)
                      if old_path.startswith(old_datapath):
@@ -705,99 +842,38 @@ def save_subdir_changes_to_cache(change, old_deducepath, new_deducepath,
    dacman_utils.list_to_file(change_data['DELETED'], _dfile)
    dacman_utils.dict_to_file(change_data['MODIFIED'], _mfile)
    dacman_utils.dict_to_file(change_data['METACHANGE'], _mcfile)
-    
+
+   _meta_info = {'base': {'dataset_id': old_datapath,
+                          'nfiles': change.old_nfiles},
+                 'revision': {'dataset_id': new_datapath,
+                              'nfiles': change.new_nfiles}}
+   _metafile = os.path.join(change_subdir, 'META_INFO')
+   dacman_utils.dump_yaml(_meta_info, _metafile)
+
    change.add_changes(change_data['ADDED'], change_data['DELETED'],
                       change_data['MODIFIED'], change_data['UNCHANGED'],
                       change_data['METACHANGE'])
    change.calculate_degree()
-    
-               
-
-def collect_list(deducepath, datapath, change_dir, is_subdir, change_type):
-    change_file = os.path.join(change_dir, change_type)
-    with open(change_file, 'r') as f:
-        change_data = f.readlines()
-        change_data = [data.strip() for data in change_data]
-        '''
-        if the diff path is just a subdirectory of a deduce index, 
-        then return only the specific diff 
-        else, return the total diff between the paths
-        '''
-        if is_subdir_newpath:
-            change_sample = []
-            for path in change_data:
-                abspath = os.path.join(new_deducepath, path)
-                if abspath.startswith(datapath):
-                    change_sample.append(path)
-            return change_sample
-        else:
-            return change_data
-
-def collect_dict(deducepath, datapath, change_dir, is_subdir, change_type):
-    change_file = os.path.join(change_dir, change_type)
-    with open(change_file, 'r') as f:
-        lines = f.readlines()
-        change_data = {}
-        for line in lines:
-           kv = line.split(':')
-           change_data[kv[0]] = kv[1].strip()
-        '''
-        if the diff path is just a subdirectory of a deduce index, 
-        then return only the specific diff 
-        else, return the total diff between the paths
-        '''
-        if is_subdir:
-            change_sample = {}
-            for path in change_data:
-                abspath = os.path.join(deducepath, path)
-                if abspath.startswith(datapath):
-                    change_sample[path] = change_data[path]
-            return change_sample
-        else:
-            return change_data
-
-
-"""
-def collect(deducepath, datapath, change_dir, is_subdir, change_type):
-    change_file = os.path.join(change_dir, change_type)
-    with open(change_file, 'r') as f:
-        change_data = yaml.load(f)
-        '''
-        if the diff path is just a subdirectory of a deduce index, 
-        then return only the specific diff 
-        else, return the total diff between the paths
-        '''
-        if is_subdir:
-            change_sample = {}
-            for path in change_data:
-                abspath = os.path.join(deducepath, path)
-                if abspath.startswith(datapath):
-                    change_sample[path] = change_data[path]
-            return change_sample
-        else:
-            return change_data
-"""
 
         
 def main(args):
     oldpath = os.path.abspath(args.oldpath)
     newpath = os.path.abspath(args.newpath)
-    deducedir = args.stagingdir
-    '''
-    None, None
-    if args.stagingdir is not None:
-       olddeducedir = os.path.join(args.stagingdir, os.path.basename(args.oldpath))
-       newdeducedir = os.path.join(args.stagingdir, os.path.basename(args.newpath))
-    '''
-    change = changes(oldpath, newpath, deducedir)
+    stagingdir = args.stagingdir
+    force = args.force
+
+    change = changes(oldpath, newpath, force, stagingdir)
+    #changeManager = ChangeManager(oldpath, newpath, force, stagingdir)
+    #status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
+    #change = changeManager.get_changes(status, cached_old_path, cached_new_path)
     display(change)
 
 def s_main(args):
     oldpath = args['oldpath']
     newpath = args['newpath']
-    deducedir = args['deducedir']
+    stagingdir = args['stagingdir']
 
-    change = changes(oldpath, newpath, deducedir)
+    change = changes(oldpath, newpath, stagingdir)
     display(change)
 
 if __name__ == '__main__':

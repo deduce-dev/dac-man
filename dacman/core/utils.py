@@ -16,7 +16,7 @@ import os
 import time
 import hashlib
 
-DACMAN_STAGING_LOC = os.path.join(os.getenv('HOME'), '.dacman/staging')
+DACMAN_STAGING_LOC = os.path.join(os.getenv('HOME'), '.dacman/data')
 
 def dump_yaml(data, filepath):
     with open(filepath, 'w') as f:
@@ -90,6 +90,14 @@ def hash_comparison_id(old_path, new_path):
    hash = hashlib.md5('{}{}'.format(old_path, new_path).encode('utf-8')).hexdigest()
    return hash
 
+
 def get_hash_id(path):
    hash = hashlib.md5(path.encode('utf-8')).hexdigest()
    return hash
+
+
+def get_nfiles(path, stagingdir):
+    scan_file = os.path.join(stagingdir, 'indexes', get_hash_id(path), 'FILEPATHS')
+    with open(scan_file) as f:
+        nlines = sum(1 for line in f)
+    return nlines
