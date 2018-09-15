@@ -20,6 +20,7 @@ from dacman.core import change
 from dacman.core import diff
 from dacman.core import cleanup
 from dacman.core import mpi_indexer
+from dacman.core import metadata
 
 def _addScanParser(subparsers):
     parser_worker = subparsers.add_parser('scan',
@@ -88,6 +89,18 @@ def _addCleanupParser(subparsers):
     #parser_worker.add_argument('-d','--datadirs', help='data directories', nargs='*', required=True)    
     parser_worker.add_argument(dest='datadirs', help='data directories', nargs='+')    
 
+
+def _addMetadataParser(subparsers):
+    parser_worker = subparsers.add_parser('metadata',
+                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                          help=""" Scans a data directory for tracking """)
+
+    parser_worker.set_defaults(action="metadata")
+    parser_worker.add_argument(dest='option', choices=['insert', 'retrieve', 'append'], help='action for user-level metadata', type=str)    
+    parser_worker.add_argument(dest='datapath', help='path to the dataset')    
+    parser_worker.add_argument('-m', '--metadata', help='user-level metadata')    
+    parser_worker.add_argument('-s','--stage', dest='stagingdir', help='(optional) directory where indexes and metadata information will be saved')    
+
 ##################################
 def main():
     parser = argparse.ArgumentParser(description="",
@@ -100,6 +113,7 @@ def main():
     _addChangeParser(subparsers)
     _addDiffParser(subparsers)
     _addCleanupParser(subparsers)
+    _addMetadataParser(subparsers)
 
     args = parser.parse_args()
     if len(args.__dict__) == 0:
@@ -122,6 +136,8 @@ def main():
         diff.main(args)
     elif action == 'clean':
         cleanup.main(args)
+    elif action == 'metadata':
+        metadata.main(args)
     else:
         print("Invalid action!")
 
