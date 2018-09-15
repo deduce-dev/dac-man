@@ -29,8 +29,11 @@ def update_yaml(data, filepath):
             orig_data = yaml.load(f)
             for new_val in data:
                 if new_val in orig_data:
-                    for old_val in data[new_val]:
-                        orig_data[new_val][old_val] = data[new_val][old_val]
+                    if len(data[new_val]) > 0:
+                        for old_val in data[new_val]:
+                            orig_data[new_val][old_val] = data[new_val][old_val]
+                    else:
+                        del orig_data[new_val]
                 else:
                     orig_data[new_val] = data[new_val]
             dump_yaml(orig_data, filepath)

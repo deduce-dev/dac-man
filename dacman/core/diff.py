@@ -23,6 +23,7 @@ import uuid
 import difflib
 import time
 
+from dacman.core.change import ChangeManager, CacheStatus
 import dacman.core.change as change
 import dacman.core.analyzer as analyzer
 import dacman.core.utils as utils
@@ -100,20 +101,25 @@ class Differ(object):
         check if indexes on the data are present
         else, check for data types and invoke parallel comparison
         '''
+        old_index_path = None
+        new_index_path = None
+        is_indexed = False
         indexdir = os.path.join(self.stagingdir, 'indexes')
         index_metafile = os.path.join(indexdir, 'INDEXED_PATHS')
-        indexed_paths = dacman_utils.load_yaml(index_metafile)
-        paths_indexed = [False, False]
-        is_indexed = False
-        for path in indexed_paths:
-           p = path + os.sep
-           if self.old_path.startswith(p) or self.old_path == path:
-              paths_indexed[0] = True
-           if self.new_path.startswith(p) or self.new_path == path:
-              paths_indexed[1] = True
-           if all(paths_indexed):
-              is_indexed = True
-              break
+        if os.path.exists(index_metafile):
+           indexed_paths = dacman_utils.load_yaml(index_metafile)
+           paths_indexed = [False, False]
+           for path in indexed_paths:
+              p = path + os.sep
+              if self.old_path.startswith(p) or self.old_path == path:
+                 old_index_path = os.path.join(indexdir, get_hash_id(os.path.abspath(path)))
+                 paths_indexed[0] = True
+              if self.new_path.startswith(p) or self.new_path == path:
+                 new_index_path = os.path.join(indexdir, get_hash_id(os.path.abspath(path)))
+                 paths_indexed[1] = True
+              if all(paths_indexed):
+                 is_indexed = True
+                 break
 
 
         old_basepath = ''
@@ -123,12 +129,26 @@ class Differ(object):
 
         if is_indexed:
            self.logger.info('Datapaths are indexed. Using indexes to find diff...')
-           old_datapath_file = os.path.join(indexdir, get_hash_id(self.old_path), 'DATAPATH')
-           new_datapath_file = os.path.join(indexdir, get_hash_id(self.new_path), 'DATAPATH')
 
-           change_data = change.changes(self.old_path, self.new_path, self.stagingdir)
-           old_filelist = os.path.join(self.stagingdir, 'indexes', get_hash_id(self.old_path), 'FILEPATHS')
-           new_filelist = os.path.join(self.stagingdir, 'indexes', get_hash_id(self.new_path), 'FILEPATHS')
+           #change_data = change.changes(self.old_path, self.new_path, False, self.stagingdir)
+           changeManager = ChangeManager(self.old_path, self.new_path, False, self.stagingdir)
+           status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
+           change_data = changeManager.get_changes(status, cached_old_path, cached_new_path)
+
+           if status == CacheStatus.NOT_CACHED:
+              old_path = self.old_path
+              new_path = self.new_path
+           else:
+              old_path = cached_old_path
+              new_path = cached_new_path            
+
+           print(old_path, new_path)
+
+           old_datapath_file = os.path.join(old_index_path, 'DATAPATH')
+           new_datapath_file = os.path.join(new_index_path, 'DATAPATH')
+
+           old_filelist = os.path.join(old_index_path, 'FILEPATHS')
+           new_filelist = os.path.join(new_index_path, 'FILEPATHS')
            
            with open(old_datapath_file) as f:
               old_basepath = f.readline().split('\n')[0]
@@ -172,10 +192,13 @@ class Differ(object):
            '''
            The code below allows to check for a diff between any two random files
            '''
-           change_data = change.changes(old_base, new_base, self.stagingdir)
+           #change_data = change.changes(old_base, new_base, False, self.stagingdir)
+           changeManager = ChangeManager(old_base, new_base, False, self.stagingdir)
+           status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
+           change_data = changeManager.get_changes(status, cached_old_path, cached_new_path)
 
-           old_datapath_file = os.path.join(indexdir, get_hash_id(self.old_path), 'DATAPATH')
-           new_datapath_file = os.path.join(indexdir, get_hash_id(self.new_path), 'DATAPATH')
+           old_datapath_file = os.path.join(indexdir, get_hash_id(cached_old_path), 'DATAPATH')
+           new_datapath_file = os.path.join(indexdir, get_hash_id(cached_new_path), 'DATAPATH')
 
            with open(old_datapath_file) as f:
               old_basepath = f.readline().split('\n')[0]

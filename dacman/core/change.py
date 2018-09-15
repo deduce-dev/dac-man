@@ -862,10 +862,10 @@ def main(args):
     stagingdir = args.stagingdir
     force = args.force
 
-    change = changes(oldpath, newpath, force, stagingdir)
-    #changeManager = ChangeManager(oldpath, newpath, force, stagingdir)
-    #status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
-    #change = changeManager.get_changes(status, cached_old_path, cached_new_path)
+    #change = changes(oldpath, newpath, force, stagingdir)
+    changeManager = ChangeManager(oldpath, newpath, force, stagingdir)
+    status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
+    change = changeManager.get_changes(status, cached_old_path, cached_new_path)
     display(change)
 
 def s_main(args):

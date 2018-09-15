@@ -209,9 +209,7 @@ def dump(metainfo, meta_path):
     
 def main(args):
    datapath = os.path.abspath(args.datapath)
-   stagingdir = None
-   if args.stagingdir is not None:
-      stagingdir = os.path.join(args.stagingdir, os.path.basename(args.datapath))
+   stagingdir = args.stagingdir
    nonrecursive = args.nonrecursive
    symlinks = args.symlinks
    details = args.metadetails

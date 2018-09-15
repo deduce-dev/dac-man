@@ -91,10 +91,12 @@ def index(datapath, custom_stagingdir=None, manager='python'):
         logger.info('Using Python multiprocessing for parallel indexing')
         indexdir = mp_index(stagingdir, datapath)
 
-    index_metafile = os.path.join(stagingdir, 'indexes/INDEXED_PATHS')
-    indexing_info = {datapath: os.path.basename(indexdir)}
-    dacman_utils.update_yaml(indexing_info, index_metafile)
-
+    index_metafile = os.path.join(os.path.dirname(indexdir), 'INDEXED_PATHS')
+    index_metadata = {}
+    if os.path.exists(index_metafile):
+        index_metadata = dacman_utils.load_yaml(index_metafile)
+    index_metadata[datapath] = os.path.basename(indexdir)
+    dacman_utils.dump_yaml(index_metadata, index_metafile)
     return indexdir
 
 def save_indexes(indexdir, indexes):
