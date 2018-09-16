@@ -142,7 +142,7 @@ class Differ(object):
               old_path = cached_old_path
               new_path = cached_new_path            
 
-           print(old_path, new_path)
+           #print(old_path, new_path)
 
            old_datapath_file = os.path.join(old_index_path, 'DATAPATH')
            new_datapath_file = os.path.join(new_index_path, 'DATAPATH')
@@ -208,13 +208,17 @@ class Differ(object):
 
         changes = change_data.modified
 
+        #print(changes)
+
         self.logger.info('Searching for path indexes')
 
         '''
         find the old and new base directories which are indexed through
         '''
-        path_prefix_new = new_basepath
-        path_prefix_old = old_basepath
+        #path_prefix_new = new_basepath
+        #path_prefix_old = old_basepath
+        path_prefix_new = cached_new_path
+        path_prefix_old = cached_old_path
         '''
         save the metadata about the high-level diff between the directories
         '''
