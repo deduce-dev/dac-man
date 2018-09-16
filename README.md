@@ -16,6 +16,7 @@ Dac-Man is much more powerful than a simple diff utility.
 
 * It is extremely fast: it can retrieve changes from terabytes of data within seconds.
 * It can be used on desktops, as well as on large supercomputers.
+* It allows users to associate user-defined metadata for any dataset.
 * It is capable of identifying both file and data level changes.
 * It allows users to plugin their own scripts for richer change analysis.
 * It identifies changes between non-co-located datasets without the need for transferring
