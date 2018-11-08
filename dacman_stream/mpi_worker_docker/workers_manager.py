@@ -12,7 +12,7 @@ from datetime import datetime
 
 import stream_worker
 
-import settings as _settings
+import config as _config
 
 try:
    from mpi4py import MPI
@@ -22,44 +22,61 @@ except ImportError:
 
 __modulename__ = 'workersmanager'
 
-#startTime = datetime.now()
+
+logger = logging.getLogger(__name__)
+
+def setup_logging(
+    default_path='config/logging.json',
+    default_level=logging.INFO,
+    env_key='LOG_CFG'
+):
+    """Setup logging configuration
+
+    """
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = json.load(f)
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
+
 
 class WorkersManager(object):
-    DEFAULT_EXECUTOR = 0
-    MPI_EXECUTOR = 1
-
-    def __init__(self, redis_queue_id=None, custom_analyzer_file=None, executor=MPI_EXECUTOR):
+    def __init__(self):
         self.pool = None
         self.mpi_proc = None
+        self.r = None
 
-        self.redis_queue_id = self.get_redis_queue_id(redis_queue_id)
-        self.custom_analyzer_file = self.get_custom_analyzer_file(custom_analyzer_file)
-        self.executor = executor
-
-        self.host = _settings.HOST
-        self.port = _settings.PORT
-        self.db = _settings.DATABASE    
-
-        self.logger = logging.getLogger(__name__)
+        self.process_started = False
 
 
-    def get_redis_queue_id(self, redis_queue_id):
+    def read_config(self):
         '''
-        Get redis_queue_id from settings.py if redis_queue_id is None.
+        Read needed values from config.py
         '''
-        if redis_queue_id:
-            return redis_queue_id
-        else:
-            return str(_settings.TASK_QUEUE_NAME + ":" + _settings.REDIS_QUEUE_ID)
+        self.redis_queue_id = str(_config.TASK_QUEUE_NAME + ":" + _config.REDIS_QUEUE_ID)
 
-    def get_custom_analyzer_file(self, custom_analyzer_file):
-        '''
-        Get redis_queue_id from settings.py if redis_queue_id is None.
-        '''
-        if custom_analyzer_file:
-            return custom_analyzer_file
-        else:
-            return _settings.CUSTOM_ANALYZER_FILE
+        #### Get the file that has the analyzer function serialization 
+        #### from config.py.
+        self.custom_analyzer_file = _config.CUSTOM_ANALYZER_FILE
+
+        self.executor = _config.EXECUTOR
+
+        if not self.r:
+            self.host = _config.HOST
+            self.port = _config.PORT
+            self.db = _config.DATABASE
+
+            self.r = redis.Redis(
+                host=self.host,
+                port=self.port,
+                db=self.db
+            )
+
 
 
 #########################################################################################################
@@ -77,7 +94,7 @@ class WorkersManager(object):
     def printProcLine(self):
         for line in self.printProcStdout():
             if line != b'':
-                print(line)
+                logger.debug(line)
 
 #########################################################################################################
 
@@ -85,24 +102,46 @@ class WorkersManager(object):
         '''
         Main function that starts the process of looking for tasks
         '''
+        while True:
+            logger.debug("Reading Config")
+            self.read_config()
+
+            while self.r.llen(self.redis_queue_id) > 0:
+                if not self.process_started:
+                    self.execute()
+                    self.process_started = True
+                    ## Check if we need to kill that thread.
+                    ## I am assuming that the thread will end by when
+                    ## the function execution ends
+                    _thread.start_new_thread(self.printProcLine, ())
+
+                time.sleep(2)
+                logger.debug("Number of Tasks in Queue: %s" \
+                    % str(self.r.llen(self.redis_queue_id)))
+ 
+            time.sleep(10)
+
+            if self.process_started:
+                logger.debug("Calling self.stop()")
+                self.stop()
+                self.process_started = False
+
+
+    def execute(self):
+        '''
+        Start executing tasks through the chosen executor method
+        '''
         #### Use python multiprocessing if default executor
-        if self.executor == WorkersManager.DEFAULT_EXECUTOR:
-            self.logger.info('Using Python multiprocessing for executing WorkersManager tasks')
+        if self.executor == _config.DEFAULT_EXECUTOR:
+            logger.info('Using Python multiprocessing for executing WorkersManager tasks')
             self.diff_tasks_default()
         #### Use MPI if specified
-        elif self.executor == WorkersManager.MPI_EXECUTOR:
+        elif self.executor == _config.MPI_EXECUTOR:
             if not MPI4PY_IMPORT:
-                self.logger.error('mpi4py is not installed or possibly not in the path')
+                logger.error('mpi4py is not installed or possibly not in the path')
                 sys.exit()
-            self.logger.info('Using MPI for executing WorkersManager tasks')
+            logger.info('Using MPI for executing WorkersManager tasks')
             self.diff_tasks_mpi()
-
-        _thread.start_new_thread(self.printProcLine, ())
-        print("WorkersManager.start(): Before Sleep")
-        time.sleep(300)
-        print("WorkersManager.start(): After Sleep")
-        #### Stop all the processes (Still Testing)
-        self.stop()
 
 
     def stop(self):
@@ -110,29 +149,29 @@ class WorkersManager(object):
         Stops the looking for tasks process
         '''
         #### Use python multiprocessing if default executor
-        if self.executor == WorkersManager.DEFAULT_EXECUTOR:
+        if self.executor == _config.DEFAULT_EXECUTOR:
             if self.pool:
                 try:
-                    self.logger.info('Stopping Multiprocessing pool task handler process')
+                    logger.info('Stopping Multiprocessing pool task handler process')
                     self.pool.close()
                     #self.pool.join()
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
         #### Use MPI if specified
-        elif self.executor == WorkersManager.MPI_EXECUTOR:
+        elif self.executor == _config.MPI_EXECUTOR:
             if self.mpi_proc:
                 try:
-                    self.logger.info('Stopping MPI task handler process')
+                    logger.info('Stopping MPI task handler process')
                     self.mpi_proc.kill()
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
             else:
-                self.logger.info('No MPI process to stop')
+                logger.info('No MPI process to stop')
         
         #print(datetime.now() - startTime)
-        self.logger.info('Diff completed')
+        logger.info('Diff completed')
 
 
 
@@ -196,4 +235,5 @@ def s_main():
     workers_manager.start()
 
 if __name__ == '__main__':
+    setup_logging(default_level=logging.DEBUG)
     s_main()
