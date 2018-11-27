@@ -106,7 +106,10 @@ class WorkersManager(object):
             logger.debug("Reading Config")
             self.read_config()
 
-            while self.r.llen(self.redis_queue_id) > 0:
+            no_change_count = 0
+            r_queue_len = self.r.llen(self.redis_queue_id)
+            temp_len = r_queue_len
+            while r_queue_len > 0:
                 if not self.process_started:
                     self.execute()
                     self.process_started = True
@@ -115,9 +118,23 @@ class WorkersManager(object):
                     ## the function execution ends
                     _thread.start_new_thread(self.printProcLine, ())
 
-                time.sleep(2)
+                time.sleep(5)
                 logger.debug("Number of Tasks in Queue: %s" \
                     % str(self.r.llen(self.redis_queue_id)))
+
+                #### Check if the len of the redis queue didn't change
+                #### for 2 mins
+                if r_queue_len == temp_len:
+                    if no_change_count >= 24:
+                        no_change_count = 0
+                        logger.debug("Calling self.stop()")
+                        self.stop()
+                        self.process_started = False
+                    else:
+                        no_change_count += 1
+
+                temp_len = r_queue_len
+                r_queue_len = self.r.llen(self.redis_queue_id)
  
             time.sleep(10)
 
@@ -236,4 +253,14 @@ def s_main():
 
 if __name__ == '__main__':
     setup_logging(default_level=logging.DEBUG)
+
+    '''
+    if (len(sys.argv) < 4):
+            print("Usage: python workers_manager.py <redis_host> <redis_port> <redis_db>")
+    else:
+        redis_host = os.path.abspath(sys.argv[1])
+        redis_port = sys.argv[2]
+        redis_db = os.path.abspath(sys.argv[3])
+    '''
+
     s_main()
