@@ -36,14 +36,14 @@ Note: By linking, we mean to add the right IP address with the right alias to ``
 # If you have access on the redis container and are able to see it
 # via the 'docker ps' command.
 
-docker run --name workers_container --link dacman-redis:redis -d workers_manager
+$ docker run --name workers_container --link dacman-redis:redis -d workers_manager
 ```
 or
 ```
 # To manually add to /etc/hosts, use the '--add-host' command.
 # Make sure to add the correct IP address.
 
-docker run -it --name workers_container --add-host redis:111.111.1.1 workers_manager
+$ docker run -it --name workers_container --add-host redis:111.111.1.1 workers_manager
 ```
 
 ## Streaming
@@ -53,7 +53,19 @@ Now we are ready to start the streaming process.
 ### 1. Have the right configurations.
 Set ```settings.py``` correctly. Make sure to set ```Host```, ```PORT``` and ```DATABASE``` to the right Redis settings.
 
+```
+###### Start of Redis Config Variables ######
+HOST="[REDIS_SERVER]"
+PORT="6379"
+DATABASE=0
+
+...
+```
+
 ### 2. Start pushing data and tasks.
 ```
-python dacman_stream.py <source_dir> <dataset(h5_file)> <output_dir>
+# This command is tested on an ALS use case with the
+# 20160904_043848_CSPbI3_140DEG1_.h5 dataset
+
+$ python dacman_stream.py <source_dir> <dataset(h5_file)> <output_dir>
 ```
