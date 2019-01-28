@@ -224,6 +224,8 @@ class WorkersManager(object):
         '''
 
         size = multiprocessing.cpu_count()
+        #### change for NERSC as the number of workers is
+        #### specified externally
         size = 1
 
         worker_command = [

@@ -8,6 +8,8 @@ import _thread
 from datetime import datetime
 from hashlib import blake2b
 
+import csv
+
 #from diffstream import DiffStream
 
 #### Remove later
@@ -22,6 +24,9 @@ r = redis.Redis(
 )
 
 startTime = datetime.now()
+
+turnaround_start = {}
+latency_start = {}
 
 def create_main_hash_strings():
     hash_task_queue = blake2b(digest_size=20)
@@ -45,14 +50,23 @@ def publish_tasks(task_queue_hs, job_o_list_hs, dataA, dataB):
     hash1_string = "%s:%s" % (_settings.DATABLOCK_PREFIX, hash1.hexdigest())
     hash2_string = "%s:%s" % (_settings.DATABLOCK_PREFIX, hash2.hexdigest())
 
+    task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
+
+    ##### Collecting Stats #####
+    turnaround_start[task_uuid] = time.time()
+    ############################
+
     r.set(hash1_string, dataA.tostring())
     r.set(hash2_string, dataB.tostring())
 
     #### Adding the task to the ordered job list
-    task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
     r.rpush(job_o_list_hs, task_uuid)
 
     r.lpush(task_queue_hs, (task_uuid, hash1_string, hash2_string, "custom"))
+
+    ##### Collecting Stats #####
+    latency_start[task_uuid] = time.time()
+    ############################
 
     print("Pushed", task_uuid, "To", task_queue_hs)
 
@@ -171,3 +185,18 @@ if __name__ == "__main__":
 
         diff_edf_a(source_dir, dataset, output_dir)
         print(datetime.now() - startTime)
+
+        output_dir_path = "/Users/absho/workspace/lbnl/deduce/output_dir/started_dir/"
+        output_full_path = os.path.join(output_dir_path, 'turnaround_start.csv')
+
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in turnaround_start.items():
+               writer.writerow([key, value])
+
+        output_full_path = os.path.join(output_dir_path, 'latency_start.csv')
+
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in latency_start.items():
+               writer.writerow([key, value])
