@@ -97,6 +97,27 @@ class Differ(object):
             self.logger.error('Old and new datapaths are not specified!')
             sys.exit()
 
+        change_pairs = []
+
+        self.old_path_is_file = os.path.isfile(self.old_path)
+        self.new_path_is_file = os.path.isfile(self.new_path)
+        old_base = self.old_path
+        new_base = self.new_path
+        self.logger.info('Starting diff calculation')
+        if self.old_path_is_file and self.new_path_is_file:
+           old_base = os.path.dirname(self.old_path)
+           new_base = os.path.dirname(self.new_path)
+           #'''
+           #if these are two files in the same directory
+           #'''
+           #if old_base == new_base:
+           change_pairs.append((self.old_path, self.new_path))
+           return change_pairs
+        elif self.old_path_is_file != self.new_path_is_file:
+           self.logger.error('Datapaths are of different types')
+           sys.exit()                    
+
+
         '''
         check if indexes on the data are present
         else, check for data types and invoke parallel comparison
@@ -106,6 +127,7 @@ class Differ(object):
         is_indexed = False
         indexdir = os.path.join(self.stagingdir, 'indexes')
         index_metafile = os.path.join(indexdir, 'INDEXED_PATHS')
+
         if os.path.exists(index_metafile):
            indexed_paths = dacman_utils.load_yaml(index_metafile)
            paths_indexed = [False, False]
@@ -121,20 +143,17 @@ class Differ(object):
                  is_indexed = True
                  break
 
-
         old_basepath = ''
         new_basepath = ''
 
-        change_pairs = []
-
         if is_indexed:
-           self.logger.info('Datapaths are indexed. Using indexes to find diff...')
-
-           #change_data = change.changes(self.old_path, self.new_path, False, self.stagingdir)
            changeManager = ChangeManager(self.old_path, self.new_path, False, self.stagingdir)
            status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
            change_data = changeManager.get_changes(status, cached_old_path, cached_new_path)
 
+           '''
+           a subdirectory change may or may not be cached
+           '''
            if status == CacheStatus.NOT_CACHED:
               old_path = self.old_path
               new_path = self.new_path
@@ -172,23 +191,6 @@ class Differ(object):
         else:
            self.logger.warn('Datapaths are not indexed. Trying to locate and index the data...')
               
-           self.old_path_is_file = os.path.isfile(self.old_path)
-           self.new_path_is_file = os.path.isfile(self.new_path)
-           old_base = self.old_path
-           new_base = self.new_path
-           self.logger.info('Starting diff calculation')
-           if self.old_path_is_file and self.new_path_is_file:
-              old_base = os.path.dirname(self.old_path)
-              new_base = os.path.dirname(self.new_path)
-              '''
-              if these are two files in the same directory
-              '''
-              if old_base == new_base:
-                 change_pairs.append((self.old_path, self.new_path))
-                 return change_pairs
-           elif self.old_path_is_file != self.new_path_is_file:
-              self.logger.error('Datapaths are of different types')
-              sys.exit()                    
            '''
            The code below allows to check for a diff between any two random files
            '''
@@ -200,11 +202,11 @@ class Differ(object):
            old_datapath_file = os.path.join(indexdir, get_hash_id(cached_old_path), 'DATAPATH')
            new_datapath_file = os.path.join(indexdir, get_hash_id(cached_new_path), 'DATAPATH')
 
-           with open(old_datapath_file) as f:
-              old_basepath = f.readline().split('\n')[0]
+           #with open(old_datapath_file) as f:
+           #   old_basepath = f.readline().split('\n')[0]
 
-           with open(new_datapath_file) as f:
-              new_basepath = f.readline().split('\n')[0]
+           #with open(new_datapath_file) as f:
+           #   new_basepath = f.readline().split('\n')[0]
 
         changes = change_data.modified
 
