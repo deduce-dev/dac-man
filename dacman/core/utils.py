@@ -26,7 +26,7 @@ def dump_yaml(data, filepath):
 def update_yaml(data, filepath):
     if os.path.exists(filepath):
         with open(filepath, 'r') as f:
-            orig_data = yaml.load(f)
+            orig_data = yaml.safe_load(f)
             for new_val in data:
                 if new_val in orig_data:
                     if len(data[new_val]) > 0:
@@ -43,7 +43,7 @@ def update_yaml(data, filepath):
 
 def load_yaml(yaml_file):
     with open(yaml_file, 'r') as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
         return data        
 
 

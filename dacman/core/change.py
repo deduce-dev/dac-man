@@ -274,7 +274,7 @@ class ChangeManager(object):
          then check if it exists for the two data versions provided here
          '''
          with open(self.cache_entries, 'r') as f:
-            cache = yaml.load(f)
+            cache = yaml.safe_load(f)
             '''
             if changes for the newpath are in cache, then
             check if they are for the compared oldpath 
@@ -351,7 +351,7 @@ class ChangeManager(object):
          change_dir = comparator.compare(self.old_datapath, self.new_datapath, self.stagingdir)
       else:
          with open(self.cache_entries, 'r') as f:
-            cache = yaml.load(f)
+            cache = yaml.safe_load(f)
             change_dir = cache[cached_new_path][cached_old_path]
 
       if cached_old_path != self.old_datapath:
@@ -446,7 +446,7 @@ def changes(old_datapath, new_datapath, force=False, custom_stagingdir=None):
         if the high-level diff exists, then check if it exists for the two data versions provided here
         '''
         with open(cache_entries, 'r') as f:
-            cache = yaml.load(f)
+            cache = yaml.safe_load(f)
             '''
             if changes for the newpath are in cache, then
             check if they are for the compared oldpath 
