@@ -74,3 +74,6 @@ outdir
 old
 _build
 *.log
+
+# dacman output files
+diff_*.yml
