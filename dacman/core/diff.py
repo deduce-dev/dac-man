@@ -570,8 +570,8 @@ def executable_diff_mp(new_file, old_file, custom_analyzer):
       logger.error('Error analyzing changes: %s', err)
       return None
    else:
-      logger.info('Change calculation completed with output:')
       out_str = out.decode(sys.stdout.encoding).strip()
+      logger.info('Change calculation completed with output: %s', out_str)
       return out_str
                 
 #########################################################################################################
