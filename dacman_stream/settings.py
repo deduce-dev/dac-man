@@ -1,7 +1,7 @@
 ###### Start of Redis Config Variables ######
-HOST="localhost"
+#HOST="localhost"
 #PORT="6379"
-#HOST="blot.lbl.gov"
+HOST="blot.lbl.gov"
 PORT="6378"
 DATABASE=0
 

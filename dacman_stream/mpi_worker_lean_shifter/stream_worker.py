@@ -19,8 +19,9 @@ import csv
 
 import config as _config
 
-
-time_job_finished = {}
+data_pull_start = {}
+data_pull_end = {}
+job_end_data_put = {}
 
 def get_redis_instance(host, port, db):
     '''
@@ -73,11 +74,15 @@ def process_task(r, task, custom_analyzer):
     '''
     task_uuid, data_id1, data_id2, protocol = eval(task)
 
+    data_pull_start[task_uuid] = time.time()
+
     data1, data2 = dataid_to_datablock(r, data_id1, data_id2)
+
+    data_pull_end[task_uuid] = time.time()
 
     try:
         r.set(task_uuid, (custom_analyzer(data1, data2)))
-        time_job_finished[task_uuid] = time.time()
+        job_end_data_put[task_uuid] = time.time()
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
@@ -86,12 +91,32 @@ def process_task(r, task, custom_analyzer):
 
 def write_to_csv():
     output_dir_path = _config.OUTPUT_CSV_DIR
-    output_full_path = os.path.join(output_dir_path, 
-            'time_job_finished_%s_%s.csv' % (socket.gethostname(), os.getpid()))
+
+    name = _config.CSV_DICTS_DIRS[0]
+    output_full_path = os.path.join(output_dir_path, name, 
+            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
     with open(output_full_path, 'w') as csv_file:
         writer = csv.writer(csv_file)
-        for key, value in time_job_finished.items():
+        for key, value in data_pull_start.items():
+            writer.writerow([key, value])
+
+    name = _config.CSV_DICTS_DIRS[1]
+    output_full_path = os.path.join(output_dir_path, name, 
+            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+
+    with open(output_full_path, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        for key, value in data_pull_end.items():
+            writer.writerow([key, value])
+
+    name = _config.CSV_DICTS_DIRS[2]
+    output_full_path = os.path.join(output_dir_path, name, 
+            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+
+    with open(output_full_path, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        for key, value in job_end_data_put.items():
             writer.writerow([key, value])
 
 
@@ -123,12 +148,12 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
 
         #### Wait for an hour and reset if a task is popped
         #while (failed_count < 360):
-        #### Wait for 60 seconds and reset if a task is popped
-        while (failed_count < 20):
+        #### Wait for 120 seconds and reset if a task is popped
+        while (failed_count < 12):
             #### redis's BRPOP command is useful here as it 
             #### will block on redis till it return a task
             #### Note: timeout here is 10 seconds
-            task = r.brpop(redis_queue_id, 3)
+            task = r.brpop(redis_queue_id, 10)
             if task:
                 failed_count = 0
 
@@ -143,8 +168,8 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
                 print("Queue is empty")
                 failed_count += 1
 
-            if failed_count == 5:
-                _thread.start_new_thread(write_to_csv, ())
+                if failed_count == 5:
+                    _thread.start_new_thread(write_to_csv, ())
                 
 
 

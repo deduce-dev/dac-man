@@ -25,8 +25,8 @@ r = redis.Redis(
 
 startTime = datetime.now()
 
-turnaround_start = {}
-latency_start = {}
+data_send_start = {}
+data_send_end = {}
 
 def create_main_hash_strings():
     hash_task_queue = blake2b(digest_size=20)
@@ -53,7 +53,7 @@ def publish_tasks(task_queue_hs, job_o_list_hs, dataA, dataB):
     task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
 
     ##### Collecting Stats #####
-    turnaround_start[task_uuid] = time.time()
+    data_send_start[task_uuid] = time.time()
     ############################
 
     r.set(hash1_string, dataA.tostring())
@@ -65,7 +65,7 @@ def publish_tasks(task_queue_hs, job_o_list_hs, dataA, dataB):
     r.lpush(task_queue_hs, (task_uuid, hash1_string, hash2_string, "custom"))
 
     ##### Collecting Stats #####
-    latency_start[task_uuid] = time.time()
+    data_send_end[task_uuid] = time.time()
     ############################
 
     print("Pushed", task_uuid, "To", task_queue_hs)
@@ -122,8 +122,8 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
                     raise
 
                 ## Remove Later 10/25/2018
-                if docker_loop_count > 150:
-                    return
+                #if docker_loop_count > 150:
+                #    return
 
                 #print(datetime.now() - startTime)
                 #exit()
@@ -177,7 +177,7 @@ def diff_edf_a(source_dir, dataset, output_dir):
 if __name__ == "__main__":
 
     if (len(sys.argv) < 4):
-            print("Usage: python dacman_stream_.py <source_dir> <dataset(h5_file)> <output_dir>")
+            print("Usage: python dacman_stream.py <source_dir> <dataset(h5_file)> <output_dir>")
     else:
         source_dir = os.path.abspath(sys.argv[1])
         dataset = sys.argv[2]
@@ -187,16 +187,16 @@ if __name__ == "__main__":
         print(datetime.now() - startTime)
 
         output_dir_path = "/Users/absho/workspace/lbnl/deduce/output_dir/started_dir/"
-        output_full_path = os.path.join(output_dir_path, 'turnaround_start.csv')
+        output_full_path = os.path.join(output_dir_path, 'data_send_start.csv')
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in turnaround_start.items():
+            for key, value in data_send_start.items():
                writer.writerow([key, value])
 
-        output_full_path = os.path.join(output_dir_path, 'latency_start.csv')
+        output_full_path = os.path.join(output_dir_path, 'data_send_end.csv')
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in latency_start.items():
+            for key, value in data_send_end.items():
                writer.writerow([key, value])
