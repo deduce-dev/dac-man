@@ -1,13 +1,38 @@
-*.log
-*.pyc
+# adapted from template for general Python projects from https://github.com/github/gitignore/blob/master/Python.gitignore
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# various OS artifacts
 .AppleDouble
 .DS_Store
-_build
+
+# editor/IDE
+.vscode
 *~
-MTS_WfM.egg-info
-dist
-build
-__pycache__
+
+# project specific
 outdir
 old
-venv
+_build
+
+# dacman output files
+*.log
+diff_*.yml

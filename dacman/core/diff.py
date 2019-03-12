@@ -554,7 +554,8 @@ def file_diff_mp(new_file, old_file, custom_analyzer, diff_analyzer):
       logger.info("Using custom executable analyzer %s", custom_analyzer)
       output = executable_diff_mp(new_file, old_file, custom_analyzer)
       if output != None and output.strip() != '':
-         print(output.decode(sys.stdout.encoding).strip())
+         out_str = output.decode(sys.stdout.encoding).strip()
+         print(out_str)
    else:
       logger.error('Analyzer type %s is not supported', type(custom_analyzer))
       raise TypeError('Analyzer type {} not supported'.format(type(custom_analyzer)))
@@ -569,8 +570,9 @@ def executable_diff_mp(new_file, old_file, custom_analyzer):
       logger.error('Error analyzing changes: %s', err)
       return None
    else:
-      logger.info('Change calculation completed with output: %s', out)
-      return out
+      out_str = out.decode(sys.stdout.encoding).strip()
+      logger.info('Change calculation completed with output: %s', out_str)
+      return out_str
                 
 #########################################################################################################
 
