@@ -15,6 +15,16 @@ def scandir_csv(path):
         else:
             yield entry
 
+def scandir_directory(path):
+    '''
+    Recursively yield DirEntry objects for given directory.
+    '''
+    for entry in os.scandir(path):
+        if entry.is_dir(follow_symlinks=False):
+            yield entry
+        else:
+            continue
+
 def count_csv_files(path):
     '''
     Counts the number of the csv files so we can know exactly
@@ -64,21 +74,19 @@ def write_dict_to_csv(dict_obj, filename, path):
         for key, value in dict_obj.items():
            writer.writerow([key, value])
 
-def main(argv):
-    ###########################################################
-    # Initiating
-    ###########################################################
+def start_stats_calculation(data_send_start_path,
+                            data_send_end_path,
+                            data_pull_start_dir,
+                            data_pull_end_dir,
+                            job_end_data_put_dir,
+                            output_dir):
+    '''
+    The main processing that does the stat calculation & the 
+    plotting.
+    '''
 
-    started_dir = os.path.abspath(sys.argv[1])
-    finished_dir = os.path.abspath(sys.argv[2])
-    output_dir = os.path.abspath(sys.argv[3])
-
-    data_send_start_path = os.path.join(started_dir, 'data_send_start.csv')
-    data_send_end_path = os.path.join(started_dir, 'data_send_end.csv')
-
-    data_pull_start_dir = os.path.join(finished_dir, "data_pull_start")
-    data_pull_end_dir = os.path.join(finished_dir, "data_pull_end")
-    job_end_data_put_dir = os.path.join(finished_dir, "job_end_data_put")
+    #### Creating the output file that will have the stream output
+    output_filename = open(os.path.join(output_dir, "stats.txt"), 'a')
 
     ###########################################################
     # Reading data_send_start, data_send_end & Initial data
@@ -92,9 +100,7 @@ def main(argv):
     ###########################################################
 
     data_pull_start = update_multiple_csvs_to_dict(data_pull_start_dir)
-
     data_pull_end = update_multiple_csvs_to_dict(data_pull_end_dir)
-
     job_end_data_put = update_multiple_csvs_to_dict(job_end_data_put_dir)
 
     ###########################################################
@@ -107,16 +113,20 @@ def main(argv):
     #### directly bec. we were running 10 processes per node
     #### in our experiment. 
     n_processes = count_csv_files(data_pull_start_dir)
-    n_nodes = n_processes / 10
+    n_nodes = int(n_processes / 10)
 
     n_jobs = len(data_pull_start) + 1
 
-    print("n_nodes:", n_nodes)
-    print("n_processes:", n_processes)
-    print("n_jobs:", n_jobs)
+    print("====================================================",
+        file=output_filename)
+    print("n_nodes:", n_nodes, file=output_filename)
+    print("n_processes:", n_processes, file=output_filename)
+    print("n_jobs:", n_jobs, file=output_filename)
+    print("====================================================",
+        file=output_filename)
 
     ###########################################################
-    # Getting the jobs keys sorted by time so we can calculate
+    # Getting the job keys sorted by time so we can calculate
     # the stats accurately.
     ###########################################################
 
@@ -137,7 +147,7 @@ def main(argv):
 
     turaround_time = job_end_data_put_max - data_send_start_min
     print("Turnaround time [Max(Job end) - Min(Data send start)]: ", 
-        turaround_time)
+        turaround_time, file=output_filename)
 
     #### Calculating Event-time Latency [Avg(Job End - Data send end)]
 
@@ -147,7 +157,7 @@ def main(argv):
         latency_list.append(diff_value)
 
     print("Event-time Latency [Avg(Job start - Data send end)]: ", 
-        np.mean(latency_list))
+        np.mean(latency_list), file=output_filename)
 
     #### Calculating Processing-time Latency = Job processing time [Avg(Job end - Job start)]
 
@@ -157,12 +167,12 @@ def main(argv):
         processing_time_latency_list.append(diff_value)
 
     print("Processing-time Latency [Avg(Job end - Job start)]: ", 
-        np.mean(processing_time_latency_list))
+        np.mean(processing_time_latency_list), file=output_filename)
 
     #### Calculating Throughput [n(Jobs)/Turnaround time]
 
     print("Throughput [n(Jobs)=%s/Turnaround time]: " % n_jobs, 
-        float(n_jobs)/float(turaround_time))
+        float(n_jobs)/float(turaround_time), file=output_filename)
 
     #### Calculating Data transfer overhead [Avg(Data send end - Data send start)]
 
@@ -173,19 +183,20 @@ def main(argv):
 
     data_transfer_overhead = np.mean(data_transfer_overhead_list)
     print("Data transfer overhead [Avg(Data send end - Data send start)]: ", 
-        data_transfer_overhead)
+        data_transfer_overhead, file=output_filename)
 
     ###########################################################
     # Plotting
     ###########################################################
 
     #### Creates two subplots and unpacks the output array immediately
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10,10))
 
     ax1.plot([i for i in range(1, len(latency_list)+1)], latency_list)
     ax1.set(xlabel='jobs', ylabel='Event-time latency (s)')
 
-    ax2.plot([i for i in range(1, len(processing_time_latency_list)+1)], processing_time_latency_list)
+    ax2.plot([i for i in range(1, len(processing_time_latency_list)+1)],
+        processing_time_latency_list)
     ax2.set(xlabel='jobs', ylabel='Processing-time latency (s)')
     
     ax1.grid()
@@ -198,13 +209,65 @@ def main(argv):
         1.0/data_transfer_overhead)
 
     fig.savefig(os.path.join(output_dir, png_filename))
-    plt.show()
+    #plt.show()
+
+    print("====================================================",
+        file=output_filename)
+
+    output_filename.close()
+
+
+def main(argv):
+    ###########################################################
+    # Initiating
+    ###########################################################
+
+    started_dir = os.path.abspath(sys.argv[1])
+    finished_dir = os.path.abspath(sys.argv[2])
+    output_dir = os.path.abspath(sys.argv[3])
+
+    recursive_bool = bool(sys.argv[3])
+
+    if recursive_bool:
+        for started_entry, finished_entry in zip(scandir_directory(started_dir),
+                        scandir_directory(finished_dir)):
+            if started_entry.name == finished_entry.name:
+                data_send_start_path = os.path.join(started_entry, 'data_send_start.csv')
+                data_send_end_path = os.path.join(started_entry, 'data_send_end.csv')
+
+                data_pull_start_dir = os.path.join(finished_entry, "data_pull_start")
+                data_pull_end_dir = os.path.join(finished_entry, "data_pull_end")
+                job_end_data_put_dir = os.path.join(finished_entry, "job_end_data_put")
+
+                start_stats_calculation(data_send_start_path,
+                                        data_send_end_path,
+                                        data_pull_start_dir,
+                                        data_pull_end_dir,
+                                        job_end_data_put_dir,
+                                        output_dir)
+    else:
+        data_send_start_path = os.path.join(started_dir, 'data_send_start.csv')
+        data_send_end_path = os.path.join(started_dir, 'data_send_end.csv')
+
+        data_pull_start_dir = os.path.join(finished_dir, "data_pull_start")
+        data_pull_end_dir = os.path.join(finished_dir, "data_pull_end")
+        job_end_data_put_dir = os.path.join(finished_dir, "job_end_data_put")
+
+        start_stats_calculation(data_send_start_path,
+                                data_send_end_path,
+                                data_pull_start_dir,
+                                data_pull_end_dir,
+                                job_end_data_put_dir,
+                                output_dir)
+
 
 if __name__ == "__main__":
 
-    if (len(sys.argv) < 4):
-        print("Usage: python dacman_stats_script.py <start_dir> <finished_dir> <output_dir>")
+    if len(sys.argv) == 4:
+        main(sys.argv[1:])
+    elif len(sys.argv) == 5:
+        main(sys.argv[1:])
+    else:
+        print("Usage: python dacman_stats_script.py <start_dir> <finished_dir> <output_dir> <recursive-boolean (optional)>")
         exit()
-
-    main(sys.argv[1:])
 
