@@ -17,16 +17,22 @@ install_deps.append('paramiko>=2.1.1')
 with open('requirements.txt') as file_requirements:
     install_deps = file_requirements.read().splitlines()
 
-version = ''
-with open('VERSION') as f:
+def get_version():
+    _locals = {}
     version = f.readline().strip()
+
+    with open("dacman/_version.py") as file_version:
+        exec(file_version.read(), None, _locals)
+
+    return _locals['__version__']
+
 
 dacman_dir = os.path.join(os.getenv('HOME'), '.dacman')
 if not os.path.exists(dacman_dir):
     os.makedirs(dacman_dir)
 
 setup(name='dacman',
-      version=version,
+      version=get_version(),
       description='Data Change Management for Scientific Datasets on HPC systems',
       author='Devarshi Ghoshal',
       author_email='dghoshal@lbl.gov',
