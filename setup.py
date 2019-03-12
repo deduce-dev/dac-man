@@ -4,22 +4,19 @@ from setuptools import setup, find_packages
 import sys
 import os
 
-python_version = sys.version_info
 
-install_deps = []
-'''
-if python_version[0] == 2:
-    if python_version[1] in [6,7]:
-        install_deps.append('argparse >= 1.2.1')
-install_deps.append('pip>=8.0.1')
-install_deps.append('paramiko>=2.1.1')
-'''
-with open('requirements.txt') as file_requirements:
-    install_deps = file_requirements.read().splitlines()
+def get_install_requires():
+    with open('requirements.txt') as file_requirements:
+        # TODO in principle there's a conceptual difference between install_requires and requirements.txt
+        # https://packaging.python.org/discussions/install-requires-vs-requirements/
+        # if we want to use requirements.txt as a common basis, we should split/strip "pinned" dependencies
+        # (i.e. package==version -> package)
+        install_deps = file_requirements.read().splitlines()
+    return install_deps
+
 
 def get_version():
     _locals = {}
-    version = f.readline().strip()
 
     with open("dacman/_version.py") as file_version:
         exec(file_version.read(), None, _locals)
@@ -37,7 +34,7 @@ setup(name='dacman',
       author='Devarshi Ghoshal',
       author_email='dghoshal@lbl.gov',
       keywords='',
-      packages=find_packages(exclude=['ez_setup']),
+      packages=find_packages(exclude=['ez_setup', 'tests', 'plugins']),
       include_package_data=True,
       zip_safe=False,
       classifiers=['Development Status :: 1 - Alpha',
@@ -48,8 +45,8 @@ setup(name='dacman',
                    'Topic :: Scientific/Engineering',
                    'License :: OSI Approved :: 3-clause BSD License'
       ],
-      install_requires=install_deps,
+      install_requires=get_install_requires(),
       entry_points={'console_scripts': ['dacman = dacman.cli:main']},
       data_files=[(os.path.join(dacman_dir, 'config'), ['config/logging.yaml']),
-                  ('', ['VERSION'])]
+                 ]
 )
