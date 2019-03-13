@@ -48,6 +48,27 @@ Dac-Man command-line. To test, run the following commands:
         cd examples
         ./simple.sh
 
+Running the test suite
+----------------------
+
+Dac-man's test suite can be found in the `tests/` directory.
+The [Tox](https://tox.readthedocs.io/en/latest/) utility is used to run the test suite automatically over multiple Python versions.
+
+To run the test suite using Tox, from the root of the repository:
+
+```sh
+pip install tox
+tox
+```
+
+Depending on which Python interpreters are available in the environment, some tests might fail.
+The [tox-conda](https://github.com/tox-dev/tox-conda) plugin allows Tox to use Conda to install and manage packages and environments:
+
+```sh
+pip install tox tox-conda
+tox
+```
+
 Contribute
 ----------
 
