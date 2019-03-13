@@ -12,7 +12,9 @@ dist/
 MANIFEST
 
 # Testing
+.cache/
 .pytest_cache/
+.tox/
 
 # Environments
 .env
