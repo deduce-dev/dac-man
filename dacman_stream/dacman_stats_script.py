@@ -1,6 +1,8 @@
 import os
 import sys
 import csv
+import math
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -132,6 +134,8 @@ def start_stats_calculation(data_send_start_path,
 
     d = data_send_start
     keys_sorted_by_time = [(k, d[k]) for k in sorted(d, key=d.get)]
+    d = job_end_data_put
+    job_end_data_put_sorted = [(k, float(d[k])) for k in sorted(d, key=d.get)]
 
     ###########################################################
     # Calculating Stats
@@ -174,6 +178,30 @@ def start_stats_calculation(data_send_start_path,
     print("Throughput [n(Jobs)=%s/Turnaround time]: " % n_jobs, 
         float(n_jobs)/float(turaround_time), file=output_filename)
 
+    #### Calculating Throughput [n(Jobs)/second]
+
+    first_job_finished_time = math.floor(job_end_data_put_sorted[0][1])
+    
+    throughput_per_second = defaultdict(int)
+    k = 1
+    for i in range(len(job_end_data_put_sorted)):
+        time_index = \
+            math.floor(job_end_data_put_sorted[i][1]) - first_job_finished_time + 1
+
+        for j in range(time_index - k):
+            throughput_per_second[k+j] = 0
+
+        k = time_index
+
+        throughput_per_second[time_index] += 1
+        k += 1
+
+    throughput_time_list = []
+    throughput_job_count_list = []
+    for k, v in throughput_per_second.items():
+        throughput_time_list.append(k)
+        throughput_job_count_list.append(v)
+
     #### Calculating Data transfer overhead [Avg(Data send end - Data send start)]
 
     data_transfer_overhead_list = []
@@ -188,6 +216,8 @@ def start_stats_calculation(data_send_start_path,
     ###########################################################
     # Plotting
     ###########################################################
+
+    #### Plotting Latency
 
     #### Creates two subplots and unpacks the output array immediately
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10,10))
@@ -206,6 +236,23 @@ def start_stats_calculation(data_send_start_path,
          % (n_jobs, 1.0/data_transfer_overhead, n_nodes, n_processes))
 
     png_filename = "latency_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
+        1.0/data_transfer_overhead)
+
+    fig.savefig(os.path.join(output_dir, png_filename))
+    #plt.show()
+
+    #### Plotting Throughput
+
+    fig, ax1 = plt.subplots(1, 1, sharex=True)
+    ax1.plot(throughput_time_list, throughput_job_count_list)
+    ax1.set(xlabel='time (s)', ylabel='throughput (jobs/s)')
+
+    ax1.grid()
+
+    fig.suptitle('%i jobs, data generation rate: %.1f jobs/sec, %i nodes, %i processes'\
+         % (n_jobs, 1.0/data_transfer_overhead, n_nodes, n_processes))
+
+    png_filename = "throughput_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
         1.0/data_transfer_overhead)
 
     fig.savefig(os.path.join(output_dir, png_filename))
