@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 import json
 
 
+
 class DiffAction:
     ADD = 'add'
     DELETE = 'delete'
@@ -343,8 +344,10 @@ class TableDiffer(BaseDiffer):
         # return self.diff_factory(*data_pair)
         builder = self.get_builder(*files)
         builder.build_columns(comparators=self.comparators)
+        builder.build_values()
         # TODO obviously this is not the right place to do this conversion
-        return builder.get_diff(context={'old': str(files[0]), 'new': str(files[1]), 'diff_params': self.params})
+        # and probably, it should go directly to the JSON/YAML serializer (for json.JSONEncoder, that would be a custom `default` function)
+        return builder.get_diff(context={'old': str(files[0]), 'new': str(files[1]), 'config': self.params})
 
     def get_builder(self, *args, **kwargs):
         data_pair = self.get_data(*args)
@@ -361,45 +364,45 @@ class TableDiff(BaseDiff):
     # TODO should we hard-code the components?
     # TODO this is a case of "composite" Diff. Is this peculiar/common enough to be worth a proper concept/interface?
     # it sure is a pain in the rear to deal with all this repetition...
-    def __init__(self, schema=None, index=None, records=None, **kwargs):
+    def __init__(self, schema=None, index=None, values=None, **kwargs):
         super().__init__(**kwargs)
 
         self.schema = schema
         self.index = index
-        self.records = records
+        self.values = values
 
         self.added = {
             'schema': self.schema.added,
             'index': self.index.added,
-            'records': self.records.added,
+            'values': self.values.added,
         }
 
         self.deleted = {
             'schema': self.schema.deleted,
             'index': self.index.deleted,
-            'records': self.records.deleted,
+            'values': self.values.deleted,
         }
 
         self.unchanged = {
             'schema': self.schema.unchanged,
             'index': self.index.unchanged,
-            'records': self.records.unchanged,
+            'values': self.values.unchanged,
         }
 
         self.changed = {
             'schema': self.schema.changed,
             'index': self.index.changed,
-            'records': self.records.changed,
+            'values': self.values.changed,
         }
 
     @property
     def components(self):
         yield self.schema
         yield self.index
-        yield self.records
+        yield self.values
 
     def to_record(self):
-        names = ['schema', 'index', 'records']
+        names = ['schema', 'index', 'values']
         d = {name: component.to_record()
                 for name, component in zip(names, self.components)
             }
@@ -465,6 +468,14 @@ class TableDiffBuilder(DiffDataClientMixin):
         self.column_diffs = results
         # temporarily leaving this as an alias, until I check and verify that we can remove it
         self.columns_diff = self.column_diffs
+
+    def get_diff_stack(self):
+        return TableDiffStack.from_column_diffs(self.column_diffs)
+
+    def build_values(self):
+        self.values_diff = TableValuesDiff(self.get_diff_stack())
+
+
     def build_records(self):
         comparison_fields = self.schema_diff.unchanged
         # or maybe the builder should take care of the comparison fields?
@@ -480,7 +491,70 @@ class TableDiffBuilder(DiffDataClientMixin):
         )
 
     def get_diff(self, **kwargs):
-        return TableDiff(schema=self.schema_diff, index=self.index_diff, records=self.records_diff, **kwargs)
+        return TableDiff(schema=self.schema_diff, index=self.index_diff, values=self.values_diff, **kwargs)
+
+
+class TableDiffStack:
+    """
+    A 3-axes representation of a table's diff output.
+
+    Each layer has the shape of the table (index, fields), while the third axis holds the various possible views of the Diff.
+    """
+
+    VIEWS = ['old', 'new', 'difference', 'status']
+
+    @classmethod
+    def from_column_diffs(cls, column_diffs):
+        return cls({view_key: pd.DataFrame({field: diff._table[view_key]
+                                           for field, diff in column_diffs.items()}).dropna(axis='index', how='all')
+                    for view_key in cls.VIEWS
+                   })
+
+    def __init__(self, data):
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def keys(self):
+        return self._data.keys()
+
+    def items(self):
+        return self._data.items()
+
+
+class TableValuesDiff(BaseDiff):
+    """
+    Minimal Diff class storing changes to individual values in a table.
+    """
+
+    @staticmethod
+    def _filter_status(s, status=None, any_of=None):
+        # TODO move this as appropriate if we use this status table paradigm elsewhere
+        # TODO is there any case where we would need to query multiple values as well?
+        if status is not None:
+            match = s == status
+        elif any_of is not None:
+            match = s.isin(any_of)
+
+        return s[match]
+
+    def __init__(self, diff_stack, **kwargs):
+        super().__init__(**kwargs)
+
+        self._stack = diff_stack
+
+        self._status = self._stack['status'].stack().sort_values()
+
+        # TODO if we want to have more information we should take care of this,
+        # e.g. use the index to query self._stack instead of storing it directly
+        def get_values(s):
+            return s.index.to_list()
+
+        self.deleted = self._filter_status(self._status, "D").pipe(get_values)
+        self.added = self._filter_status(self._status, "A").pipe(get_values)
+        self.changed = self._filter_status(self._status, "C").pipe(get_values)
+        self.unchanged = self._filter_status(self._status, any_of=["U", "N"]).pipe(get_values)
 
 
 class TableSchemaDiffer(BaseDiffer):
@@ -511,6 +585,7 @@ class TableSchemaDiff(BaseDiff):
         # TODO for the time being we're leaving this empty
         # we can think of smarter strategies (e.g. fuzzy matching)
         # to infer the most likely field renames
+        # TODO add changes indicated explicitly by the user
         self.changed = set()
 
 
@@ -530,6 +605,7 @@ class TableIndexDiff(BaseDiff):
         self.unchanged = old.intersection(new)
 
         # the index/PK by design cannot be modified
+        # TODO the only case is for changes indicated explicitly by the user
         self.changed = set()
 
 
