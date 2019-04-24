@@ -38,3 +38,6 @@ PATH_BASE = _get_data_path()
 PATHS_BASIC = [PATH_BASE / 'test1' / name for name in ('2019DacManBasicA.csv', '2019DacManBasicB.csv')]
 
 PATHS_2 = [PATH_BASE / 'test2' / f'{name}.csv' for name in ('v1', 'v2')]
+
+# same as test2, but in Excel format
+PATHS_3 = [PATH_BASE / 'test3' / f'{name}.xlsm' for name in ('v1', 'v2')]

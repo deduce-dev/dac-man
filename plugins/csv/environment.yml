@@ -4,7 +4,8 @@ dependencies:
   # this requires deciding what are the versions we want to support
   - python=3.6
   - pandas>=0.24
-  # TODO add package for parsing Excel files
+  # TODO add package(s) for parsing Excel files
+  - xlrd
   - pip:
     # This depends on the current directory structure, and it assumes that:
     # 1) this plugin is two directories down from the root Dac-man repository

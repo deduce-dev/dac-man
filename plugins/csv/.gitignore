@@ -11,6 +11,10 @@ __pycache__
 # Jupyter notebooks
 *.ipynb_checkpoints
 
+# other temp files
+# libreoffice
+.~lock.*
+
 # dacman output files
 diff_*.yml
 
