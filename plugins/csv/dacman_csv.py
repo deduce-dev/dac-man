@@ -182,6 +182,59 @@ class BaseDiffer:
         return self.get_diff(*args)
 
 
+class Loader:
+    """
+    Helper class to streamline and encapsulate the process of loading the data to be diffed from a specified source `io`.
+
+    This class makes no assumption on the relation between the data and the options it manages,
+    i.e. if the same object is used to load all data units or not: this is up to the client (the highest-level Differ, i.e. TableDiffer) to decide.
+    At the moment TableDiffer supports using a single Loader object with different sources; if need be, this assumption can be relaxed to gain more flexibility
+    in case e.g. the two sources to be diffed have different structure, need different processing and so on.
+    """
+    def __init__(self, io=None, load_func=None, load_opts=None,
+                 rename_fields=None,
+                 process_func=None,
+                 index_fields=None,
+                 sort_fields=None,
+                 ):
+
+        self.io = io
+        self.load_func = load_func or pd.read_csv  # TODO should this be the default?
+        # or rather, should the default be set here?
+        self.load_opts = load_opts or {}
+        
+        self.rename_fields = rename_fields or {}
+        self.process_func = process_func or (lambda d: d)
+
+        # TODO decide whether to set defaults here or in the client
+        self.index_fields = index_fields
+        self.sort_fields = sort_fields
+        
+    def get_data(self, io=None):
+
+        io = io or self.io
+        df = (self.load_func(io, **self.load_opts)
+              .rename(columns=self.rename_fields)
+              .pipe(self.process_func)
+             )
+
+        if self.index_fields:
+            df = df.set_index(self.index_fields)
+
+        if self.sort_fields:
+            # TODO this should also support specifying sort order
+            # e.g.[(field_1, ascending_1), (field_2, ascending_2), ...]
+            df = df.sort_values(self.sort_fields)
+        
+        return df
+
+
+# TODO not sure where this thing belongs: it signifies "any", in the sense of default/fallback
+# mostly concerning fields (since they seem to have the largest configuration space), but not exclusively
+# since it's essentially config related I guess that the strongest association would be with TableDiffer
+ANY_KEY = '*'
+
+
 # TODO instead of "CSV", probably a better prefix (i.e. less implementation-specific) would be "TabularData/Table"
 # this is connected to the deeper question of "at what level we want to analyze the data", i.e. "what are we diffing":
 # Roughly, the levels I've identified so far:
@@ -193,43 +246,97 @@ class BaseDiffer:
 # - native pandas data structures
 # - fully domain-specific data semantics
 class TableDiffer(BaseDiffer):
-    
+
+    @classmethod
+    def from_config_py(cls, path, **kwargs):
+        # TODO dynamically load config file path
+        path = Path(path)
+        _locals = {}
+        with path.open('r') as f:
+            exec(f.read(), None, _locals)
+        # TODO think about changing the format so that e.g. keys are module-level variables instead of having to use a dict
+        config = _locals['CONFIG']
+
+        return cls(config=config, **kwargs)
+
     def __init__(self,
-                 read_options=None,
-                 process=None,
-                 index_columns=None,
+                 config=None,
+                 loader=None,
                  diff_factory=None,
                  display_data=False,
     ):
-        self.read_options = read_options or [{}] * 2
-        self.process = process or [lambda d: d] * 2
-        # TODO decide on a consistent naming for "column names":
-        # some options are: columns, cols, fields, field_names, ...
-        self.index_columns = index_columns
-        # options: all of these are part of the diff context, at various levels
+        # TODO use default config instead?
+        self.config = config or {}
+        # TODO what to do if loader is somehow in contrast with config?
+        self.loader = loader or self.get_loader(self.config)
+        self.comparators = self.get_comparators(self.config)
 
         self.diff_factory = diff_factory or TableDiff
 
         self.display_data = display_data
 
+    def get_loader(self, config):
+        # TODO this smells a bit - probably we can decide once we streamline the config pathway
+        # TODO this should be an enum
+        load_mode = config.get('load_mode', 'csv')
+        map_mode_to_func = {'csv': pd.read_csv, 'excel': pd.read_excel}
+
+        load_func = config.get('load_func', map_mode_to_func[load_mode])
+
+        loader = Loader(
+            io=None,  # this will be set in `get_diff()`
+            load_func=load_func,
+            load_opts=config.get('load_opts'),
+            rename_fields=config.get('rename_fields'),
+            process_func=config.get('process_func'),
+            # TODO index_fields?
+            index_fields=config.get('index_fields'),
+            sort_fields=config.get('sort_fields'),
+        )
+
+        return loader
+
+    def get_comparators(self, config):
+
+        # TODO an explicit table is probably better than trying to locals()[name]
+        # also, we could use aliases and so on
+        obj_table = {
+            'compare_eq': compare_eq,
+            'compare_numeric': compare_numeric,
+            'compare_time': compare_time,
+        }
+
+        # TODO this is probably more general than this, and could go elsewhere
+        def get_comparator_obj(obj_or_name):
+            if callable(obj_or_name):
+                obj = obj_or_name
+            else:
+                name = obj_or_name
+                obj = obj_table.get(name)
+            if obj is None:
+                pass
+                # TODO try to search for it in the dynamically loaded module
+                # or is it better to update the obj_table and search there?
+            return obj
+
+        # TODO think where it would be the best place to insert those complicated rules to assign comparators based on the fields
+        # (and, in general, if it makes sense or not)
+        input_ = config.get('comparators', {})
+
+        objs = {key: get_comparator_obj(comparator) for key, comparator in input_.items()}
+
+        return objs
+
     def get_data(self, *files):
-        data_pair = [pd.read_csv(file, **opts)
-                     for file, opts in zip(files, self.read_options)
-        ]
-
-        data_pair = [data.pipe(f)
-                     for data, f in zip(data_pair, self.process)
-                    ]
-
-        return data_pair
+        # TODO adapt to use two different loaders
+        return [self.loader.get_data(file) for file in files]
 
     @property
     def params(self):
+        # config options: all of these are part of the diff context, at various levels
         # I should pass these to the diff or the builder
-        return {
-            'read_options': self.read_options,
-            'index_columns': self.index_columns,
-        }
+        # TODO if we want to support different loaders, then we'll have to rethink this structure
+        return dict(self.config)
 
     def get_diff(self, *files):
         # data_pair = self.get_data(*files)
@@ -514,9 +621,9 @@ def get_cli_parser():
     parser.add_argument('old', type=Path, help='path to old file')
     parser.add_argument('new', type=Path, help='path to new file')
     parser.add_argument('-f', '--format', type=str, required=False, choices=['json'], default='json', help='output format of the diff')
+    parser.add_argument('-c', '--config', required=False, default=None, help='path to configuration file')
 
     return parser
-
 
 
 def main():
@@ -526,13 +633,18 @@ def main():
     old, new = args.old, args.new
     format_ = args.format
 
-    # print(f'diff "{old}" -> "{new}" [format: {format_}]')
+    config = args.config
 
-    differ = TableDiffer()
+    if config:
+        differ = TableDiffer.from_config_py(Path(config))
+    else:
+        differ = TableDiffer()
+
     diff = differ(old, new)
     diff_record = diff.to_record()
 
     if format_ == 'json':
+        # TODO move this to appropriate DiffView class
         output = json.dumps(diff_record, indent=4, separators=(', ', ': '))
         print(output)
 
