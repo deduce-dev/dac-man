@@ -1,7 +1,7 @@
 import pandas as pd
 
 from dacman_csv import TableDiffer
-from dacman_csv import compare_eq, compare_numeric, compare_time
+from dacman_csv.comparators import compare_eq, compare_numeric, compare_time
 
 import pytest
 
