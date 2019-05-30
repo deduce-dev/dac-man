@@ -1,0 +1,4 @@
+# we need to have "requirements.txt" included in sdist,
+# which in turn is required for tox to install the dependencies
+include *.txt
+

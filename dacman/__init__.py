@@ -23,13 +23,8 @@ import os
 import yaml
 import sys
 
-from pkg_resources import Requirement, resource_filename
+from ._version import __version__
 
-def get_version():
-    version_file = resource_filename(Requirement.parse("dacman"),"VERSION")
-    with open(version_file) as f:
-        version = f.readline().strip()
-        return version
 
 def setup_logging(log_config, log_level):
     if os.path.exists(log_config):
@@ -51,7 +46,6 @@ def init_log():
 
 init_log()
 
-__version__ = get_version()
 
 '''
 Only exposing the diff related classes for the API.
