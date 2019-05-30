@@ -3,7 +3,8 @@ FROM ubuntu:18.04
 ARG USER=mpi
 ENV USER ${USER}
 
-
+# HOME must be added for NERSC to be able to load 
+# the installed packages from ~/.local
 ENV DEBIAN_FRONTEND=noninteractive \
     USER_HOME=/home/${USER} \ 
     HOME=/home/${USER}
@@ -13,7 +14,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends sudo apt-utils && \
     apt-get install -y --no-install-recommends openssh-server \
         python3-dev python3-numpy python3-pip python3-virtualenv python3-scipy redis-tools \
-        gcc gfortran libopenmpi-dev openmpi-bin openmpi-common openmpi-doc binutils  && \
+        gcc gfortran libopenmpi-dev openmpi-bin openmpi-common openmpi-doc binutils iperf vim && \
     apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 

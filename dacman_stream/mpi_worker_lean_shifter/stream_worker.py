@@ -21,6 +21,7 @@ import config as _config
 
 data_pull_start = {}
 data_pull_end = {}
+job_end_processing = {}
 job_end_data_put = {}
 
 def get_redis_instance(host, port, db):
@@ -29,8 +30,7 @@ def get_redis_instance(host, port, db):
     '''
     r = redis.Redis(
         host=host,
-        port=port,
-        db=db
+        port=port
     )
 
     return r
@@ -60,8 +60,12 @@ def dataid_to_datablock(r, data_id1, data_id2):
     '''
     Retrieves DataBlocks from given Data IDs
     '''
-    data1 = np.fromstring(r.get(data_id1), dtype='<f4')
-    data2 = np.fromstring(r.get(data_id2), dtype='<f4')
+    #data1 = np.fromstring(r.get(data_id1), dtype='<f4')
+    #data2 = np.fromstring(r.get(data_id2), dtype='<f4')
+    data1, data2 = r.mget([data_id1, data_id2])
+
+    data1 = np.fromstring(data1, dtype='<f4')
+    data2 = np.fromstring(data2, dtype='<f4')
 
     return data1, data2
 
@@ -81,7 +85,9 @@ def process_task(r, task, custom_analyzer):
     data_pull_end[task_uuid] = time.time()
 
     try:
-        r.set(task_uuid, (custom_analyzer(data1, data2)))
+        rms_log, t_test_t, t_test_p = custom_analyzer(data1, data2)
+        job_end_processing[task_uuid] = time.time()
+        r.set(task_uuid, (rms_log, t_test_t, t_test_p))
         job_end_data_put[task_uuid] = time.time()
     except:
         print("Unexpected error:", sys.exc_info()[0])
@@ -111,6 +117,15 @@ def write_to_csv():
             writer.writerow([key, value])
 
     name = _config.CSV_DICTS_DIRS[2]
+    output_full_path = os.path.join(output_dir_path, name, 
+            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+
+    with open(output_full_path, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        for key, value in job_end_processing.items():
+            writer.writerow([key, value])
+
+    name = _config.CSV_DICTS_DIRS[3]
     output_full_path = os.path.join(output_dir_path, name, 
             '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
@@ -154,12 +169,15 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
             #### will block on redis till it return a task
             #### Note: timeout here is 10 seconds
             task = r.brpop(redis_queue_id, 10)
+            #task = r.rpop(redis_queue_id)
             if task:
                 failed_count = 0
 
                 print(rank, "is processing task:", task[1], end='\n\n')
+                #print(rank, "is processing task:", task, end='\n\n')
                 try:
                     out_code = process_task(r, task[1], custom_analyzer)
+                    #out_code = process_task(r, task, custom_analyzer)
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     traceback.print_exc()
@@ -167,6 +185,7 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
             else:
                 print("Queue is empty")
                 failed_count += 1
+                time.sleep(1)
 
                 if failed_count == 5:
                     _thread.start_new_thread(write_to_csv, ())

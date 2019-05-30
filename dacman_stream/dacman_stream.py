@@ -5,6 +5,7 @@ import redis
 import uuid
 import time
 import _thread
+import numpy as np
 from datetime import datetime
 from hashlib import blake2b
 
@@ -71,7 +72,7 @@ def publish_tasks(task_queue_hs, job_o_list_hs, dataA, dataB):
     print("Pushed", task_uuid, "To", task_queue_hs)
 
 
-def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir, dataset, output_dir='.'):
+def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir, dataset, output_dir='.', streaming_time=5):
     mean_correct = False
     use_gaussian_filter = False
     do_ttest = True
@@ -92,8 +93,13 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
 
             print("n_frames:", n_frames)
 
-            for ii in range(0,n_frames-1,loopstep):
-                jj = ii +1
+            #for ii in range(0,n_frames-1,loopstep):
+            t_end = time.time() + 60 * streaming_time
+            ii = 0
+            while time.time() < t_end:
+                if ii == n_frames-1:
+                    ii = 0
+                jj = ii + 1
 
                 filename1 = "/%s/%s/%s" % (group, subgroup, frames_list[ii])
                 filename2 = "/%s/%s/%s" % (group, subgroup, frames_list[jj])
@@ -111,9 +117,15 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
                 matrix1 = log_mat_pos1.flatten()
                 matrix2 = log_mat_pos2.flatten()
 
-                #print(type(matrix1))
+                print(type(matrix1))
+                print(matrix1[:10])
+                np.random.shuffle(matrix1)
+                np.random.shuffle(matrix2)
+                print(matrix1[:10])
+                exit()
 
                 try:
+                    #time.sleep(2)
                     publish_tasks(queue_hash, job_list_hash, matrix1, matrix2)
                     print("Count: %s" % str(docker_loop_count))
                     docker_loop_count += 1
@@ -121,6 +133,7 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
 
+                ii += 1
                 ## Remove Later 10/25/2018
                 #if docker_loop_count > 150:
                 #    return
@@ -134,7 +147,7 @@ def printProcLine(diffstream):
         print(line)
 
 
-def diff_edf_a(source_dir, dataset, output_dir):
+def diff_edf_a(source_dir, dataset, output_dir, streaming_time):
     loopstep = 1 #1 = look at every frame; 2 = look at every other frame; 3 = look at every third frame; etc
 
     #### Create the hashes of both the task queue and the 
@@ -158,7 +171,7 @@ def diff_edf_a(source_dir, dataset, output_dir):
 
         two_frame_analysis_publisher(task_queue_hash_string, 
                             job_ordered_list_hash_string, 
-                    loopstep, source_dir, dataset, output_dir)
+                    loopstep, source_dir, dataset, output_dir, streaming_time)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         #diffstream.stop()
@@ -176,17 +189,18 @@ def diff_edf_a(source_dir, dataset, output_dir):
     
 if __name__ == "__main__":
 
-    if (len(sys.argv) < 4):
-            print("Usage: python dacman_stream.py <source_dir> <dataset(h5_file)> <output_dir>")
+    if (len(sys.argv) < 5):
+            print("Usage: python dacman_stream.py <source_dir> <dataset(h5_file)> <output_dir> <streaming_time>")
     else:
         source_dir = os.path.abspath(sys.argv[1])
         dataset = sys.argv[2]
         output_dir = os.path.abspath(sys.argv[3])
+        streaming_time = int(sys.argv[4])
 
-        diff_edf_a(source_dir, dataset, output_dir)
+        diff_edf_a(source_dir, dataset, output_dir, streaming_time)
         print(datetime.now() - startTime)
 
-        output_dir_path = "/Users/absho/workspace/lbnl/deduce/output_dir/started_dir/"
+        output_dir_path = _settings.DACMAN_SOURCE_CSV_DIR
         output_full_path = os.path.join(output_dir_path, 'data_send_start.csv')
 
         with open(output_full_path, 'w') as csv_file:
