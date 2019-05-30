@@ -16,18 +16,15 @@ try:
 except ImportError:
    from scandir import scandir, walk
 
-import yaml
 import sys
 import os
-import uuid
 import difflib
 import time
 
-from dacman.core.change import ChangeManager, CacheStatus
+from dacman.core.change import ChangeManager
 import dacman.core.change as change
 import dacman.core.analyzer as analyzer
-import dacman.core.utils as utils
-from dacman.core.utils import cprint, get_hash_id
+from dacman.core.utils import get_hash_id
 import dacman.core.utils as dacman_utils
 
 import subprocess
@@ -105,12 +102,6 @@ class Differ(object):
         new_base = self.new_path
         self.logger.info('Starting diff calculation')
         if self.old_path_is_file and self.new_path_is_file:
-           old_base = os.path.dirname(self.old_path)
-           new_base = os.path.dirname(self.new_path)
-           #'''
-           #if these are two files in the same directory
-           #'''
-           #if old_base == new_base:
            change_pairs.append((self.old_path, self.new_path))
            return change_pairs
         elif self.old_path_is_file != self.new_path_is_file:
@@ -143,25 +134,10 @@ class Differ(object):
                  is_indexed = True
                  break
 
-        old_basepath = ''
-        new_basepath = ''
-
         if is_indexed:
            changeManager = ChangeManager(self.old_path, self.new_path, False, self.stagingdir)
            status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
            change_data = changeManager.get_changes(status, cached_old_path, cached_new_path)
-
-           '''
-           a subdirectory change may or may not be cached
-           '''
-           if status == CacheStatus.NOT_CACHED:
-              old_path = self.old_path
-              new_path = self.new_path
-           else:
-              old_path = cached_old_path
-              new_path = cached_new_path            
-
-           #print(old_path, new_path)
 
            old_datapath_file = os.path.join(old_index_path, 'DATAPATH')
            new_datapath_file = os.path.join(new_index_path, 'DATAPATH')
@@ -199,26 +175,13 @@ class Differ(object):
            status, cached_old_path, cached_new_path = changeManager.get_cached_paths()
            change_data = changeManager.get_changes(status, cached_old_path, cached_new_path)
 
-           old_datapath_file = os.path.join(indexdir, get_hash_id(cached_old_path), 'DATAPATH')
-           new_datapath_file = os.path.join(indexdir, get_hash_id(cached_new_path), 'DATAPATH')
-
-           #with open(old_datapath_file) as f:
-           #   old_basepath = f.readline().split('\n')[0]
-
-           #with open(new_datapath_file) as f:
-           #   new_basepath = f.readline().split('\n')[0]
-
         changes = change_data.modified
-
-        #print(changes)
 
         self.logger.info('Searching for path indexes')
 
         '''
         find the old and new base directories which are indexed through
         '''
-        #path_prefix_new = new_basepath
-        #path_prefix_old = old_basepath
         path_prefix_new = cached_new_path
         path_prefix_old = cached_old_path
         '''
@@ -248,16 +211,16 @@ class Differ(object):
     '''
     summary of changes (at a high-level, no data-level)
     '''
-    def diff_summary(self, change_pairs):
-        if len(change_pairs) == 0:
-           print('There is no change in the datasets')
-        elif len(change_pairs) == 1:
-           if self.old_path_is_file:
-              print('Files {} and {} changed'.format(self.new_path, self.old_path))
-           else:
-              pass
-        else:
-           pass
+    # def diff_summary(self, change_pairs):
+    #     if len(change_pairs) == 0:
+    #        print('There is no change in the datasets')
+    #     elif len(change_pairs) == 1:
+    #        if self.old_path_is_file:
+    #           print('Files {} and {} changed'.format(self.new_path, self.old_path))
+    #        else:
+    #           pass
+    #     else:
+    #        pass
 
 
     '''
@@ -272,10 +235,6 @@ class Differ(object):
        UNCHANGED_METAFILE = 'unchanged'
 
        self.logger.info('Saving summary of changes')
-       curdir = os.getcwd()
-       #outdir = hashlib.md5('{}{}'.format(self.old_path, self.new_path).encode('utf-8')).hexdigest()
-       #outdir = dacman_utils.hash_comparison_id(self.old_path, self.new_path)
-       #outdir = os.path.join(curdir, outdir)
        outdir = self.outdir
 
        if not os.path.exists(outdir):
@@ -283,25 +242,13 @@ class Differ(object):
        summary_file = os.path.join(outdir, SUMMARY_METAFILE)
 
        change_summary = {}
-       #change_summary['versions'] = {self.new_path: self.old_path}
-       change_summary['versions'] = {'base': {'dataset_id': change_data.old_path, 
+       change_summary['versions'] = {'base': {'dataset_id': change_data.old_path,
                                               'nfiles': change_data.old_nfiles},
                                      'revision': {'dataset_id': change_data.new_path,
                                                   'nfiles': change_data.new_nfiles}}
        change_summary['counts'] = change_data.get_change_map()
-       #change_summary['degree'] = change_data.degree
-       # REMOVED: change_factor, as it is not a useful change metric 
-       #change_summary['change_factor'] = change_data.degree # * 100
        dacman_utils.dump_yaml(change_summary, summary_file)
 
-       '''
-       info_file = os.path.join(outdir, 'change.info')
-       change_info = {'modified': change_data.modified,
-                      'deleted': change_data.deleted,
-                      'added': change_data.added,
-                      'metaonly': change_data.metachange}
-       dacman_utils.dump_yaml(change_info, info_file)
-       '''
        add_change_file = os.path.join(outdir, ADDED_METAFILE)
        del_change_file = os.path.join(outdir, DELETED_METAFILE)
        mod_change_file = os.path.join(outdir, MODIFIED_METAFILE)
@@ -318,13 +265,7 @@ class Differ(object):
           dacman_utils.dict_to_file(change_data.metachange, meta_change_file)
        if len(change_data.unchanged) > 0:
           dacman_utils.list_to_file(change_data.unchanged, unchanged_meta_file)
-
-       #change.display(change_data)
-       #cprint(__modulename__, 'Change information saved in: {}'.format(outdir))
-       #cprint(__modulename__, 'Change information saved in: {}'.format(outdir))
-
 #########################################################################################################
-
     '''
     main diff function that calculates differences between files or directories
     '''    
@@ -335,8 +276,8 @@ class Differ(object):
 
        if self.executor == Differ.DEFAULT_EXECUTOR:
           change_pairs = self.get_change_pairs()
-          self.diff_summary(change_pairs)
-          if self._diff_all and len(change_pairs) > 0:
+          #self.diff_summary(change_pairs)
+          if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
               self.logger.info('Using Python multiprocessing for calculating data changes in modified files')
               self.collection_diff_default(change_pairs)
        elif self.executor == Differ.MPI_EXECUTOR:
@@ -350,8 +291,8 @@ class Differ(object):
              self.logger.error('Tigres is not installed or possibly not in the path')
              sys.exit()
           change_pairs = self.get_change_pairs()
-          self.diff_summary(change_pairs)
-          if self._diff_all and len(change_pairs) > 0:
+          #self.diff_summary(change_pairs)
+          if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
               self.logger.info('Using Tigres for calculating data changes in modified files')
               self.collection_diff_tigres(change_pairs)
        
@@ -363,44 +304,43 @@ class Differ(object):
     '''
     function to calculate diffs between two files using the specified analyzer
     '''
-    def file_diff(self, new_file, old_file):
-       self.logger.info('Calculating changes in %s and %s', new_file, old_file)
-       self.diff_pairs.append((new_file, old_file))
-       if not self.custom_analyzer:
-          logger.info("Using default analyzer")
-          output = self.diff_analyzer.analyze(new_file, old_file)
-          if output != None and output.strip() != '':
-             print(output)
-       elif callable(self.custom_analyzer):
-          logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
-          output = self.custom_analyzer(new_file, old_file)
-          if output != None and output.strip() != '':
-             print(output)
-       elif isinstance(self.custom_analyzer, str):
-          self.logger.info('Using custom executable analyzer %s', custom_analyzer)
-          logger.info("Using custom executable analyzer %s", self.custom_analyzer)
-          output = self.executable_diff(new_file, old_file)
-          if output != None and output.strip() != '':
-             print(output.decode(sys.stdout.encoding).strip())
-       else:
-          self.logger.error('Analyzer type %s is not supported', type(custom_analyzer))
-          raise TypeError('Analyzer type {} not supported'.format(type(custom_analyzer)))
+    # def file_diff(self, new_file, old_file):
+    #    self.logger.info('Calculating changes in %s and %s', new_file, old_file)
+    #    self.diff_pairs.append((new_file, old_file))
+    #    if not self.custom_analyzer:
+    #       self.logger.info("Using default analyzer")
+    #       output = self.diff_analyzer.analyze(new_file, old_file)
+    #       if output != None and output.strip() != '':
+    #          print(output)
+    #    elif callable(self.custom_analyzer):
+    #       self.logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
+    #       output = self.custom_analyzer(new_file, old_file)
+    #       if output != None and output.strip() != '':
+    #          print(output)
+    #    elif isinstance(self.custom_analyzer, str):
+    #       self.logger.info('Using custom executable analyzer %s', self.custom_analyzer)
+    #       output = self.executable_diff(new_file, old_file)
+    #       if output != None and output.strip() != '':
+    #          print(output.decode(sys.stdout.encoding).strip())
+    #    else:
+    #       self.logger.error('Analyzer type %s is not supported', type(self.custom_analyzer))
+    #       raise TypeError('Analyzer type {} not supported'.format(type(self.custom_analyzer)))
                 
 #########################################################################################################
 
     '''
     function to calculate diffs between two files using an external script or app
     '''
-    def executable_diff(self, new_file, old_file):
-        proc = subprocess.Popen([self.custom_analyzer, new_file, old_file],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = proc.communicate()
-        if err:
-            self.logger.error('Error analyzing changes: %s', err)
-            return None
-        else:
-            self.logger.info('Change calculation completed with output: %s', out)
-            return out
+    # def executable_diff(self, new_file, old_file):
+    #     proc = subprocess.Popen([self.custom_analyzer, new_file, old_file],
+    #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #     out, err = proc.communicate()
+    #     if err:
+    #         self.logger.error('Error analyzing changes: %s', err)
+    #         return None
+    #     else:
+    #         self.logger.info('Change calculation completed with output: %s', out)
+    #         return out
 
 #########################################################################################################
         
@@ -414,8 +354,8 @@ class Differ(object):
        pool = multiprocessing.Pool(processes=num_procs)
        for change_pair in change_pairs:
           #result = pool.apply_async(file_diff, args=(change_pair[0], change_pair[1]))
-          result = pool.apply_async(file_diff_mp, args=(change_pair[0], change_pair[1], 
-                                                        self.custom_analyzer, self.diff_analyzer))
+          result = pool.apply_async(file_diff, args=(change_pair[0], change_pair[1],
+                                                     self.custom_analyzer, self.diff_analyzer))
           results.append(result)
 
        pool.close()
@@ -440,9 +380,9 @@ class Differ(object):
           closed_workers = 0
           num_workers = size - 1
           
-          change_pairs = self.get_change_pairs()
-          self.diff_summary(change_pairs)
-          if self._diff_all:
+          #change_pairs = self.get_change_pairs()
+          #self.diff_summary(change_pairs)
+          if self._diff_all or self.old_path_is_file:
               change_pairs = self.get_change_pairs()
 
               while closed_workers < num_workers:
@@ -537,9 +477,10 @@ class Differ(object):
 '''
 TODO: duplicate code that needs to be fixed -- used by python multiprocessing to launch executables.
 '''
-def file_diff_mp(new_file, old_file, custom_analyzer, diff_analyzer):
+def file_diff(new_file, old_file, custom_analyzer, diff_analyzer):
    logger = logging.getLogger(__name__)
    logger.info('Calculating changes in %s and %s', new_file, old_file)
+   print("[{},\n {}]".format(new_file, old_file))
    if not custom_analyzer:
       logger.info("Using default analyzer")
       output = diff_analyzer.analyze(new_file, old_file)
@@ -552,7 +493,7 @@ def file_diff_mp(new_file, old_file, custom_analyzer, diff_analyzer):
          print(output)
    elif isinstance(custom_analyzer, str):
       logger.info("Using custom executable analyzer %s", custom_analyzer)
-      output = executable_diff_mp(new_file, old_file, custom_analyzer)
+      output = executable_diff(new_file, old_file, custom_analyzer)
       if output != None and output.strip() != '':
          print(output.decode(sys.stdout.encoding).strip())
    else:
@@ -560,7 +501,7 @@ def file_diff_mp(new_file, old_file, custom_analyzer, diff_analyzer):
       raise TypeError('Analyzer type {} not supported'.format(type(custom_analyzer)))
 
 
-def executable_diff_mp(new_file, old_file, custom_analyzer):
+def executable_diff(new_file, old_file, custom_analyzer):
    logger = logging.getLogger(__name__)
    proc = subprocess.Popen([custom_analyzer, new_file, old_file],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)

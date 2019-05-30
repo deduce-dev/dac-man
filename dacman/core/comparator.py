@@ -151,15 +151,18 @@ def compare(old_datapath, new_datapath, custom_stagingdir):
             if data remains same, but filepath changes
             '''
             old_filepath = old_data_indexes[datahash]
-            _metachange[filepath] = old_filepath
-            old_path_indexes.pop(old_filepath)
-            old_data_indexes.pop(datahash)
-            basename = os.path.basename(old_filepath)
-            if basename in name_path_map:
-                if old_filepath in name_path_map[basename]:
-                    name_path_map[basename].remove(old_filepath)
-                    if len(name_path_map[basename]) == 0:
-                        name_path_map.pop(basename)
+            if old_filepath in old_path_indexes:
+                _metachange[filepath] = old_filepath
+                old_path_indexes.pop(old_filepath)
+                old_data_indexes.pop(datahash)
+                basename = os.path.basename(old_filepath)
+                if basename in name_path_map:
+                    if old_filepath in name_path_map[basename]:
+                        name_path_map[basename].remove(old_filepath)
+                        if len(name_path_map[basename]) == 0:
+                            name_path_map.pop(basename)
+            else:
+                _added.append(filepath)
         else:
             _added.append(filepath)
                 
