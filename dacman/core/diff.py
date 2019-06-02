@@ -304,46 +304,46 @@ class Differ(object):
     '''
     function to calculate diffs between two files using the specified analyzer
     '''
-    # def file_diff(self, new_file, old_file):
-    #    self.logger.info('Calculating changes in %s and %s', new_file, old_file)
-    #    self.diff_pairs.append((new_file, old_file))
-    #    if not self.custom_analyzer:
-    #       self.logger.info("Using default analyzer")
-    #       output = self.diff_analyzer.analyze(new_file, old_file)
-    #       if output != None and output.strip() != '':
-    #          print(output)
-    #    elif callable(self.custom_analyzer):
-    #       self.logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
-    #       output = self.custom_analyzer(new_file, old_file)
-    #       if output != None and output.strip() != '':
-    #          print(output)
-    #    elif isinstance(self.custom_analyzer, str):
-    #       self.logger.info('Using custom executable analyzer %s', self.custom_analyzer)
-    #       output = self.executable_diff(new_file, old_file)
-    #       if output != None and output.strip() != '':
-    #          print(output.decode(sys.stdout.encoding).strip())
-    #    else:
-    #       self.logger.error('Analyzer type %s is not supported', type(self.custom_analyzer))
-    #       raise TypeError('Analyzer type {} not supported'.format(type(self.custom_analyzer)))
+    def file_diff(self, new_file, old_file):
+       self.logger.info('Calculating changes in %s and %s', new_file, old_file)
+       self.diff_pairs.append((new_file, old_file))
+       if not self.custom_analyzer:
+          self.logger.info("Using default analyzer")
+          output = self.diff_analyzer.analyze(new_file, old_file)
+          if output != None and output.strip() != '':
+             print(output)
+       elif callable(self.custom_analyzer):
+          self.logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
+          output = self.custom_analyzer(new_file, old_file)
+          if output != None and output.strip() != '':
+             print(output)
+       elif isinstance(self.custom_analyzer, str):
+          self.logger.info('Using custom executable analyzer %s', self.custom_analyzer)
+          output = self.executable_diff(new_file, old_file)
+          if output != None and output.strip() != '':
+             print(output.decode(sys.stdout.encoding).strip())
+       else:
+          self.logger.error('Analyzer type %s is not supported', type(self.custom_analyzer))
+          raise TypeError('Analyzer type {} not supported'.format(type(self.custom_analyzer)))
                 
 #########################################################################################################
 
     '''
     function to calculate diffs between two files using an external script or app
     '''
-    # def executable_diff(self, new_file, old_file):
-    #     proc = subprocess.Popen([self.custom_analyzer, new_file, old_file],
-    #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #     out, err = proc.communicate()
-    #     if err:
-    #         self.logger.error('Error analyzing changes: %s', err)
-    #         return None
-    #     else:
-    #         self.logger.info('Change calculation completed with output: %s', out)
-    #         return out
+    def executable_diff(self, new_file, old_file):
+        proc = subprocess.Popen([self.custom_analyzer, new_file, old_file],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        if err:
+            self.logger.error('Error analyzing changes: %s', err)
+            return None
+        else:
+            self.logger.info('Change calculation completed with output: %s', out)
+            return out
 
 #########################################################################################################
-        
+
     '''
     function to calculate diffs in a collection of file-pairs using
     the default executor (Python multiprocessing)
