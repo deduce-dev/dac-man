@@ -278,6 +278,7 @@ class Differ(object):
           change_pairs = self.get_change_pairs()
           #self.diff_summary(change_pairs)
           if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
+              print("Data changes in files:")
               self.logger.info('Using Python multiprocessing for calculating data changes in modified files')
               self.collection_diff_default(change_pairs)
        elif self.executor == Differ.MPI_EXECUTOR:
@@ -293,6 +294,7 @@ class Differ(object):
           change_pairs = self.get_change_pairs()
           #self.diff_summary(change_pairs)
           if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
+              print("Data changes in files:")
               self.logger.info('Using Tigres for calculating data changes in modified files')
               self.collection_diff_tigres(change_pairs)
        
@@ -307,21 +309,22 @@ class Differ(object):
     def file_diff(self, new_file, old_file):
        self.logger.info('Calculating changes in %s and %s', new_file, old_file)
        self.diff_pairs.append((new_file, old_file))
+       print("[{},\n {}]".format(new_file, old_file))
        if not self.custom_analyzer:
           self.logger.info("Using default analyzer")
           output = self.diff_analyzer.analyze(new_file, old_file)
-          if output != None and output.strip() != '':
+          if output is not None and output.strip() != '':
              print(output)
        elif callable(self.custom_analyzer):
           self.logger.info("Using custom function analyzer %s", self.custom_analyzer.__name__)
           output = self.custom_analyzer(new_file, old_file)
-          if output != None and output.strip() != '':
+          if output is not None and output.strip() != '':
              print(output)
        elif isinstance(self.custom_analyzer, str):
           self.logger.info('Using custom executable analyzer %s', self.custom_analyzer)
           output = self.executable_diff(new_file, old_file)
-          if output != None and output.strip() != '':
-             print(output.decode(sys.stdout.encoding).strip())
+          if output is not None and output.strip() != '':
+             print(output)
        else:
           self.logger.error('Analyzer type %s is not supported', type(self.custom_analyzer))
           raise TypeError('Analyzer type {} not supported'.format(type(self.custom_analyzer)))
@@ -339,8 +342,9 @@ class Differ(object):
             self.logger.error('Error analyzing changes: %s', err)
             return None
         else:
-            self.logger.info('Change calculation completed with output: %s', out)
-            return out
+            out_decoded = out.decode(sys.stdout.encoding).strip()
+            self.logger.info('Change calculation completed with output: %s', out_decoded)
+            return out_decoded
 
 #########################################################################################################
 
@@ -384,7 +388,7 @@ class Differ(object):
           #self.diff_summary(change_pairs)
           if self._diff_all or self.old_path_is_file:
               change_pairs = self.get_change_pairs()
-
+              print("Data changes in files:")
               while closed_workers < num_workers:
                  result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
                  source = status.Get_source()
@@ -495,8 +499,7 @@ def file_diff(new_file, old_file, custom_analyzer, diff_analyzer):
       logger.info("Using custom executable analyzer %s", custom_analyzer)
       output = executable_diff(new_file, old_file, custom_analyzer)
       if output != None and output.strip() != '':
-         out_str = output.decode(sys.stdout.encoding).strip()
-         print(out_str)
+         print(output)
    else:
       logger.error('Analyzer type %s is not supported', type(custom_analyzer))
       raise TypeError('Analyzer type {} not supported'.format(type(custom_analyzer)))
@@ -511,9 +514,9 @@ def executable_diff(new_file, old_file, custom_analyzer):
       logger.error('Error analyzing changes: %s', err)
       return None
    else:
-      out_str = out.decode(sys.stdout.encoding).strip()
-      logger.info('Change calculation completed with output: %s', out_str)
-      return out_str
+      out_decoded = out.decode(sys.stdout.encoding).strip()
+      logger.info('Change calculation completed with output: %s', out_decoded)
+      return out_decoded
                 
 #########################################################################################################
 

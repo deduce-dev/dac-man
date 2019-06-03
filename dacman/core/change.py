@@ -617,7 +617,8 @@ def set_change_from_cache(change, change_dir):
    
 
 def display(change):
-    print("Additions: {}, Deletions: {}, Modifications: {}, Metadata changes: {}, Unchanged: {}".
+    print("File changes in the dataset:")
+    print("\t Additions: {}, Deletions: {}, Modifications: {}, Metadata changes: {}, Unchanged: {}".
           format(len(change.added),
                  len(change.deleted),
                  len(change.modified),
