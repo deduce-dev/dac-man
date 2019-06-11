@@ -96,43 +96,36 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
             #for ii in range(0,n_frames-1,loopstep):
             t_end = time.time() + 60 * streaming_time
             ii = 0
+
+            filename1 = "/%s/%s/%s" % (group, subgroup, frames_list[ii])
+            dx1 = fx[filename1]
+            log_mat_pos1 = dx1[0,:,:]
+            matrix_temp = log_mat_pos1.flatten()
             while time.time() < t_end:
                 if ii == n_frames-1:
                     ii = 0
                 jj = ii + 1
 
-                filename1 = "/%s/%s/%s" % (group, subgroup, frames_list[ii])
                 filename2 = "/%s/%s/%s" % (group, subgroup, frames_list[jj])
-                dx1 = fx[filename1]
                 dx2 = fx[filename2]         
-                imagedata1 = dx1[0,:,:]
-                imagedata2 = dx2[0,:,:]
-
-                data1 = imagedata1
-                data2 = imagedata2
-
-                log_mat_pos1=data1 #
-                log_mat_pos2=data2 #
+                log_mat_pos2 = dx2[0,:,:]
                 
-                matrix1 = log_mat_pos1.flatten()
                 matrix2 = log_mat_pos2.flatten()
 
-                print(type(matrix1))
-                print(matrix1[:10])
-                np.random.shuffle(matrix1)
+                #print(type(matrix1))
+
                 np.random.shuffle(matrix2)
-                print(matrix1[:10])
-                exit()
 
                 try:
                     #time.sleep(2)
-                    publish_tasks(queue_hash, job_list_hash, matrix1, matrix2)
+                    publish_tasks(queue_hash, job_list_hash, matrix_temp, matrix2)
                     print("Count: %s" % str(docker_loop_count))
                     docker_loop_count += 1
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
 
+                matrix_temp = np.copy(matrix2)
                 ii += 1
                 ## Remove Later 10/25/2018
                 #if docker_loop_count > 150:

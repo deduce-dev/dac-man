@@ -271,7 +271,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
             ax_curr.grid()
 
     fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'throughput (jobs/s)', va='center', rotation='vertical')
+    fig.text(0.04, 0.5, 'throughput (Data-Files/second)', va='center', rotation='vertical')
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -360,7 +360,7 @@ def start_stats_calculation(data_send_start_path,
     # Calculating Stats
     ###########################################################
 
-    #### Calculating job arrival rate [Max(data_send_end) - Min(data_send_end)]
+    #### Calculating job arrival rate [n_jobs/(Max(data_send_end) - Min(data_send_end))]
 
     data_send_end_max = float('-inf')
     data_send_end_min = float('inf')
@@ -495,7 +495,6 @@ def start_stats_calculation(data_send_start_path,
 
     to_n_elements = 300
 
-    #### Plotting multiple graphs in one figure
     event_time_latencies_arr.append(
             aggregate_list(latency_list, to_n_elements))
     pure_process_time_latencies_arr.append(
@@ -506,6 +505,19 @@ def start_stats_calculation(data_send_start_path,
             aggregate_list(throughput_job_count_list, to_n_elements))
     throughput_time_list_arr.append(
             aggregate_list(throughput_time_list, to_n_elements))
+
+    '''
+    event_time_latencies_arr.append(
+            aggregate_list(latency_list, to_n_elements))
+    pure_process_time_latencies_arr.append(
+            aggregate_list(pure_processing_time_latency_list, to_n_elements))
+    process_time_latencies_arr.append(
+            aggregate_list(processing_time_latency_list, to_n_elements))
+    throughput_job_count_list_arr.append(
+            aggregate_list(throughput_job_count_list, to_n_elements))
+    throughput_time_list_arr.append(
+            aggregate_list(throughput_time_list, to_n_elements))
+    '''
 
     n_jobs_arr.append(n_jobs)
     job_arrival_rate_arr.append(job_arrival_rate)
