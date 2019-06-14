@@ -1,11 +1,18 @@
+from pathlib import Path
 import json
+
+try:
+    from IPython.display import (display, JSON as ipy_JSON)
+except ImportError as e:
+    print('No rich output available. Falling back to STDOUT.')
+    display = print
+
 
 from . import _base
 
 
 # TODO maybe at some point it will make sense to have a lightweight DiffData class
 def display_diff_data(old, new):
-    from IPython.display import display, display_pretty
 
     print('displaying diff data:')
     print('old:')
@@ -40,7 +47,14 @@ class PrettyPrint(_base.DiffClient):
         if self.backend == 'json':
             return json.dumps(self.diff.to_record(), indent=4, separators=(', ', ': '), cls=_ExtendedJSONEncoder)
 
-    def __repr__(self):
+    def _ipython_display_(self):
+        # ipy_JSON accept Python dicts that are encodable to JSON with default settings
+        # to avoid re-implementing the functionality in _ExtendedJSONEncoder,
+        # we do a round-trip conversion to obtain a dict with compatible values
+        data = json.loads(self.render())
+        display(ipy_JSON(data))
+
+    def __str__(self):
         return self.render()
 
 
@@ -95,12 +109,10 @@ class Interactive(_base.DiffClient):
         )
 
     def _ipython_display_(self):
-        from IPython.display import display
 
-        display(self.display())
+        self.display()
 
     def display(self):
-        from IPython.display import display
         from ipywidgets import widgets
 
         def f(sort_by=None, key=None):
@@ -121,4 +133,4 @@ class Interactive(_base.DiffClient):
 
         output = interactive_output.children[-1]
         output.layout.height = '700px'
-        return interactive_output
+        display(interactive_output)
