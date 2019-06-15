@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 from pathlib import Path
-import json
 
 from . import TableDiffer
+from .viewers import PrettyPrint
 
 
 def get_cli_parser():
@@ -38,6 +38,7 @@ def main():
     diff_record = diff.to_record()
 
     if format_ == 'json':
-        # TODO move this to appropriate DiffView class
-        output = json.dumps(diff_record, indent=4, separators=(', ', ': '))
-        print(output)
+
+        output_str = str(PrettyPrint(diff))
+
+        print(output_str)
