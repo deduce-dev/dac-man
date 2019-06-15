@@ -4,7 +4,7 @@ A plug-in for Dac-man to compute, analyze and visualize differences (_diffs_) be
 
 ## Installation
 
-1. Clone the Dac-man repository and enter the plugin root directory (currenty under `/plugins/csv`)
+1. Clone the Dac-man repository and enter the plugin root directory under `/plugins/csv`
 
     ```sh
     git clone https://github.com/dghoshal-lbl/dac-man && cd dac-man/plugins/csv
@@ -25,6 +25,14 @@ A plug-in for Dac-man to compute, analyze and visualize differences (_diffs_) be
 
     ```sh
     dacman-csv
+    ```
+
+1. To test the functionality with some sample data, run with the following options:
+
+    ```sh
+    TEST_DIR="data/test2"; dacman-csv --config "$TEST_DIR"/config.py "$TEST_DIR"/v1.csv "$TEST_DIR"/v2.csv
+    ```
+
     ```
 
 ## Running the tests
