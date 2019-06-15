@@ -1,0 +1,21 @@
+measurement_id,site_id,measurement_date,temperature,pressure,humidity,comment
+9295,Zulu,02/27/2019,107.6,1167.7,0.678,This text has been changed!
+4311,Alpha,03/04/2019,73.7,1058.0,0.132,
+8052,Alpha,01/16/2019,91.5,822.8,0.85,
+1258,Alpha,04/03/2018,103.7,,0.14,"donec posuere, metus vitae ipsum."
+4419,Bravo,12/23/2018,45.23,999.4,0.164,
+9038,Delta,09/09/2018,102.4,978.8,0.2121,
+1482,Alpha,11/16/2018,67.1,994.6,0.314,"Aliquam sit amet diam in magna bibendum imperdiet. Nullam orci pede, venenatis non, sodales sed, tincidunt eu, felis."
+2066,Alpha,01/29/2019,105.6,958.1,0.57,"O, nulla nisl."
+8674,Echo,08/21/2018,77.9,943.7,,
+3639,Alpha,03/15/2019,85.8,1026.8,0.351,
+2502,Bravo,06/06/2018,60.3,1122.0,0.14,Cras in purus eu magna vulputate luctus.
+2949,Charlie,09/11/2018,106.2,1092.8,0.629,
+4080,Charlie,09/30/2018,90.6,889.1,0.757,"Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros. Vestibulum ac est lacinia nisi venenatis tristique."
+8982,Alpha,11/26/2018,81.2,905.0,0.218,
+2926,Charlie,01/04/2019,62.1,1080.4,0.808,
+7436,Bravo,07/30/2018,53.9,842.5,0.46,Duis bibendum. Morbi non quam nec dui luctus rutrum.
+4467,Charlie,11/15/2018,69.2,894.4,0.338,
+6800,Alpha,12/08/2018,55.2,910.3,0.93,
+6263,Alpha,08/05/2018,57.4,1137.8,0.006,
+1735,Echo,12/05/2018,84.8,1105.2,0.32,

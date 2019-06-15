@@ -1,0 +1,22 @@
+# general Python artefacts
+# TODO move them to top-level gitignore file
+__pycache__
+*.egg-info
+
+# tests
+.cache
+.pytest_cache
+.tox
+
+# Jupyter notebooks
+*.ipynb_checkpoints
+
+# other temp files
+# libreoffice
+.~lock.*
+
+# dacman output files
+diff_*.yml
+
+# development-only files
+_messy.ipynb
