@@ -2,8 +2,8 @@
 #HOST="localhost"
 #PORT="6379"
 HOST="blot.lbl.gov"
-PORT="6381"
-#PORT="6378"
+#PORT="6381"
+PORT="6378"
 DATABASE=0
 
 DATABLOCK_PREFIX="datablock"

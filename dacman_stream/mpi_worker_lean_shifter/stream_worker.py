@@ -64,6 +64,13 @@ def dataid_to_datablock(r, data_id1, data_id2):
     #data2 = np.fromstring(r.get(data_id2), dtype='<f4')
     data1, data2 = r.mget([data_id1, data_id2])
 
+    #p = r.pipeline()
+    #p.mget([data_id1, data_id2])
+    #p.delete(data_id1)
+    #response = p.execute()
+
+    #data1, data2 = response[0]
+
     data1 = np.fromstring(data1, dtype='<f4')
     data2 = np.fromstring(data2, dtype='<f4')
 
@@ -161,10 +168,15 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
         #### process eventually
         failed_count = 0
 
+        #### Set a key to show that the worker is alive
+        r.set("worker", 1)
+
         #### Wait for an hour and reset if a task is popped
         #while (failed_count < 360):
         #### Wait for 120 seconds and reset if a task is popped
-        while (failed_count < 12):
+        #while (failed_count < 12):
+        #### Wait for 25 mins and reset if a task is popped
+        while (failed_count < 150):
             #### redis's BRPOP command is useful here as it 
             #### will block on redis till it return a task
             #### Note: timeout here is 10 seconds

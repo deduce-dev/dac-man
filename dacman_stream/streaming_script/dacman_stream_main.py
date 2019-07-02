@@ -83,15 +83,14 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
     ## Remove Later 10/25/2018
     docker_loop_count = 1
 
-
     for group in fx:
-        print("group: " + group)
+        print("group: " + str(group))
         for subgroup in fx[group]:
-            print("subgroup: " + subgroup)
+            print("subgroup: " + str(subgroup))
             files_list = list(fx[group][subgroup])
-            frames_list = list(filter(lambda x: x.endswith(".edf"), files_list))
-
-            print("files_list: " + str(files_list))
+            #print(str(files_list))
+            #frames_list = list(filter(lambda x: x.endswith(".edf"), files_list))
+            frames_list = files_list
 
             n_frames = len(frames_list)
 
@@ -103,32 +102,40 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
 
             filename1 = "/%s/%s/%s" % (group, subgroup, frames_list[ii])
             dx1 = fx[filename1]
-            log_mat_pos1 = dx1[0,:,:]
+            #log_mat_pos1 = dx1[0,:,:]
+            log_mat_pos1 = dx1[:]
             matrix_temp = log_mat_pos1.flatten()
+            #matrix_temp = dx1
+            #print(type(dx1))
+            #exit()
+
             while time.time() < t_end:
                 if ii == n_frames-1:
                     ii = 0
                 jj = ii + 1
 
                 filename2 = "/%s/%s/%s" % (group, subgroup, frames_list[jj])
-                dx2 = fx[filename2]         
-                log_mat_pos2 = dx2[0,:,:]
+                dx2 = fx[filename2] 
                 
+                #log_mat_pos2 = dx2[0,:,:]
+                log_mat_pos2 = dx2[:]
                 matrix2 = log_mat_pos2.flatten()
+                #matrix2 = dx2
 
                 #print(type(matrix1))
-
-                np.random.shuffle(matrix2)
+                
+                # Shuffling input to make sure that datablocks are new
+                #np.random.shuffle(matrix2)
 
                 try:
-                    #time.sleep(2)
+                    #time.sleep(0.5)
                     publish_tasks(queue_hash, job_list_hash, matrix_temp, matrix2)
                     print("Count: %s" % str(docker_loop_count))
                     docker_loop_count += 1
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
-
+                
                 matrix_temp = np.copy(matrix2)
                 ii += 1
                 ## Remove Later 10/25/2018
@@ -137,7 +144,6 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
 
                 #print(datetime.now() - startTime)
                 #exit()
-        
 
 def printProcLine(diffstream):
     for line in diffstream.printProcStdout():
@@ -197,7 +203,10 @@ if __name__ == "__main__":
         diff_edf_a(source_dir, dataset, output_dir, streaming_time)
         print(datetime.now() - startTime)
 
+        #output_dir_path = "/Users/absho/workspace/lbnl/deduce/output_dir/started_dir/"
+        #output_dir_path = "/dataset/dacman_source_output/"
         output_dir_path = _settings.DACMAN_SOURCE_CSV_DIR
+        
         output_full_path = os.path.join(output_dir_path, 'data_send_start.csv')
 
         with open(output_full_path, 'w') as csv_file:

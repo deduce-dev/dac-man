@@ -83,15 +83,12 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
     ## Remove Later 10/25/2018
     docker_loop_count = 1
 
+    dataset_juli = []
 
     for group in fx:
-        print("group: " + group)
         for subgroup in fx[group]:
-            print("subgroup: " + subgroup)
             files_list = list(fx[group][subgroup])
             frames_list = list(filter(lambda x: x.endswith(".edf"), files_list))
-
-            print("files_list: " + str(files_list))
 
             n_frames = len(frames_list)
 
@@ -105,39 +102,64 @@ def two_frame_analysis_publisher(queue_hash, job_list_hash, loopstep, source_dir
             dx1 = fx[filename1]
             log_mat_pos1 = dx1[0,:,:]
             matrix_temp = log_mat_pos1.flatten()
-            while time.time() < t_end:
-                if ii == n_frames-1:
-                    ii = 0
-                jj = ii + 1
+            
+            dataset_juli = np.copy(matrix_temp)
+            
+            ## June 2019: Making syntheic dataset:
+            dataset_file = "dataset_juli_synthetic_" + str(streaming_time)
+            dataset_file = dataset_file + "m_0s" + ".h5"
 
-                filename2 = "/%s/%s/%s" % (group, subgroup, frames_list[jj])
-                dx2 = fx[filename2]         
-                log_mat_pos2 = dx2[0,:,:]
+            with h5py.File(os.path.join(output_dir, dataset_file), 'a') as hf:
+                hf_grp = hf.create_group("synthetic/als")
+                print("hf_grp: " + str( hf_grp))
+                edf_count = 0
                 
-                matrix2 = log_mat_pos2.flatten()
+                hf_grp.create_dataset("edf" + str(edf_count), data=matrix_temp) 
+                edf_count += 1
 
-                #print(type(matrix1))
+                while time.time() < t_end:
+                    if ii == n_frames-1:
+                        ii = 0
+                    jj = ii + 1
 
-                np.random.shuffle(matrix2)
+                    filename2 = "/%s/%s/%s" % (group, subgroup, frames_list[jj])
+                    dx2 = fx[filename2] 
+                    log_mat_pos2 = dx2[0,:,:]
 
-                try:
-                    #time.sleep(2)
-                    publish_tasks(queue_hash, job_list_hash, matrix_temp, matrix2)
-                    print("Count: %s" % str(docker_loop_count))
-                    docker_loop_count += 1
-                except:
-                    print("Unexpected error:", sys.exc_info()[0])
-                    raise
+                    matrix2 = log_mat_pos2.flatten()
 
-                matrix_temp = np.copy(matrix2)
-                ii += 1
-                ## Remove Later 10/25/2018
-                #if docker_loop_count > 150:
-                #    return
+                    #print(type(matrix1))
+                    
+                    # Shuffling input to make sure that datablocks are new
+                    np.random.shuffle(matrix2)
+                    
+                    #dataset_juli = np.vstack((dataset_juli, matrix2))
+                    hf_grp.create_dataset("edf" + str(edf_count), data=matrix2) 
+                    edf_count += 1
 
-                #print(datetime.now() - startTime)
-                #exit()
-        
+                    try:
+                        #time.sleep(0.5)
+                        #publish_tasks(queue_hash, job_list_hash, matrix_temp, matrix2)
+                        print("Count: %s" % str(docker_loop_count))
+                        docker_loop_count += 1
+                    except:
+                        print("Unexpected error:", sys.exc_info()[0])
+                        raise
+                    
+                    matrix_temp = np.copy(matrix2)
+                    ii += 1
+                    ## Remove Later 10/25/2018
+                    #if docker_loop_count > 150:
+                    #    return
+
+                    #print(datetime.now() - startTime)
+                    #exit()
+    #print(dataset_juli)
+    #print(len(dataset_juli))
+    #dataset_file = output_dir + "dataset_juli_synthetic_" + str(streaming_time)
+    #dataset_file = dataset_file + "_0s_" + ".npy"
+    #np.save(output_dir + "/dataset_juli_0.1m_0s.npy", dataset_juli)
+    #dataset = np.load(output_dir + "/dataset_juli_0.1m_0s.npy")
 
 def printProcLine(diffstream):
     for line in diffstream.printProcStdout():
@@ -197,7 +219,10 @@ if __name__ == "__main__":
         diff_edf_a(source_dir, dataset, output_dir, streaming_time)
         print(datetime.now() - startTime)
 
+        #output_dir_path = "/Users/absho/workspace/lbnl/deduce/output_dir/started_dir/"
+        #output_dir_path = "/dataset/dacman_source_output/"
         output_dir_path = _settings.DACMAN_SOURCE_CSV_DIR
+        
         output_full_path = os.path.join(output_dir_path, 'data_send_start.csv')
 
         with open(output_full_path, 'w') as csv_file:

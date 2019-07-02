@@ -12,7 +12,10 @@ import matplotlib.pyplot as plt
 ###########################################################
 
 event_time_latencies_arr = []
+event_latencies_time_list_arr = []
+event_job_latencies_arr = []
 pure_process_time_latencies_arr = []
+pure_process_latencies_time_list_arr = []
 process_time_latencies_arr = []
 throughput_job_count_list_arr = []
 throughput_time_list_arr = []
@@ -65,7 +68,7 @@ def csv_to_dict(csvfile):
     mydict = {}
     with open(csvfile, mode='r') as infile:
         reader = csv.reader(infile)
-        mydict = {rows[0]:rows[1] for rows in reader}
+        mydict = {rows[0]:float(rows[1]) for rows in reader}
 
     return mydict
 
@@ -113,7 +116,9 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     sorted_indices = [i[0] for i in sorted(enumerate(job_arrival_rate_arr),
                              key=lambda x:x[1], reverse=True)]
 
-    #### Plotting Event-time latencies
+    ########################################################
+    #### Plotting Event-time latencies time series
+    ########################################################
 
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
@@ -127,25 +132,28 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 break
 
             arr_index = sorted_indices[k]
-            job_num_list = [u for u in range(1, len(event_time_latencies_arr[arr_index])+1)]
+            #job_num_list = [u for u in range(1, len(event_time_latencies_arr[arr_index])+1)]
 
             ax_curr = ax
             if type(ax) == "numpy.ndarray":
                 ax_curr = ax[i, j]
 
-            ax_curr.plot(job_num_list, event_time_latencies_arr[arr_index])
+            ax_curr.scatter(
+                event_latencies_time_list_arr,
+                event_time_latencies_arr[arr_index],
+                s=1)
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
             ax_curr.grid()
-            ax_curr.set_xticklabels([])
+            #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time', ha='center')
+    fig.text(0.5, 0.04, 'time (s)', ha='center')
     fig.text(0.04, 0.5, 'Event-time latency (s)', va='center', rotation='vertical')
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
 
-    title += ', 100% Data Size (20 MB), no bursts'
+    #title += ', 100% Data Size (20 MB), no bursts'
 
     #title += ', 100% Data Size (20 MB), no bursts\n' + \
     #         '--' + '\n' + \
@@ -154,12 +162,66 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     fig.suptitle(title)
 
-    png_filename = "event_latencies_%i_%i.png" % (n_nodes_arr[0],
+    png_filename = "event_latencies_scatter_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
 
+    ########################################################
+    #### Plotting Event-time latencies bar chart
+    ########################################################
+
+    fig, ax = plt.subplots(dim1, dim2, sharex=True,
+        figsize=(figsize1,figsize2))
+
+    event_time_latencies_len = len(event_time_latencies_arr)
+
+    for i in range(dim1):
+        for j in range(dim2):
+            k = i*dim2 + j
+            if k >= event_time_latencies_len:
+                break
+
+            arr_index = sorted_indices[k]
+            job_num_list = [u for u in range(1, len(event_job_latencies_arr[arr_index])+1)]
+
+            ax_curr = ax
+            if type(ax) == "numpy.ndarray":
+                ax_curr = ax[i, j]
+
+            #with open('event_job_latencies_arr.csv', 'w', newline='') as f:
+            #    for latency in event_job_latencies_arr[arr_index]:
+            #        f.write(str(latency) + '\n')
+
+            ax_curr.bar(job_num_list, event_job_latencies_arr[arr_index], width=1)
+            #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
+            ax_curr.set_ylim(bottom=0)
+            ax_curr.grid()
+            ax_curr.set_xticklabels([1, 2], minor=True)
+
+    fig.text(0.5, 0.04, 'Jobs', ha='center')
+    fig.text(0.04, 0.5, 'Event-time latency (s)', va='center', rotation='vertical')
+
+    title = '%i nodes, %i processes' \
+            % (n_nodes_arr[0], n_processes_arr[0])
+
+    #title += ', 100% Data Size (20 MB), no bursts'
+
+    #title += ', 100% Data Size (20 MB), no bursts\n' + \
+    #         '--' + '\n' + \
+    #         'DAR: Data arrival rate' \
+         
+
+    fig.suptitle(title)
+
+    png_filename = "event_latencies_bar_%i_%i.png" % (n_nodes_arr[0],
+        n_processes_arr[0])
+
+    fig.savefig(os.path.join(output_dir, png_filename))
+
+    ########################################################
     #### Plotting pure-processing-time latencies
+    ########################################################
 
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
@@ -177,19 +239,22 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
             if type(ax) == "numpy.ndarray":
                 ax_curr = ax[i, j]
 
-            ax_curr.plot(job_num_list, pure_process_time_latencies_arr[arr_index])
+            ax_curr.scatter(
+                pure_process_latencies_time_list_arr,
+                pure_process_time_latencies_arr[arr_index],
+                s=1)
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
             ax_curr.grid()
-            ax_curr.set_xticklabels([])
+            #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time', ha='center')
+    fig.text(0.5, 0.04, 'time (s)', ha='center')
     fig.text(0.04, 0.5, 'Pure-processing-time latency (s)', va='center', rotation='vertical')
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
 
-    title += ', 100% Data Size (20 MB), no bursts'
+    #title += ', 100% Data Size (20 MB), no bursts'
 
     #title += ', 100% Data Size (20 MB), no bursts\n' + \
     #         '--' + '\n' + \
@@ -203,7 +268,9 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     fig.savefig(os.path.join(output_dir, png_filename))
 
+    ########################################################
     #### Plotting Processing-time-data-put latencies
+    ########################################################
 
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
@@ -221,19 +288,22 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
             if type(ax) == "numpy.ndarray":
                 ax_curr = ax[i, j]
 
-            ax_curr.plot(job_num_list, process_time_latencies_arr[arr_index])
+            ax_curr.scatter(
+                event_latencies_time_list_arr,
+                process_time_latencies_arr[arr_index],
+                s=1)
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
             ax_curr.grid()
-            ax_curr.set_xticklabels([])
+            #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time', ha='center')
+    fig.text(0.5, 0.04, 'time (s)', ha='center')
     fig.text(0.04, 0.5, 'Processing-time-data-put latency (s)', va='center', rotation='vertical')
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
 
-    title += ', 100% Data Size (20 MB), no bursts'
+    #title += ', 100% Data Size (20 MB), no bursts'
 
     #title += ', 100% Data Size (20 MB), no bursts\n' + \
     #         '--' + '\n' + \
@@ -247,7 +317,53 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     fig.savefig(os.path.join(output_dir, png_filename))
 
-    #### Plotting Throughput
+    ########################################################
+    #### Plotting Throughput Scatter
+    ########################################################
+
+    fig, ax = plt.subplots(dim1, dim2, sharex=True,
+        figsize=(figsize1,figsize2))
+
+    for i in range(dim1):
+        for j in range(dim2):
+            k = i*dim2 + j
+            if k >= event_time_latencies_len:
+                break
+
+            arr_index = sorted_indices[k]
+
+            ax_curr = ax
+            if type(ax) == "numpy.ndarray":
+                ax_curr = ax[i, j]
+
+            ax_curr.scatter(throughput_time_list_arr[arr_index],
+                throughput_job_count_list_arr[arr_index])
+            #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
+            ax_curr.set_ylim(bottom=0)
+            ax_curr.grid()
+
+    fig.text(0.5, 0.04, 'time (s)', ha='center')
+    fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
+
+    title = '%i nodes, %i processes' \
+            % (n_nodes_arr[0], n_processes_arr[0])
+
+    #title += ', 100% Data Size (20 MB), no bursts'
+
+    #title += ', 100% Data Size (20 MB), no bursts\n' + \
+    #         '--' + '\n' + \
+    #         'DAR: Data arrival rate' \
+         
+    fig.suptitle(title)
+
+    png_filename = "throughputs_scatter_%i_%i.png" % (n_nodes_arr[0],
+        n_processes_arr[0])
+
+    fig.savefig(os.path.join(output_dir, png_filename))
+
+    ########################################################
+    #### Plotting Throughput Line
+    ########################################################
 
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
@@ -271,12 +387,12 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
             ax_curr.grid()
 
     fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'throughput (Data-Files/second)', va='center', rotation='vertical')
+    fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
 
-    title += ', 100% Data Size (20 MB), no bursts'
+    #title += ', 100% Data Size (20 MB), no bursts'
 
     #title += ', 100% Data Size (20 MB), no bursts\n' + \
     #         '--' + '\n' + \
@@ -284,12 +400,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
          
     fig.suptitle(title)
 
-    png_filename = "throughputs_%i_%i.png" % (n_nodes_arr[0],
+    png_filename = "throughputs_line_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
-
-
 
 
 def start_stats_calculation(data_send_start_path,
@@ -314,6 +428,9 @@ def start_stats_calculation(data_send_start_path,
     data_send_start = csv_to_dict(data_send_start_path)
     data_send_end = csv_to_dict(data_send_end_path)
 
+    print("data_send_start: " + str(len(data_send_start)))
+    print("data_send_end: " + str(len(data_send_end)))
+
     ###########################################################
     # Reading data_pull_start, data_pull_end & job_end_data_put
     ###########################################################
@@ -322,6 +439,15 @@ def start_stats_calculation(data_send_start_path,
     data_pull_end = update_multiple_csvs_to_dict(data_pull_end_dir)
     job_end_processing = update_multiple_csvs_to_dict(job_end_processing_dir)
     job_end_data_put = update_multiple_csvs_to_dict(job_end_data_put_dir)
+
+    print("data_pull_start: " + str(len(data_pull_start)))
+    print("data_pull_end: " + str(len(data_pull_end)))
+    print("job_end_processing: " + str(len(job_end_processing)))
+    print("job_end_data_put: " + str(len(job_end_data_put)))
+    #print("data_pull_start: " + str(len(data_pull_start)) + ", " + str(data_pull_start['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
+    #print("data_pull_end: " + str(len(data_pull_end)) + ", " + str(data_pull_end['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
+    #print("job_end_processing: " + str(len(job_end_processing)) + ", " + str(job_end_processing['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
+    #print("job_end_data_put: " + str(len(job_end_data_put)) + ", " + str(job_end_data_put['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
 
     ###########################################################
     # Getting some initial stats for later calculation
@@ -351,10 +477,10 @@ def start_stats_calculation(data_send_start_path,
     # the stats accurately.
     ###########################################################
 
-    d = data_send_start
-    keys_sorted_by_time = [(k, d[k]) for k in sorted(d, key=d.get)]
-    d = job_end_data_put
-    job_end_data_put_sorted = [(k, float(d[k])) for k in sorted(d, key=d.get)]
+    d1 = data_send_start
+    data_send_start_sorted = [(k, d1[k]) for k in sorted(d1, key=d1.get)]
+    d2 = job_end_data_put
+    job_end_data_put_sorted = [(k, float(d2[k])) for k in sorted(d2, key=d2.get)]
 
     ###########################################################
     # Calculating Stats
@@ -392,7 +518,7 @@ def start_stats_calculation(data_send_start_path,
     #### Calculating pulling from Redis overhead time [Avg(Data pull end - Data pull start)]
 
     redis_overhead_time = []
-    for key, time in keys_sorted_by_time:
+    for key, time in data_send_start_sorted:
         diff_value = float(data_pull_end[key]) - float(data_pull_start[key])
         redis_overhead_time.append(diff_value)
 
@@ -401,23 +527,86 @@ def start_stats_calculation(data_send_start_path,
     #print("Redis pull overhead time: ", 
     #    redis_overhead_time, file=output_filename)
 
-    #### Calculating Event-time Latency [Avg(Job End - Data send end)]
+    #### Calculating Event-time Latency time based
+    #### [Avg(job_end_data_put - Data data_send_end end)]
+    '''
+    difference_count = 0
+    for i in range(len(job_end_data_put_sorted)):
+        task1_key, _ = data_send_start_sorted[i]
+        task2_key, _ = job_end_data_put_sorted[i]
+        if task1_key != task2_key:
+            print("Interesting!! task1_key: " + task1_key + ", task2_key: " + task2_key)
+            difference_count += 1
+    if len(job_end_data_put_sorted) == len(data_send_start_sorted):
+        print("Total Job Length: " + str(len(job_end_data_put_sorted)))
+    print("difference_count: " + str(difference_count))
+    '''
 
-    latency_list = []
-    for key, time in keys_sorted_by_time:
-        diff_value = float(data_pull_end[key]) - float(data_send_end[key])
-        latency_list.append(diff_value)
+    time_based_latency_list = []
+    for key, time in job_end_data_put_sorted:
+        diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
+        time_based_latency_list.append(diff_value)
+        event_latencies_time_list_arr.append(time)
+        #event_latencies_time_list_arr.append(
+        #    float(job_end_data_put[key]))
+
+    #### Calculating Event-time Latency job based 
+    #### [Avg(job_end_data_put - Data data_send_end end)]
+
+    job_based_latency_list = []
+    for key, time in data_send_start_sorted:
+        diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
+        job_based_latency_list.append(diff_value)
+
+    # Remove this later
+    #u = 0
+    #for latency in job_based_latency_list:
+    #    print(latency)
+    #    u +=1
+    #    if u > 250:
+    #        break
+    #print("len(job_based_latency_list): " + str(len(job_based_latency_list)))
+    #with open('job_based_latency_list.csv', 'w', newline='') as f:
+    #    for latency in job_based_latency_list:
+    #        f.write(str(latency) + '\n')
+    # End
+
+    #### Comparing the difference between the two event-time latencies
+    #### (time based & job based) for verification
+
+    #difference_count = 0
+    event_latencies_diff_list = []
+    if len(time_based_latency_list) == len(job_based_latency_list):
+        print("Total Job Length: " + str(len(job_based_latency_list)))
+    for i in range(len(time_based_latency_list)):
+        task1_time = time_based_latency_list[i]
+        task2_time = job_based_latency_list[i]
+        if not math.isclose(task1_time, task2_time, rel_tol=1e-09):
+            event_latencies_diff_list.append(abs(task1_time - task2_time))
+            #difference_count += 1
+
+    if event_latencies_diff_list:
+        print("max diff between jobs-sent-first & jobs-finished-first: "
+            + str(max(event_latencies_diff_list)), file=output_filename)
+        #print("difference_count: " + str(difference_count))
+
+    #### Already sorted: To be fixed -- event_latencies_time_list_arr[0]
+    event_latency_time_min = min(event_latencies_time_list_arr)
+    event_latencies_time_list_arr[:] = \
+        [x - event_latency_time_min for x in event_latencies_time_list_arr]
 
     print("Event-time Latency [Avg(Job start - Data send end)]: ", 
-        np.mean(latency_list), file=output_filename)
+        np.mean(job_based_latency_list), file=output_filename)
 
     #### Calculating Pure Processing-time latency = 
     #### Job processing time [Avg(Job end processing - Job start)]
 
     pure_processing_time_latency_list = []
-    for key, time in keys_sorted_by_time:
+    for key, time in data_send_start_sorted:
         diff_value = float(job_end_processing[key]) - float(data_pull_end[key])
         pure_processing_time_latency_list.append(diff_value)
+        pure_process_latencies_time_list_arr.append(
+            float(job_end_processing[key]))
 
     print("Pure-processing-time Latency [Avg(Job end processing - Job start)]: ", 
         np.mean(pure_processing_time_latency_list), file=output_filename)
@@ -426,7 +615,7 @@ def start_stats_calculation(data_send_start_path,
     #### Job processing time + data put [Avg(Job end data put - Job start)]
 
     processing_time_latency_list = []
-    for key, time in keys_sorted_by_time:
+    for key, time in data_send_start_sorted:
         diff_value = float(job_end_data_put[key]) - float(data_pull_end[key])
         processing_time_latency_list.append(diff_value)
 
@@ -443,18 +632,10 @@ def start_stats_calculation(data_send_start_path,
     first_job_finished_time = math.floor(job_end_data_put_sorted[0][1])
     
     throughput_per_second = defaultdict(int)
-    k = 1
     for i in range(len(job_end_data_put_sorted)):
-        time_index = \
+        time_step = \
             math.floor(job_end_data_put_sorted[i][1]) - first_job_finished_time + 1
-
-        for j in range(time_index - k):
-            throughput_per_second[k+j] = 0
-
-        k = time_index
-
-        throughput_per_second[time_index] += 1
-        k += 1
+        throughput_per_second[time_step] += 1
 
     throughput_time_list = []
     throughput_job_count_list = []
@@ -465,7 +646,7 @@ def start_stats_calculation(data_send_start_path,
     #### Calculating Data transfer overhead [Avg(Data send end - Data send start)]
 
     data_transfer_overhead_list = []
-    for key, time in keys_sorted_by_time:
+    for key, time in data_send_start_sorted:
         diff_value = float(data_send_end[key]) - float(data_send_start[key])
         data_transfer_overhead_list.append(diff_value)
 
@@ -493,20 +674,22 @@ def start_stats_calculation(data_send_start_path,
 
     #### Plotting Latency
 
-    to_n_elements = 300
-
     event_time_latencies_arr.append(
-            aggregate_list(latency_list, to_n_elements))
+        time_based_latency_list)
+    event_job_latencies_arr.append(
+        job_based_latency_list)
     pure_process_time_latencies_arr.append(
-            aggregate_list(pure_processing_time_latency_list, to_n_elements))
+        pure_processing_time_latency_list)
     process_time_latencies_arr.append(
-            aggregate_list(processing_time_latency_list, to_n_elements))
+        processing_time_latency_list)
     throughput_job_count_list_arr.append(
-            aggregate_list(throughput_job_count_list, to_n_elements))
+        throughput_job_count_list)
     throughput_time_list_arr.append(
-            aggregate_list(throughput_time_list, to_n_elements))
+        throughput_time_list)
 
     '''
+    to_n_elements = 300
+
     event_time_latencies_arr.append(
             aggregate_list(latency_list, to_n_elements))
     pure_process_time_latencies_arr.append(
