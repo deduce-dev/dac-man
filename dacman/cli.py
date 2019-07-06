@@ -12,7 +12,6 @@
 """
 
 import argparse
-import os
 import sys
 from dacman.core import scanner
 from dacman.core import indexer
@@ -21,6 +20,8 @@ from dacman.core import diff
 from dacman.core import cleanup
 from dacman.core import mpi_indexer
 from dacman.core import metadata
+from dacman.unused import executors
+
 
 def _addScanParser(subparsers):
     parser_worker = subparsers.add_parser('scan',
@@ -68,17 +69,13 @@ def _addDiffParser(subparsers):
                                           help=""" Finds the diff between two datasets """)
 
     parser_worker.set_defaults(action="diff")
-    #parser_worker.add_argument('-o','--oldpath', help='path to the old dataset', required=True)    
-    #parser_worker.add_argument('-n','--newpath', help='path to the new dataset', required=True)
-    parser_worker.add_argument(dest='oldpath', help='path to the old dataset')    
+    parser_worker.add_argument(dest='oldpath', help='path to the old dataset')
     parser_worker.add_argument(dest='newpath', help='path to the new dataset')    
     parser_worker.add_argument('-s','--stage', dest='stagingdir', help='(optional) directory where indexes and metadata information will be saved')    
-    #parser_worker.add_argument('-O','--olddeducedir', help='optional directory for saving indexes and metadata for new datapath (for read-only data directories)')    
-    #parser_worker.add_argument('-N','--newdeducedir', help='optional directory for saving indexes and metadata for new datapath (for read-only data directories)')    
-    parser_worker.add_argument('-o','--outdir', help='path where change information is saved')    
+    parser_worker.add_argument('-o','--outdir', help='path where change information is saved')
     parser_worker.add_argument('-a','--analyzer', help='(optional) custom program to analyze changes')    
-    parser_worker.add_argument('--datachange', help='(optional) find data changes in modified files', action='store_true')
-    parser_worker.add_argument('-e','--executor', help='executor that parallelizes data change calculation', choices=['default', 'mpi', 'tigres'], default='default')
+    parser_worker.add_argument('--compare', help='(optional) find data changes in modified files', action='store_true')
+    parser_worker.add_argument('-e','--executor', help='executor that parallelizes data change calculation', choices=['default', 'threaded', 'mpi', 'tigres'], default='default')
 
 def _addCleanupParser(subparsers):
     parser_worker = subparsers.add_parser('clean',
@@ -101,6 +98,14 @@ def _addMetadataParser(subparsers):
     parser_worker.add_argument('-m', '--metadata', help='user-level metadata')    
     parser_worker.add_argument('-s','--stage', dest='stagingdir', help='(optional) directory where indexes and metadata information will be saved')    
 
+
+def _addPluginParser(subparsers):
+    parser_worker = subparsers.add_parser('plugin',
+                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                          help=""" Removes deduce indexes from a data directory """)
+
+    parser_worker.set_defaults(action="testplugin")
+
 ##################################
 def main():
     parser = argparse.ArgumentParser(description="",
@@ -114,6 +119,7 @@ def main():
     _addDiffParser(subparsers)
     _addCleanupParser(subparsers)
     _addMetadataParser(subparsers)
+    _addPluginParser(subparsers)
 
     args = parser.parse_args()
     if len(args.__dict__) == 0:
@@ -134,10 +140,19 @@ def main():
         change.main(args)
     elif action == 'diff':
         diff.main(args)
+        # comparisons = [(args.newpath, args.oldpath)]
+        # if args.executor == 'mpi':
+        #     mpi.run(comparisons, None)
+        # elif args.executor == 'threaded':
+        #     local_mp.run(comparisons, None)
+        # else:
+        #     local_seq.run(comparisons, None)
     elif action == 'clean':
         cleanup.main(args)
     elif action == 'metadata':
         metadata.main(args)
+    elif action == 'testplugin':
+        executors.test()
     else:
         print("Invalid action!")
 

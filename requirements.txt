@@ -5,4 +5,5 @@ six>=1.10.0
 # using "4.2b1" since it seems to be working with both pip and conda
 # PyYAML>=4.2
 PyYAML>=4.2b1
-
+numpy
+straight.plugin
