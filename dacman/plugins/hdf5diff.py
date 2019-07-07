@@ -117,7 +117,7 @@ class HDF5Plugin(ComparatorBase):
         return support
 
     def description(self):
-        description = '''Default HDF5 comparator usinf ndiff.'''
+        description = '''Default HDF5 comparator using ndiff.'''
         return description
 
     def compare(self, file1, file2, *args):

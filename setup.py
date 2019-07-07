@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import sys
 import os
 
 
@@ -22,7 +21,6 @@ def get_version():
         exec(file_version.read(), None, _locals)
 
     return _locals['__version__']
-
 
 dacman_dir = os.path.join(os.getenv('HOME'), '.dacman')
 if not os.path.exists(dacman_dir):
@@ -48,5 +46,6 @@ setup(name='dacman',
       install_requires=get_install_requires(),
       entry_points={'console_scripts': ['dacman = dacman.cli:main']},
       data_files=[(os.path.join(dacman_dir, 'config'), ['config/logging.yaml']),
+                  (os.path.join(dacman_dir, 'config'), ['config/plugins.yaml'])
                  ]
 )
