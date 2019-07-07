@@ -31,17 +31,9 @@ import logging
 
 try:
     from mpi4py import MPI
-
     MPI4PY_IMPORT = True
 except ImportError:
     MPI4PY_IMPORT = False
-
-try:
-    import tigres
-
-    TIGRES_IMPORT = True
-except ImportError:
-    TIGRES_IMPORT = False
 
 __modulename__ = 'diff'
 
@@ -257,6 +249,7 @@ class Differ(object):
 
         if self.executor == Executor.MPI:
             if not MPI4PY_IMPORT:
+                print("mpi4py is not installed or possibly not in the path.")
                 self.logger.error('mpi4py is not installed or possibly not in the path')
                 sys.exit()
             comm = MPI.COMM_WORLD
@@ -284,7 +277,7 @@ def main(args):
     oldpath = args.oldpath
     newpath = args.newpath
     stagingdir = args.stagingdir
-    analyzer = args.analyzer
+    analyzer = args.plugin
     recursive = args.compare
     outdir = args.outdir
     executor = args.executor

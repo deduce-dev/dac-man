@@ -1,12 +1,9 @@
-import difflib
-
 from dacman.compare.base import ComparatorBase
-from dacman.compare.record import DacmanRecord
+from dacman.compare.adaptor import DacmanRecord
 
 
 class DefaultPlugin(ComparatorBase):
     def __init__(self):
-        #super().__init__()
         self.p_change_header = 0.0
         self.p_change_data = 0.0
 
@@ -23,10 +20,10 @@ class DefaultPlugin(ComparatorBase):
     def compare(self, a, b, *args):
         a_record = DacmanRecord(a)
         b_record = DacmanRecord(b)
-        header_changes = self.__compare_records__(a_record.get_header(),
-                                                  b_record.get_header())
-        data_changes = self.__compare_records__(a_record.get_data(),
-                                                b_record.get_data())
+        header_changes = self._compare_records(a_record.get_header(),
+                                               b_record.get_header())
+        data_changes = self._compare_records(a_record.get_data(),
+                                             b_record.get_data())
         if len(a_record.get_header()) > 0:
             self.p_change_header = len(header_changes['modified']) / len(a_record.get_header()) * 100.0
         if len(a_record.get_data()) > 0:
@@ -36,7 +33,7 @@ class DefaultPlugin(ComparatorBase):
                    'values': data_changes}
         return changes
 
-    def __compare_records__(self, record_list1, record_list2):
+    def _compare_records(self, record_list1, record_list2):
         nrecs1 = len(record_list1)
         nrecs2 = len(record_list2)
         changes = {}
@@ -91,21 +88,21 @@ class DefaultPlugin(ComparatorBase):
 
     def stats(self, changes):
         print("Changes in headers:")
-        self.__element_stats__(changes['headers'])
+        self._element_stats(changes['headers'])
         print("\t % Change = {}".format(self.p_change_header))
         print("Changes in values:")
-        self.__element_stats__(changes['values'])
+        self._element_stats(changes['values'])
         print("\t % Change = {}".format(self.p_change_data))
 
-    def __element_stats__(self, changes):
+    def _element_stats(self, changes):
         added = len(changes['added'])
         deleted = len(changes['deleted'])
         modified = len(changes['modified'])
         unchanged = len(changes['unchanged'])
         print("\t Added={}, Deleted={}, Modified={}, Unchanged={}".format(added,
-                                                                       deleted,
-                                                                       modified,
-                                                                       unchanged))
+                                                                          deleted,
+                                                                          modified,
+                                                                          unchanged))
 
 
 

@@ -11,6 +11,14 @@ class PluginManager(object):
         else:
             return COMPARATORS_MAP['default']
 
+    @classmethod
+    def get_plugins(cls):
+        plugins = load("dacman.plugins", subclasses=ComparatorBase)
+        plugin_list = []
+        for plugin in plugins:
+            plugin_list.append(plugin)
+        return plugin_list
+
 
 def get_comparators():
     plugins = load("dacman.plugins", subclasses=ComparatorBase)
@@ -18,18 +26,14 @@ def get_comparators():
     for plugin in plugins:
         comparator = plugin()
         supports = comparator.supports()
-        #print("Plugin {} supports: {}".format(plugin.__name__, supports))
+        # print("Plugin {} supports: {}".format(plugin.__name__, supports))
+        # For different plugins for the same datatype, a plugin will
+        # be selected at random. Fix later...
         if type(supports) == list:
             for s in supports:
-                if s in comparators:
-                    comparators[s].append(comparator)
-                else:
-                    comparators[s] = comparator
+                comparators[s] = comparator
         else:
-            if supports in comparators:
-                comparators[supports].append(comparator)
-            else:
-                comparators[supports] = comparator
+            comparators[supports] = comparator
 
     return comparators
 

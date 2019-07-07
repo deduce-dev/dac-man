@@ -1,8 +1,16 @@
-from mpi4py import MPI
+import sys
+try:
+    from mpi4py import MPI
+    MPI4PY_IMPORT = True
+except ImportError:
+    MPI4PY_IMPORT = False
 from dacman.compare.data import diff
 
 
 def run(comparisons, plugin):
+    if not MPI4PY_IMPORT:
+        print("mpi4py is not installed or possibly not in the path.")
+        sys.exit()
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()

@@ -1,14 +1,19 @@
+import sys
 try:
     import tigres
     TIGRES_IMPORT = True
 except ImportError:
     TIGRES_IMPORT = False
 
+
 import time
 from dacman.compare.data import diff
 
 
 def run(comparisons, plugin):
+    if not TIGRES_IMPORT:
+        print("tigres is not installed or possibly not in the path.")
+        sys.exit()
     exec_name = 'EXECUTION_DISTRIBUTE_PROCESS'
     exec_plugin = tigres.utils.Execution.get(exec_name)
 
@@ -25,7 +30,7 @@ def run(comparisons, plugin):
                                 impl_name=diff)
         task_array.append(task_diff)
 
-        # FIX THIS: how to pass keyword arg to tigres
+        # FIX THIS: how to pass keyword arg to tigres?
         for comparison in comparisons:
             input_array.append(tigres.InputValues(list_=comparison))
 

@@ -16,4 +16,5 @@ class DataDiffer(object):
         self.plugin = plugin
 
     def start(self):
+        print("Runtime = {}".format(self.executor))
         self.executor_map[self.executor].run(self.comparisons, self.plugin)

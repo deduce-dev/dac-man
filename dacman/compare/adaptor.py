@@ -1,6 +1,7 @@
 
 import os
 import re
+import sys
 
 # file-format specific import checks to ensure the package is installed
 # for FITS
@@ -21,7 +22,6 @@ try:
     H5_IMPORT = True
 except ImportError:
     H5_IMPORT = False
-import sys
 try:
     import numpy
 except ImportError:
@@ -33,6 +33,10 @@ from dacman.compare.base import DacmanRecordAdaptor
 
 
 ##########################################################
+
+def import_error(pkg):
+    print("{} is not installed or possibly not in the path.".format(pkg))
+    sys.exit()
 
 class DefaultAdaptor(DacmanRecordAdaptor):
     def __init__(self):
@@ -51,15 +55,17 @@ class DefaultAdaptor(DacmanRecordAdaptor):
 
 class H5Adaptor(DacmanRecordAdaptor):
     def __init__(self):
-        pass
+        if not H5_IMPORT:
+            import_error('hypy')
 
     def transform(self, hdf_file):
-        pass
+        return [], []
 
 
 class FitsAdaptor(DacmanRecordAdaptor):
     def __init__(self):
-        pass
+        if not ASTROPY_IMPORT:
+            import_error('astropy')
 
     def transform(self, fits_file):
         hdulist = fits.open(fits_file)
@@ -67,18 +73,18 @@ class FitsAdaptor(DacmanRecordAdaptor):
         hdu_data_records = []
         for i in range(len(hdulist)):
             hdu = hdulist[i]
-            header_record, data_record = self.__hdu2records__(hdu)
+            header_record, data_record = self._hdu2records(hdu)
             hdu_header_records.append(header_record)
             hdu_data_records.append(data_record)
         return hdu_header_records, hdu_data_records
 
-    def __hdu2records__(self, hdu):
+    def _hdu2records(self, hdu):
         header_record_list = []
         data_record_list = []
         for k, v in hdu.header.items():
             header_record_list.append('{}: {}'.format(k, v))
 
-        data_dims = self.__get_hdu_shape__(hdu)
+        data_dims = self._get_hdu_shape(hdu)
         if len(data_dims) == 2: # 2-D array
             for row in hdu.data:
                 data_record_list.append(row.tolist())
@@ -89,7 +95,7 @@ class FitsAdaptor(DacmanRecordAdaptor):
 
         return header_record_list, data_record_list
 
-    def __get_hdu_shape__(self, hdu):
+    def _get_hdu_shape(self, hdu):
         dims = hdu._summary()[4]
         if not isinstance(hdu, fits.hdu.table.TableHDU):
             return hdu.data.shape
@@ -101,7 +107,8 @@ class FitsAdaptor(DacmanRecordAdaptor):
 
 class ImageAdaptor(DacmanRecordAdaptor):
     def __init__(self):
-        pass
+        if not FABIO_IMPORT:
+            import_error('fabio')
 
     def transform(self, image_file):
         img = fabio.open(image_file)
@@ -127,13 +134,13 @@ class ImageAdaptor(DacmanRecordAdaptor):
 class DacmanRecord(object):
     def __init__(self, source):
         self.source = source
-        self.headers = None
-        self.data = None
-        self.metadata = None
+        self.headers = []
+        self.data = []
+        self.metadata = {}
         self.file_support = {}
         self.file_adaptors = {}
-        self.__import_file_support__()
-        self.__transform_source__()
+        self._import_file_support()
+        self._transform_source()
 
     def get_header(self):
         return self.headers
@@ -144,17 +151,24 @@ class DacmanRecord(object):
     def get_metadata(self):
         return self.metadata
 
-    def __transform_source__(self):
-        adaptor = self.__filetype__(self.source)
+    def _transform_source(self):
+        adaptor = self._filetype(self.source)
         if adaptor is None:
             adaptor = DefaultAdaptor()
         headers, data = adaptor.transform(self.source)
         self.headers = headers
         self.data = data
-        self.metadata = {'nHeaders': len(headers), 'nValues': len(data)}
+        if headers is not None:
+            self.metadata = {'nHeaders': len(headers)}
+        else:
+            self.metadata = {'nHeaders': 0}
+        if data is not None:
+            self.metadata = {'nValues': len(data)}
+        else:
+            self.metadata = {'nValues': 0}
 
-    def __import_file_support__(self):
-        hdf_exts = ['.hdf', '.h4', '.hdf4', '.he2', '.h5', '.hdf5', '.he5']
+    def _import_file_support(self):
+        hdf_exts = ['hdf', 'h4', 'hdf4', 'he2', 'h5', 'hdf5', 'he5']
         for hdf_ext in hdf_exts:
             self.file_support[hdf_ext] = H5_IMPORT
             self.file_adaptors[hdf_ext] = H5Adaptor
@@ -172,7 +186,7 @@ class DacmanRecord(object):
     temporary solution to get file types using extensions
     later use magic to get the file header to determine file type
     '''
-    def __filetype__(self, filename):
+    def _filetype(self, filename):
         file_ext = os.path.splitext(filename)[1][1:].lower()
         if file_ext in self.file_support:
             if self.file_support[file_ext]:

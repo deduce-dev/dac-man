@@ -1,10 +1,14 @@
+'''
+A single-threaded executor
+'''
+
 from dacman.compare.data import diff
 
 
 def run(comparisons, plugin):
     results = []
     for comparison in comparisons:
-        print(comparison)
+        #print(comparison)
         argv = []
         if len(comparison) > 2:
             argv = comparison[2:]
