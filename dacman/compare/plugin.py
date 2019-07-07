@@ -42,8 +42,6 @@ def _get_comparators():
         comparator = plugin()
         supports = comparator.supports()
         # print("Plugin {} supports: {}".format(plugin.__name__, supports))
-        # For different plugins for the same datatype, a plugin will
-        # be selected at random. Fix later...
         if type(supports) == list:
             for s in supports:
                 _add_comparator(s, comparator, comparators)
