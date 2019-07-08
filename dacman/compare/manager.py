@@ -17,4 +17,13 @@ class DataDiffer(object):
 
     def start(self):
         print("Runtime = {}".format(self.executor))
-        self.executor_map[self.executor].run(self.comparisons, self.plugin)
+        results = self.executor_map[self.executor].run(self.comparisons, self.plugin)
+        if type(results) == list:
+            for result in results:
+                self._print(result)
+        else:
+            self._print(results)
+
+    def _print(self, txt):
+        if txt is not None:
+            print(txt)

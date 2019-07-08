@@ -8,6 +8,7 @@ except ImportError:
 
 import time
 from dacman.compare.data import diff
+import logging
 
 
 def run(comparisons, plugin):
@@ -16,6 +17,9 @@ def run(comparisons, plugin):
         sys.exit()
     exec_name = 'EXECUTION_DISTRIBUTE_PROCESS'
     exec_plugin = tigres.utils.Execution.get(exec_name)
+    diff_results = None
+    logger = logging.getLogger(__name__)
+    logger.info('Using tigres for parallel comparison.')
 
     try:
         logfile = 'dacman_diff_{}.log'.format(str(round(time.time())))
@@ -37,8 +41,13 @@ def run(comparisons, plugin):
         diff_results = tigres.parallel('diff', input_array=input_array,
                                        task_array=task_array)
 
+        logger = logging.getLogger(__name__)
+        logger.info('Data comparison complete.')
+
     except tigres.utils.TigresException as e:
         print(str(e))
-        return_code = 1
+        logger.info('Error in comapring datasets using Tigres. {}'.format(e))
     finally:
         tigres.end()
+        if diff_results is not None:
+            return diff_results

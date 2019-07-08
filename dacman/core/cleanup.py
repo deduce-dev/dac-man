@@ -12,7 +12,6 @@
 """
 
 import os
-import sys
 import shutil
 import logging
 from dacman.core.utils import get_hash_id

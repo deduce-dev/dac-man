@@ -54,6 +54,9 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
     if external_plugin:
         print("External comparator plugin = {}".format(comparator_plugin))
         result = _external(comparator_plugin, new_file, old_file, *argv)
+        logger.info('Comparing {} and {} using {}'.format(new_file,
+                                                          old_file,
+                                                          comparator_plugin))
     else:
         print("Data comparator plugin = {}".format(comparator.__class__.__name__))
 

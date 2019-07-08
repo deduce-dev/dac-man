@@ -13,6 +13,11 @@ class PluginManager(object):
             plugin_info = dacman_utils.load_yaml(plugin_config)
             if plugin_info is not None:
                 if data_type in plugin_info:
+                    # check if it's one of the default plugins for the data type
+                    for comparator in COMPARATORS_MAP['default']:
+                        if plugin_info[data_type] == comparator.__class__.__name__:
+                            return comparator
+                    # check if the data type plugin is available or not
                     if data_type in COMPARATORS_MAP:
                         for comparator in COMPARATORS_MAP[data_type]:
                             if comparator.__class__.__name__ == plugin_info[data_type]:

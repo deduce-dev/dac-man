@@ -6,6 +6,8 @@ except ImportError:
     MPI4PY_IMPORT = False
 from dacman.compare.data import diff
 
+import logging
+
 
 def run(comparisons, plugin):
     if not MPI4PY_IMPORT:
@@ -23,9 +25,13 @@ def run(comparisons, plugin):
         EXIT = 3
 
     if rank == 0:
+        logger = logging.getLogger(__name__)
+        logger.info('Using MPI for parallel comparison.')
+
         change_pair_num = 0
         closed_workers = 0
         num_workers = size - 1
+        results = []
 
         print("Data changes in files:")
         while closed_workers < num_workers:
@@ -35,15 +41,18 @@ def run(comparisons, plugin):
 
             if tag == States.READY:
                 if change_pair_num < len(comparisons):
+                    print(comparisons[change_pair_num])
                     comm.send(comparisons[change_pair_num], dest=source, tag=States.START)
                     change_pair_num += 1
                 else:
                     comm.send(None, dest=source, tag=States.EXIT)
             elif tag == States.DONE:
-                pass
+                results.append(result)
             elif tag == States.EXIT:
                 closed_workers += 1
 
+        logger.info('Data comparison complete.')
+        return results
     else:
         # only start parallel processing if data change is required
         while True:
@@ -58,8 +67,8 @@ def run(comparisons, plugin):
                 if len(comparison) > 2:
                     for arg in comparison[2:]:
                         args.append(arg)
-                diff(new_file, old_file, *args, comparator_plugin=plugin)
-                comm.send(None, dest=0, tag=States.DONE)
+                result = diff(new_file, old_file, *args, comparator_plugin=plugin)
+                comm.send(result, dest=0, tag=States.DONE)
             elif tag == States.EXIT:
                 comm.send(None, dest=0, tag=States.EXIT)
                 break

@@ -27,7 +27,7 @@ Installation
 
 Dac-Man is developed in Python, with the following minimal requirements:
 
-* Python (>= 2.7)
+* Python (>= 3.6)
 * pip (>= 9.0)
 
 For HPC support, you need:

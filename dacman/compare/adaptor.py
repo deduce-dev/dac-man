@@ -56,7 +56,7 @@ class DefaultAdaptor(DacmanRecordAdaptor):
 class H5Adaptor(DacmanRecordAdaptor):
     def __init__(self):
         if not H5_IMPORT:
-            import_error('hypy')
+            import_error('h5py')
 
     def transform(self, hdf_file):
         return [], []
