@@ -11,13 +11,33 @@ class DataDiffer(object):
         self.comparisons = comparisons
         self.plugin = None
         self.executor = executor
+        self._mpi_world = None
 
     def use_plugin(self, plugin):
         self.plugin = plugin
 
+    @property
+    def mpi_world(self):
+        return self._mpi_world
+
+    @mpi_world.setter
+    def mpi_world(self, comm):
+        self._mpi_world = comm
+
     def start(self):
-        print("Runtime = {}".format(self.executor))
-        results = self.executor_map[self.executor].run(self.comparisons, self.plugin)
+        if self.executor == Executor.MPI:
+            rank = self.mpi_world.Get_rank()
+            if rank == 0:
+                results = self.executor_map[self.executor].master(self.comparisons,
+                                                                  self.mpi_world)
+                self._print_results(results)
+            else:
+                self.executor_map[self.executor].workers(self.mpi_world, self.plugin)
+        else:
+            results = self.executor_map[self.executor].run(self.comparisons, self.plugin)
+            self._print_results(results)
+
+    def _print_results(self, results):
         if type(results) == list:
             for result in results:
                 self._print(result)

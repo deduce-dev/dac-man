@@ -61,13 +61,14 @@ class Differ(object):
     def set_paths(self, old_path, new_path, custom_stagingdir=None):
         self.old_path = os.path.abspath(old_path)
         self.new_path = os.path.abspath(new_path)
+        self.old_path_is_file = os.path.isfile(self.old_path)
+        self.new_path_is_file = os.path.isfile(self.new_path)
         if custom_stagingdir:
             self.stagingdir = custom_stagingdir
 
     '''
     calculating longest common substring between two paths to avoid relative path queries
     '''
-
     def common_path(self, total_path, actual_path):
         match = difflib.SequenceMatcher(None, actual_path, total_path).find_longest_match(0, len(actual_path), 0,
                                                                                           len(total_path))
@@ -77,7 +78,6 @@ class Differ(object):
     '''
     get the file pairs that have changed
     '''
-
     def get_change_pairs(self):
         if not (self.old_path and self.new_path):
             self.logger.error('Old and new datapaths are not specified!')
@@ -85,8 +85,6 @@ class Differ(object):
 
         change_pairs = []
 
-        self.old_path_is_file = os.path.isfile(self.old_path)
-        self.new_path_is_file = os.path.isfile(self.new_path)
         old_base = self.old_path
         new_base = self.new_path
         self.logger.info('Starting diff calculation')
@@ -246,7 +244,6 @@ class Differ(object):
         if self.old_path == self.new_path:
             self.logger.error('Diff paths are the same')
             sys.exit()
-
         if self.executor == Executor.MPI:
             if not MPI4PY_IMPORT:
                 print("mpi4py is not installed or possibly not in the path.")
@@ -255,20 +252,27 @@ class Differ(object):
             comm = MPI.COMM_WORLD
             rank = comm.Get_rank()
             if rank == 0:
-                self._submit_diff()
+                self.logger.info('Runtime system = {}'.format(self.executor))
+                change_pairs = self.get_change_pairs()
+                if self._diff_all or self.old_path_is_file > 0:
+                    differ = DataDiffer(change_pairs, self.executor)
+                    differ.mpi_world = comm
+                    differ.start()
+                self.logger.info('Diff completed')
+            else:
+                if self._diff_all or self.old_path_is_file:
+                    differ = DataDiffer(None, self.executor)
+                    differ.mpi_world = comm
+                    differ.start()
         else:
-            self._submit_diff()
-
-        self.logger.info('Diff completed')
-
-    def _submit_diff(self):
-        self.logger.info('Runtime system = {}'.format(self.executor))
-        change_pairs = self.get_change_pairs()
-        if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
-            differ = DataDiffer(change_pairs, self.executor)
-            if self.custom_analyzer is not None:
-                differ.use_plugin(self.custom_analyzer)
-            differ.start()
+            self.logger.info('Runtime system = {}'.format(self.executor))
+            change_pairs = self.get_change_pairs()
+            if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
+                differ = DataDiffer(change_pairs, self.executor)
+                if self.custom_analyzer is not None:
+                    differ.use_plugin(self.custom_analyzer)
+                differ.start()
+            self.logger.info('Diff completed')
 
 
 #######################################################################
