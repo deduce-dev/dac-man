@@ -30,6 +30,7 @@ except ImportError:
         sys.exit()
 
 from dacman.compare.base import DacmanRecordAdaptor
+import logging
 
 
 ##########################################################
@@ -45,7 +46,7 @@ class DefaultAdaptor(DacmanRecordAdaptor):
     def transform(self, data_file):
         header_records = []
         data_records = []
-        with open(data_file) as f:
+        with open(data_file, encoding="utf8", errors='ignore') as f:
             for line in f:
                 words = re.findall(r"[\w']+", line)
                 data_records += words
@@ -138,7 +139,11 @@ class DacmanRecord(object):
         self.data = []
         self.metadata = {}
         self.file_support = {}
+        self.lib_support = {}
         self.file_adaptors = {}
+        self.file_ext = os.path.splitext(source)[1][1:].lower()
+        self.logger = logging.getLogger(__name__)
+
         self._import_file_support()
         self._transform_source()
 
@@ -152,8 +157,10 @@ class DacmanRecord(object):
         return self.metadata
 
     def _transform_source(self):
-        adaptor = self._filetype(self.source)
+        adaptor = self._filetype()
         if adaptor is None:
+            self.logger.warning("No adaptor found for {}. "
+                                "Using default adaptor.".format(self.file_ext))
             adaptor = DefaultAdaptor()
         headers, data = adaptor.transform(self.source)
         self.headers = headers
@@ -172,28 +179,37 @@ class DacmanRecord(object):
         for hdf_ext in hdf_exts:
             self.file_support[hdf_ext] = H5_IMPORT
             self.file_adaptors[hdf_ext] = H5Adaptor
+            self.lib_support[hdf_ext] = 'h5py'
 
         self.file_support['edf'] = FABIO_IMPORT
         self.file_adaptors['edf'] = ImageAdaptor
+        self.lib_support['edf'] = 'fabio'
 
         self.file_support['tif'] = FABIO_IMPORT
         self.file_adaptors['tif'] = ImageAdaptor
+        self.lib_support['tif'] = 'fabio'
 
         self.file_support['fits'] = ASTROPY_IMPORT
         self.file_adaptors['fits'] = FitsAdaptor
+        self.lib_support['fits'] = 'astropy'
 
     '''
     temporary solution to get file types using extensions
     later use magic to get the file header to determine file type
     '''
-    def _filetype(self, filename):
-        file_ext = os.path.splitext(filename)[1][1:].lower()
-        if file_ext in self.file_support:
-            if self.file_support[file_ext]:
-                adaptor = self.file_adaptors[file_ext]()
+    def _filetype(self):
+        if self.file_ext in self.file_support:
+            if self.file_support[self.file_ext]:
+                adaptor = self.file_adaptors[self.file_ext]()
                 return adaptor
             else:
+                errmsg = "{} is not installed or possibly not" \
+                         " in the path. Required for structured" \
+                         " reading of {} files.".format(self.lib_support[self.file_ext],
+                                                        self.file_ext)
+                self.logger.warning(errmsg)
                 return None
+
         else:
             return None
 

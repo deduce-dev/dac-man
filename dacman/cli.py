@@ -73,7 +73,7 @@ def _addDiffParser(subparsers):
     parser_worker.add_argument('-s','--stage', dest='stagingdir', help='(optional) directory where indexes and metadata information will be saved')    
     parser_worker.add_argument('-o','--outdir', help='path where change information is saved')
     parser_worker.add_argument('-p','--plugin', help='(optional) external plugin to calculate changes')
-    parser_worker.add_argument('--compare', help='(optional) find data changes in modified files', action='store_true')
+    parser_worker.add_argument('--detailed', help='(optional) find detailed data changes in modified files', action='store_true')
     parser_worker.add_argument('-e','--executor', help='executor that parallelizes data change calculation', choices=['default', 'threaded', 'mpi', 'tigres'], default='default')
 
 def _addCleanupParser(subparsers):

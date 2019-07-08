@@ -46,7 +46,7 @@ The `examples/` directory contains a simple example and related data to test
 Dac-Man command-line. To test, run the following commands:
 
         cd examples
-        ./simple.sh
+        ./scripts/simple.sh
 
 Running the test suite
 ----------------------

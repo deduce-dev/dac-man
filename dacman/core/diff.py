@@ -282,7 +282,7 @@ def main(args):
     newpath = args.newpath
     stagingdir = args.stagingdir
     analyzer = args.plugin
-    recursive = args.compare
+    recursive = args.detailed
     outdir = args.outdir
     executor = args.executor
 
