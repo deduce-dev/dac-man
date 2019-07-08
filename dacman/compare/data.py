@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 from dacman.compare.plugin import PluginManager
-from dacman.compare.base import ComparatorBase
+from dacman.compare.base import Comparator
 
 
 __modulename__ = 'data'
@@ -44,7 +44,7 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
     else:
         if isinstance(comparator_plugin, str):
             external_plugin = True
-        elif issubclass(comparator_plugin, ComparatorBase):
+        elif issubclass(comparator_plugin, Comparator):
             comparator = comparator_plugin()
         else:
             print("Invalid comparator plugin")

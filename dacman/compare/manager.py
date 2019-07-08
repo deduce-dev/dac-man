@@ -17,22 +17,22 @@ class DataDiffer(object):
         self.plugin = plugin
 
     @property
-    def mpi_world(self):
+    def mpi_communicator(self):
         return self._mpi_world
 
-    @mpi_world.setter
-    def mpi_world(self, comm):
+    @mpi_communicator.setter
+    def mpi_communicator(self, comm):
         self._mpi_world = comm
 
     def start(self):
         if self.executor == Executor.MPI:
-            rank = self.mpi_world.Get_rank()
+            rank = self.mpi_communicator.Get_rank()
             if rank == 0:
                 results = self.executor_map[self.executor].master(self.comparisons,
-                                                                  self.mpi_world)
+                                                                  self.mpi_communicator)
                 self._print_results(results)
             else:
-                self.executor_map[self.executor].workers(self.mpi_world, self.plugin)
+                self.executor_map[self.executor].workers(self.mpi_communicator, self.plugin)
         else:
             results = self.executor_map[self.executor].run(self.comparisons, self.plugin)
             self._print_results(results)

@@ -256,13 +256,13 @@ class Differ(object):
                 change_pairs = self.get_change_pairs()
                 if self._diff_all or self.old_path_is_file > 0:
                     differ = DataDiffer(change_pairs, self.executor)
-                    differ.mpi_world = comm
+                    differ.mpi_communicator = comm
                     differ.start()
                 self.logger.info('Diff completed')
             else:
                 if self._diff_all or self.old_path_is_file:
                     differ = DataDiffer(None, self.executor)
-                    differ.mpi_world = comm
+                    differ.mpi_communicator = comm
                     differ.start()
         else:
             self.logger.info('Runtime system = {}'.format(self.executor))

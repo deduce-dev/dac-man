@@ -2,7 +2,7 @@
 
 import h5py
 import sys
-from dacman.compare.base import ComparatorBase
+from dacman.compare.base import Comparator
 
 # load attributes
 def read_attributes(hval):
@@ -108,7 +108,7 @@ def diff_groups(file1, grp1, file2, grp2, path):
         diff_groups(file1, grp1[name], file2, grp2[name], path+name+"/")
 
 
-class HDF5Plugin(ComparatorBase):
+class HDF5Plugin(Comparator):
     def __init__(self):
         pass
 

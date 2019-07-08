@@ -1,8 +1,8 @@
-from dacman.compare.base import ComparatorBase
+from dacman.compare.base import Comparator
 from dacman.compare.adaptor import DacmanRecord
 
 
-class DefaultPlugin(ComparatorBase):
+class DefaultPlugin(Comparator):
     def __init__(self):
         self.p_change_header = 0.0
         self.p_change_data = 0.0

@@ -22,7 +22,7 @@ class DacmanRecordAdaptor(abc.ABC):
             return flat_array
 
 
-class ComparatorBase(abc.ABC):
+class Comparator(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def supports(self):

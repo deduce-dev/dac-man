@@ -1,6 +1,6 @@
 
 from straight.plugin import load
-from dacman.compare.base import ComparatorBase
+from dacman.compare.base import Comparator
 import dacman.core.utils as dacman_utils
 import os
 
@@ -33,7 +33,7 @@ class PluginManager(object):
 
     @classmethod
     def get_plugins(cls):
-        plugins = load("dacman.plugins", subclasses=ComparatorBase)
+        plugins = load("dacman.plugins", subclasses=Comparator)
         plugin_list = []
         for plugin in plugins:
             plugin_list.append(plugin)
@@ -41,7 +41,7 @@ class PluginManager(object):
 
 
 def _get_comparators():
-    plugins = load("dacman.plugins", subclasses=ComparatorBase)
+    plugins = load("dacman.plugins", subclasses=Comparator)
     comparators = {}
     for plugin in plugins:
         comparator = plugin()
