@@ -24,9 +24,9 @@ CSV_DICTS_DIRS = [
     "job_end_data_put"
 ]
 
-OUTPUT_CSV_DIR = "/global/homes/e/elbashan/workspace/dac-man/sandbox/job_finished_timestamp_dir/"
+OUTPUT_CSV_DIR = "/global/homes/e/elbashan/workspace/dac-man/sandbox/batch_timestamps_dir/"
 
-def write_to_csv():
+def write_to_csv(output_dir='.'):
     output_dir_path = OUTPUT_CSV_DIR
 
     name = CSV_DICTS_DIRS[0]
@@ -109,7 +109,7 @@ def two_frame_analysis(data_a, data_b):
     return rms_log, t_test_t, t_test_p
 
 
-def get_change_pairs(dataset, output_dir='.'):
+def get_change_pairs(dataset, job_num=3000):
     mean_correct = False
     use_gaussian_filter = False
     do_ttest = True
@@ -141,7 +141,7 @@ def get_change_pairs(dataset, output_dir='.'):
             #print(frame_len)
             #exit()
 
-            while ii <= 3000:
+            while ii <= job_num:
                 if ii == n_frames-1:
                     ii = 0
                 jj = ii + 1
@@ -162,7 +162,7 @@ def get_change_pairs(dataset, output_dir='.'):
                 #exit()
 
 
-def collection_diff_mpi():
+def diff_edf_mpi(dataset, job_num):
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
@@ -179,7 +179,7 @@ def collection_diff_mpi():
         closed_workers = 0
         num_workers = size - 1
       
-        for change_pair in get_change_pairs():
+        for change_pair in get_change_pairs(dataset, job_num):
             result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
             source = statsu.Get_source()
             tag = status.Get_tag()
@@ -200,7 +200,7 @@ def collection_diff_mpi():
             if tag == States.EXIT:
                 closed_workers += 1
 
-        # Saving Results to CSV
+        # Saving timestamps in CSV format
         write_to_csv()
     else:
         while True:
@@ -227,3 +227,15 @@ def collection_diff_mpi():
             elif tag == States.EXIT:
                 comm.send(None, dest=0, tag=States.EXIT)
                 break
+
+if __name__ == "__main__":
+
+    if (len(sys.argv) < 3):
+            print("Usage: python dacman_batch.py <dataset(h5_file)> <job_num>")
+    else:
+        dataset = os.path.abspath(sys.argv[1])
+        #output_dir = os.path.abspath(sys.argv[2])
+        job_num = int(sys.argv[2])
+
+        diff_edf_mpi(dataset, job_num)
+
