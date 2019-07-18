@@ -1,0 +1,47 @@
+\section{Overview}
+Scientific datasets are updated frequently due to changes in
+instrument configuration, software updates, quality assessments
+or data cleaning algorithms. However, due to the large size and
+complex data structures of these datasets, existing tools either
+do not scale or are unable to generate meaningful change information.
+
+The \textbf{\systemname} (\textbf{DA}ta \textbf{C}hange \textbf{Man}agement)
+framework allows users to efficiently and effectively identify,
+track and manage data change and associated provenance in scientific
+datasets. There are two main components of \systemname:
+\begin{itemize}
+\item Change tracker that keeps track of the changes between
+ different versions of a dataset.
+\item Query manager that manages data change related queries.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Features}
+The key features of \systemname include:
+\begin{itemize}
+\item HPC support. \systemname provides MPI support for enabling parallel
+ change capture in HPC environments.
+\item Offline comparison. Datasets can be compared away from the actual
+ location of the data, allowing users to find changes without necessarily
+ moving the datasets to a common location.
+\item Extendable. Users can plug-in their own scripts to calculate changes.
+\item Flexible command-line options. Provides different options to configure
+ change detection.
+\item Detailed output. \systemname outputs contain details on the different
+ types and amount of change.
+\item Customizable logging. Users can customize where and what to log,
+ including the detailed steps in the change capture process.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Requirements}
+\systemname is developed using Python. It requires Python 2.7 or greater.
+Users need Python setuptools and pip to install \systemname. Fore detailed
+instructions on the installation, please refer to Chapter~\ref{ch:install}.
+
+\systemname is known to work on the following operating systems:
+\begin{itemize}
+\item Linux
+\item Unix-like OSs
+\item Mac OS
+\end{itemize}

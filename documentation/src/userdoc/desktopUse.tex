@@ -1,0 +1,192 @@
+
+\section{Quick Tutorial}
+To capture changes between two directories \texttt{dir1}
+and \texttt{dir2}, run the following command using the \systemname
+command-line:
+
+\texttt{\$ \appcmd diff dir1 dir2}
+
+The above command identifies the number of files changed
+between the two directories. In order to retrieve detailed
+infromation about the changes, you can use the following
+command:
+
+\texttt{\$ \appcmd diff dir1 dir2 --detailed}
+
+\section{Command-line}
+\systemname enables change capture and analysis in four
+simple steps, which provide flexibility to the users in
+identifying and capturing changes. \systemname provides
+four command-line options to manage each of these steps
+separately.
+
+\subsection{scan}
+This option scans and saves the directory structure and
+other metadata related to a data path. You can specify
+an optional staging directory, where the metadata information
+will be saved.
+
+\texttt{\$ \appcmd scan <path> [-s STAGINGDIR] [-i [IGNORE [IGNORE ...]]] [--nonrecursive] [--symlinks]}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+$-$s STAGINGDIR            : directory where filesystem metadata and indexes are saved. \\
+$-$i [IGNORE [IGNORE ...]] : list of file types to be ignored.\\
+$--$nonrecursive           : do not scan the directory contents recursively.\\
+$--$symlinks               : include symbolic links.
+  }
+}
+
+\subsection{index}
+This command indexes the files, mapping the files to their contents. 
+
+\texttt{\$ \appcmd index <path> [-s STAGINGDIR] [-m {python,tigres,mpi}]}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+$-$s STAGINGDIR          : directory where filesystem metadata and indexes are saved. \\
+$-$m {python,tigres,mpi} : index manager for parallelizing the index creation.
+                         The options are python/mpi/tigres. By default, it uses the Python
+                         multiprocessing module (manager=python) that is suitable for parallelizing
+                         on one node. For multi-node parallelism, users can select between
+                         MPI (manager=mpi) or tigres (manager=tigres).
+  }
+}
+
+\subsection{compare}
+This command compares two datapaths. It compares and calculates
+the different types of changes.
+
+\texttt{\$ \appcmd compare <oldpath> <newpath> [-s STAGINGDIR]}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+$-$s STAGINGDIR          : directory where filesystem metadata and indexes are saved.
+  }
+}
+
+\subsection{diff}
+This command retrieves changes between two datapaths.
+
+\texttt{\$ \appcmd diff <oldpath> <newpath> [-s STAGINGDIR] [-o OUTDIR] [-a ANALYZER] [--datachange] [-e {default,threaded,mpi,tigres}]}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+$-$s STAGINGDIR          : directory where filesystem metadata and indexes are saved. \\
+$-$o OUTDIR              : directory where the summary of changes is saved.\\
+$-$p plugin              : user-defined scripts for analyzing data changes. \\
+$--$detailed             : calculate data level changes in addition to file changes.\\
+$-$e {default,threaded,tigres,mpi} : type of executor (or runtime) for parallel data change capture.
+                         The options are default/threaded/mpi/tigres. The default option uses single
+                         threaded. The threaded option uses the Python multiprocessing module
+                         that is suitable for parallelizing on one node. For multi-node parallelism,
+                         users can select between MPI or tigres.
+  }
+}
+
+In addition to the four commands, \systemname also provides
+two additional commands for cleanup and metadata management.
+
+\subsection{clean}
+This option removes all the indexes and cache information
+associated with the specified directories.
+
+\texttt{\$ \appcmd clean <path> [path ...]}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+path               : path to data directories.
+  }
+}
+
+\subsection{metadata}
+This command allows users to add user-defined metadata for a data directory. 
+
+\texttt{\$ \appcmd metadata [-m METADATA] [-s STAGINGDIR] {insert,retrieve,append} datapath}
+
+The arguments to the command are:
+
+\fbox{
+  \parbox{\textwidth}{    
+$-$s STAGINGDIR          : directory where filesystem metadata and indexes are saved. \\
+$-$m METADATA            : user-defined metadata information. \\
+{insert,retrieve,append} : options related to user-defined metadata information. \\
+datapath                 : path to the data directory.
+  }
+}
+
+\section{Outputs}
+\lstset{%
+  language=[ISO]C++,
+  basicstyle=\ttfamily\footnotesize,
+  frame=lines,
+  keywordstyle=\color{black},
+  commentstyle=\color[rgb]{0.0,0.4,0.0}\scriptsize,
+  extendedchars=true,         
+  breaklines=true             
+}
+
+\systemname prints the summary of changes on standard output. The summary
+lists the number of changes between two datasets. An example output looks like below:
+
+\begin{lstlisting}
+Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
+\end{lstlisting}
+
+You can opt to save a more detailed output by specifying the output
+directory where the detailed change information will be saved:
+
+\texttt{\$ \appcmd diff /old/path /new/path -o output}
+
+The \texttt{output/} directory contains a list of files with detailed
+information about the changes. It also contains a summary of the change
+information as:
+
+output/summary
+
+\if0
+\fbox{
+  \parbox{\textwidth}{
+change\_factor: 1.0\\
+counts:\\
+  added: 1\\
+  deleted: 1\\
+  metaonly: 0\\
+  modified: 1\\
+  unchanged: 1\\
+versions:\\
+  base:\\
+    dataset\_id: /path/to/old/data\\
+    nfiles: 3\\
+  revision:\\
+    dataset\_id: /path/to/new/data\\
+    nfiles: 3
+  }
+}
+\fi
+
+\begin{lstlisting}
+counts:
+  added: 1
+  deleted: 1
+  metaonly: 0
+  modified: 1
+  unchanged: 1
+versions:
+  base:
+    dataset_id: /path/to/old/data
+    nfiles: 3
+  revision:
+    dataset_id: /path/to/new/data
+    nfiles: 3
+\end{lstlisting}

@@ -1,0 +1,65 @@
+The top-level dacman module provides methods and classes for doing
+data comparisons at scale. Data can be compared using dacman.diff().
+
+\section{dacman.diff}
+\texttt{dacman.diff(new\_file, old\_file, *argv, comparator\_plugin=None)}
+
+Method to perform a single comparison using the specified plugin.
+
+\fbox{
+  \parbox{\textwidth}{
+  \textbf{Parameters:}\\
+  new\_file: path to the new file (data to compare)\\
+  old\_file: path to the old file (data compared against)\\
+  *args   : optional parameters for specific comparisons\\
+  comparator\_plugin: plugin to be used for comparing the files\\
+
+  \textbf{Returns:} None
+ }
+}
+
+\section{dacman.DataDiffer}
+\texttt{class dacman.DataDiffer(comparisons, executor=Executor.DEFAULT)}
+
+Class that compares multiple files or objects. It takes
+a list of comparisons and performs the comparisons in
+parallel. The executor argument specifies the type of
+runtime to be used for doing the comparisons.
+
+\subsection{use\_plugin(plugin)}
+%\texttt{dacman.DataDiffer.use\_plugin(plugin)}
+
+Method to set a specific plug-in for camparing the files.
+If no plug-in is set, then \systemname will select one
+of the internal plug-ins based on file/data types.
+
+\subsection{start()}
+%\texttt{dacman.DataDiffer.start()}
+
+Method to start the comparison using the specified runtime and
+plug-in. 
+
+\subsection{mpi\_communicator}
+%\texttt{dacman.DataDiffer.mpi\_communicator}
+
+Attribute specifying the MPI communicator to be used when using
+the MPI executor.
+
+\section{dacman.Executor}
+\texttt{class dacman.Executor}
+
+Types of runtime in \systemname.
+
+\fbox{
+  \parbox{\textwidth}{
+        DEFAULT  : A single threaded runtime.\\
+        THREADED : Runtime based on Python's multiprocessing.\\
+        MPI      : MPI based.\\
+        TIGRES   : Tigres workflow management system. \\
+  }
+}
+
+\section{dacman.plugins} 
+\texttt{dacman.plugins.default.DefaultPlugin}
+
+Module containing the system and user-defined plugins.

@@ -1,0 +1,60 @@
+\section{Overview}
+Scientific datasets come in various formats and data types. It is
+not a sustainable solution to compare files and datasets of different
+types in a single way. For example image files are a lot different
+than text files and hence, need to be compared differently. Additionally,
+different domain sciences have different structures to their files.
+
+The \systemname plug-in framework allows users to implement their
+own plug-ins for comparing files and datasets of different types
+and formats. Additionally, \systemname also provides default plug-ins
+for a variety of different scientific data formats including hierarchical
+datasets (e.g., HDF5), image files (e.g., FITS, EDF) and tabular data
+(e.g., csv, Excel).
+
+\section{Usage}
+The plug-ins in \systemname are generally placed inside the \texttt{plugins/}
+directory. \systemname automatically selects the specific plug-in at runtime
+based on the file types. However, users can also specify explicitly which
+plug-in to use for data comparisons. Generally, the plug-ins in \systemname
+can be specified in three different ways.
+
+\subsection{Plug-ins configuration}
+When \systemname is installed, a plug-ins configuration file is created 
+in user's \texttt{HOME} directory.
+
+\texttt{\$HOME/.dacman/config/plugins.yaml}
+
+This file may contain all the registered internal plug-ins in \systemname.
+Users can edit this file to specify the selection of a plug-in for specific
+file-type comparisons.
+
+\subsection{CLI}
+\systemname also allows users to use their own change analysis scripts as
+plug-ins. To use this, users need to specify \texttt{-p/--plugin} option
+through the \systemname CLI.
+
+\fbox{
+  \parbox{\textwidth}{    
+    dacman diff file1 file2 --p /path/to/myscript
+  }
+}
+
+\subsection{\systemname API}
+Users can write their own change analysis pipelines using the
+\systemname API. The API also provides the necessary module for
+users to specify a plugin in their codes.
+
+\begin{lstlisting}[language=Python]
+from dacman import Executor, DataDiffer
+from dacman.plugins.default import DefaultPlugin
+def diff1(file1, file2):
+  comparisons = [(file1, file2)]
+  differ = DataDiffer(comparisons, Executor.DEFAULT)
+  differ.use_plugin(DefaultPlugin)
+  differ.start()
+\end{lstlisting}
+
+Users can also create and register their own plug-ins in \systemname.
+The next chapter describes the \systemname plug-in API that can be used
+to create user-defined plug-ins in \systemname.

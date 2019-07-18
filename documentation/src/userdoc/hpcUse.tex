@@ -1,0 +1,38 @@
+\section{Using MPI}
+\systemname allows you to parallelize \texttt{index} and \texttt{diff}
+steps. To parallelize on HPC clusters, you need to enable the MPI support
+by using the appropriate flags.
+
+\texttt{\$ \appcmd index ... -m mpi}\\
+\texttt{\$ \appcmd diff ... -e mpi}
+
+In order to distribute the tasks to multiple workers, you need to
+use \texttt{mpirun} or \texttt{mpiexec}. For example, running \systemname
+on an HPC cluster with 8 nodes and 32 cores per node, you can do
+the following:
+
+\texttt{\$ mpiexec -n 256 \appcmd index ... -m mpi}\\
+\texttt{\$ mpiexec -n 256 \appcmd diff ... -e mpi}
+
+\section{Batch Script}
+In order to submit a batch job in a cluster, you need to include
+the \systemname command in your job script. The example below shows
+a batch script (hpcEx.batch) for the Slurm scheduler.
+
+hpcEx.batch
+
+\fbox{
+  \parbox{\textwidth}{
+   \texttt{\#!/bin/bash\\
+\#SBATCH -J example\\
+\#SBATCH -t 00:30:00\\
+\#SBATCH -N 8\\
+\#SBATCH -q myqueue\\ \\
+mpiexec -n 256 \appcmd diff /old/data /new/data -e mpi
+    }
+  }
+}
+
+The script can then be submitted to the batch scheduler as:
+
+\texttt{\$ sbatch hpcEx.batch}

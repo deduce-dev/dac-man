@@ -1,0 +1,72 @@
+The plug-ins in \systemname are different `comparators' that capture
+changes in files and datasets. All the comparator plug-ins, registered
+to \systemname are derived from the base \texttt{Comparator} class.
+
+\section{class Comparator}
+The \texttt{Comparator} class is an abstract class that provides
+the underlying methods for defining the metadata and algorithm for
+capturing data changes. All the methods in this class are abstract
+and need to be implemented by the deriving plug-in class.
+
+\subsection{supports()}
+
+A static method that sets up all the file/data types that are
+supported by the specific plug-in.
+
+\subsection{description()}
+
+A static method that describes the specific plug-in.
+
+\subsection{compare(a, b, *args)}
+
+The core method for implementing the algorithm to compare two
+files/datasets.
+
+\subsection{percent\_change()}
+
+Method to summarize the amount of change in two files with respect
+to the comparison algorithm.
+
+\subsection{stats(changes)}
+
+Method for providing statistics on calculated changes from the 
+\texttt{compare} method.
+
+\section{Creating Plug-ins}
+
+In order to create and register plug-ins in \systemname, users
+need to implement the methods in the \texttt{Comparator} class.
+Users can either choose to add multiple plug-ins in a single
+module, or create a module for each plug-in.
+
+The following example shows a module for each plug-in (single\_plugin.py):
+\begin{lstlisting}[language = python]
+class MyPlugin(Comparator):
+  def supports():
+    ...
+  ...
+  def compare(a, b, *args):
+    ...
+  ...
+\end{lstlisting}
+
+
+The following example shows multiple plug-ins in a module (multiple\_plugins.py):
+\begin{lstlisting}[language = python]
+class TxtPlugin(Comparator):
+  def supports():
+    return ['txt']
+  ...
+  def compare(a, b, *args):
+    ...
+  ...
+
+
+class CsvPlugin(Comparator):
+  def supports():
+    return ['csv']
+  ...
+  def compare(a, b, *args):
+    ...
+  ...
+\end{lstlisting}

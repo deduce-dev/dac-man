@@ -1,0 +1,44 @@
+The default plug-in in \systemname uses a data abstraction, called
+the \systemname records to compare changes for different file formats
+and data types. \systemname records transforms the header and data
+of a file into an array. The records from two files are then compared
+using a linear algorithm.
+
+\section{Adaptors}
+
+The default plug-in uses several adaptors to transform data from
+different file formats into \systemname records. Currently, the
+plug-in uses adaptors for the following file formats:
+\begin{itemize} 
+\item h5: HDF5 file format
+\item fits: image file format consisting of n-dimensional arrays or tables
+\item edf: time-series data
+\item tif: high-quality graphics image format
+\end{itemize} 
+
+In order to use the default plug-in, users need to install the
+required libraries/packages. Following is the list of all the
+packages required based for the corresponding file format support.
+
+\begin{itemize} 
+\item h5: h5py
+\item fits: astropy
+\item edf: fabio
+\item tif: fabio
+\end{itemize}
+
+\section{Change Stats}
+
+The default plug-in captures the following data change metrics:
+\begin{itemize} 
+\item added:     number of data values added
+\item deleted:   number of data values deleted
+\item modified:  number of data values modified
+\item unchanged: number of unchanged data values 
+\end{itemize}
+
+In addition, the default plug-in also calculates \% change
+between two files based on the \systemname records comparison.
+
+
+

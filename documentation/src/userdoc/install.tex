@@ -1,0 +1,94 @@
+This chapter describes the steps required to install \systemname.
+It requires Python version 3.6 or greater. It is installed
+as any other Python package and uses Python \texttt{setuptools}
+package. For enabling advanced features in \systemname, additional
+packages may need to be installed. You can install these packages
+using \texttt{pip}. 
+
+More general information about installing Python packages can be
+found in Python's documentation at \url{http://www.python.org/doc/}.
+
+\section{Installing \systemname}
+This section describes the steps for installing \systemname. Upon
+successful installation, you can use \systemname as a command-line
+tool. 
+
+\subsection{Getting the Package}
+You can download the package from the \systemname repository
+(\url{https://github.com/dghoshal-lbl/dac-man}) as a tarball.
+Alternatively, you can clone the source tree from the repository:
+
+\texttt{\$ git clone git@github.com:dghoshal-lbl/dac-man.git}
+
+\subsection{Installation from Source}
+Once the package is downloaded/cloned, \systemname can be installed
+by running the following commands:
+
+\texttt{\$ cd dacman}\\
+\texttt{\$ python setup.py install}
+
+If you are installing to a location that requires special permissions
+(like /usr/local), you may need to run the last command with \textbf{sudo}.
+Alternatively, you can create and activate a build environment through
+\textbf{virtualenv} or \textbf{conda} as described below.
+
+\subsubsection{Using virtualenv}
+You can install virtualenv using pip. 
+
+\texttt{\$ pip install virtualenv}
+
+More details on installing and using virtualenv can be found in
+\url{https://packaging.python.org/guides/installing-using-pip-and-virtualenv/}.
+
+After installing virtualenv, you need to create and activate the
+environment, and then install \systemname.
+ 
+\texttt{\$ virtualenv venv}\\
+\texttt{\$ source venv/bin/activate}\\
+\texttt{(venv)\$ cd dacman}\\
+\texttt{(venv)\$ python setup.py install}
+
+\subsubsection{Using conda}
+Conda can be installed using the OS-specific installer that can be downloaded
+from \url{https://conda.io/docs/user-guide/install/index.html}. After installing,
+the Python environment can be created and activated as:
+
+\texttt{\$ conda create --name env}\\
+\texttt{\$ source activate env}\\
+\texttt{(env)\$ cd dacman}\\
+\texttt{(env)\$ python setup.py install}
+
+More information about using conda environments can be found in
+\url{https://conda.io/docs/user-guide/tasks/manage-environments.html}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Testing the Installation}
+%\fix{Will add a test suite similar to madats release.}
+In order to test the \systemname installation, run the following commands:
+
+\texttt{\$ cd examples/}\\
+\texttt{\$ ./scripts/simple.sh}\\
+
+On successful execution, this prints the summary of change and detailed
+change information between two example directories.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dependencies}
+\systemname primarily depends on the following packages:
+\begin{itemize}
+\item scandir
+\item six
+\item PyYAML
+\item straight.plugin
+\end{itemize}
+
+These dependencies are listed in \texttt{requirements.txt} file
+and are automatically installed during the build process.
+
+Additional dependencies for running \systemname on HPC environments
+include:
+\begin{itemize}
+\item numpy  : Python library for operations on large, multi-dimensional arrays
+\item mpi4py : Python MPI bindings
+\end{itemize}
+
