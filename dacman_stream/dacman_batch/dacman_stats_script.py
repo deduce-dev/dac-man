@@ -406,8 +406,9 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     fig.savefig(os.path.join(output_dir, png_filename))
 
 
-def start_stats_calculation(data_send_start_path,
-                            data_send_end_path,
+def start_stats_calculation(dacman_batch_ts_dir,
+                            data_send_start_dir,
+                            data_send_end_dir,
                             data_pull_start_dir,
                             data_pull_end_dir,
                             job_end_processing_dir,
@@ -425,8 +426,8 @@ def start_stats_calculation(data_send_start_path,
     # Reading data_send_start, data_send_end & Initial data
     ###########################################################
 
-    data_send_start = csv_to_dict(data_send_start_path)
-    data_send_end = csv_to_dict(data_send_end_path)
+    data_send_start = update_multiple_csvs_to_dict(data_send_start_dir)
+    data_send_end = update_multiple_csvs_to_dict(data_send_end_dir)
 
     print("data_send_start: " + str(len(data_send_start)))
     print("data_send_end: " + str(len(data_send_end)))
@@ -762,12 +763,10 @@ def main(argv):
     # Initiating
     ###########################################################
 
-    started_dir = os.path.abspath(sys.argv[1])
-    finished_dir = os.path.abspath(sys.argv[2])
-    output_dir = os.path.abspath(sys.argv[3])
+    input_dir = os.path.abspath(sys.argv[1])
+    output_dir = os.path.abspath(sys.argv[2])
 
-    recursive_bool = bool(int(sys.argv[4]))
-
+    '''
     if recursive_bool:
         for started_entry, finished_entry in zip(scandir_directory(started_dir),
                         scandir_directory(finished_dir)):
@@ -790,31 +789,31 @@ def main(argv):
 
         plot_latencies(2, 2, 15, 10, output_dir)
     else:
-        data_send_start_path = os.path.join(started_dir, 'data_send_start.csv')
-        data_send_end_path = os.path.join(started_dir, 'data_send_end.csv')
+    '''
+    dacman_batch_ts_dir = os.path.join(input_dir, 'dacman_batch_ts')
+    data_send_start_dir = os.path.join(input_dir, 'data_send_start')
+    data_send_end_dir = os.path.join(input_dir, 'data_send_end')
+    data_pull_start_dir = os.path.join(input_dir, "data_pull_start")
+    data_pull_end_dir = os.path.join(input_dir, "data_pull_end")
+    job_end_processing_dir = os.path.join(input_dir, "job_end_processing")
+    job_end_data_put_dir = os.path.join(input_dir, "job_end_data_put")
 
-        data_pull_start_dir = os.path.join(finished_dir, "data_pull_start")
-        data_pull_end_dir = os.path.join(finished_dir, "data_pull_end")
-        job_end_processing_dir = os.path.join(finished_dir, "job_end_processing")
-        job_end_data_put_dir = os.path.join(finished_dir, "job_end_data_put")
-
-        start_stats_calculation(data_send_start_path,
-                                data_send_end_path,
-                                data_pull_start_dir,
-                                data_pull_end_dir,
-                                job_end_processing_dir,
-                                job_end_data_put_dir,
-                                output_dir)
-        plot_latencies(1, 1, 8, 8, output_dir)
+    start_stats_calculation(dacman_batch_ts_dir,
+                            data_send_start_dir,
+                            data_send_end_dir,
+                            data_pull_start_dir,
+                            data_pull_end_dir,
+                            job_end_processing_dir,
+                            job_end_data_put_dir,
+                            output_dir)
+    plot_latencies(1, 1, 8, 8, output_dir)
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 4:
-        main(sys.argv[1:])
-    elif len(sys.argv) == 5:
+    if len(sys.argv) == 3:
         main(sys.argv[1:])
     else:
-        print("Usage: python dacman_stats_script.py <started_dir> <finished_dir> <output_dir> <recursive-boolean (optional)>")
+        print("Usage: python dacman_stats_script.py <input_dir> <output_dir>")
         exit()
 

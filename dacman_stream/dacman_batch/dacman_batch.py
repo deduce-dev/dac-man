@@ -29,64 +29,67 @@ CSV_DICTS_DIRS = [
     "job_end_data_put"
 ]
 
+#os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
 OUTPUT_CSV_DIR = "/global/homes/e/elbashan/workspace/dac-man/sandbox/batch_timestamps_dir/"
 
-def write_to_csv(output_dir='.'):
+def write_to_csv(rank=0):
     output_dir_path = OUTPUT_CSV_DIR
 
-    name = CSV_DICTS_DIRS[0]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+    if rank == 0:
+        name = CSV_DICTS_DIRS[0]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in data_send_start.items():
-            writer.writerow([key, value])
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in data_send_start.items():
+                writer.writerow([key, value])
 
-    name = CSV_DICTS_DIRS[1]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        name = CSV_DICTS_DIRS[1]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in data_send_end.items():
-            writer.writerow([key, value])
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in data_send_end.items():
+                writer.writerow([key, value])
+    else:
+        name = CSV_DICTS_DIRS[2]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    name = CSV_DICTS_DIRS[2]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in data_pull_start.items():
+                writer.writerow([key, value])
 
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in data_pull_start.items():
-            writer.writerow([key, value])
+        name = CSV_DICTS_DIRS[3]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    name = CSV_DICTS_DIRS[3]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in data_pull_end.items():
+                writer.writerow([key, value])
 
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in data_pull_end.items():
-            writer.writerow([key, value])
+        name = CSV_DICTS_DIRS[4]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    name = CSV_DICTS_DIRS[4]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in job_end_processing.items():
+                writer.writerow([key, value])
 
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in job_end_processing.items():
-            writer.writerow([key, value])
+        name = CSV_DICTS_DIRS[5]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
-    name = CSV_DICTS_DIRS[5]
-    output_full_path = os.path.join(output_dir_path, name,
-            '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
-
-    with open(output_full_path, 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        for key, value in job_end_data_put.items():
-            writer.writerow([key, value])
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in job_end_data_put.items():
+                writer.writerow([key, value])
 
 
 def two_frame_analysis(data_a, data_b):
@@ -183,6 +186,7 @@ def diff_edf_mpi(dataset, job_num):
         EXIT = 3
 
     if rank == 0:
+        script_start_ts = time.time()
         print("Rank:", str(rank), "started")      
         change_pair_num = 0
         closed_workers = 0
@@ -213,6 +217,9 @@ def diff_edf_mpi(dataset, job_num):
         script_end_ts = time.time()
         #### Creating the output file that will have the stream output
         with open(os.path.join(OUTPUT_CSV_DIR, "dacman_batch_ts", 
+            "dacman_batch_start_ts.txt"), 'w') as f:
+            print(str(script_start_ts), file=f)
+        with open(os.path.join(OUTPUT_CSV_DIR, "dacman_batch_ts", 
             "dacman_batch_end_ts.txt"), 'w') as f:
             print(str(script_end_ts), file=f)
     else:
@@ -242,7 +249,8 @@ def diff_edf_mpi(dataset, job_num):
                 break
 
     # Saving timestamps in CSV format
-    write_to_csv()
+    write_to_csv(rank=rank)
+    #print("Rank %s finished!" % (str(rank)))
 
 if __name__ == "__main__":
 
