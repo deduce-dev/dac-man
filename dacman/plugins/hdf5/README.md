@@ -2,7 +2,7 @@
 
 A Dac-man plug-in to compare HDF5 files, using information from metadata collected from the contained Objects.
 
-## Principles
+## Key Concepts
 
 The operation of the plug-in can be summarized in these steps:
 
@@ -63,7 +63,7 @@ To compare the two files `A.h5` and `B.h5`, after installing Dac-Man and `h5py`,
 dacman diff A.h5 B.h5
 ```
 
-#### From the command line (standalone mode, optional)
+#### As a standalone tool (optional)
 
 Optionally, the `hdf5` plugin can be used as a standalone CLI utility:
 
@@ -86,9 +86,10 @@ In this section, a few cases are given as examples.
 ### Add specialized comparisons for Datasets
 
 A common use case would be to add a comparison for a specialized type of Dataset.
-The additional functionality can be added by minimally extending the main classes involved in the comparison processing chain.
+The additional functionality can be added by minimally extending the main classes involved in the change analysis chain.
 
-For this example, we can consider the case of comparing images stored in an HDF5 files in the EDF format by analyzing changes in the mean luminance and number of unique values.
+For this example, we can consider the case of comparing images stored in an HDF5 files in the EDF format by analyzing changes in the mean intensity and number of unique values.
+All of the following Python code is located in a single Python module `/path/to/my_plugin.py`.
 
 #### Collecting metadata
 
@@ -96,8 +97,8 @@ For this example, we can consider the case of comparing images stored in an HDF5
 def collect_from_edf(d, dataset):
     image = dataset[...]
 
-    d['mean_lumi'] = numpy.mean(image)
-    d['n_unique'] = numpy.unique(image)
+    d['mean_intensity'] = numpy.mean(image, axes=(1, 2))
+    d['n_unique'] = numpy.unique(image).size
 
 
 class MyMetadataCollector(MetadataCollector):
@@ -129,14 +130,14 @@ class MyMetrics(ObjMetadataMetrics):
         if self.is_image_edf:
             if change_in('image_edf'):
                 val_a, val_b = self.get_values('image_edf', orient=tuple)
-                self['delta_mean_lumi'] = val_a['mean_lumi'] - val_b['mean_lumi']
+                self['delta_mean_intensity'] = val_a['mean_intensity'] - val_b['mean_intensity']
                 self['delta_n_unique'] = val_a['n_unique'] - val_b['n_unique']
 ```
 
-#### Creating custom plug-in
+#### Creating the custom plug-in
 
 ```py
-class MyPlugin(HDF5PLugin):
+class MyHDF5Plugin(HDF5PLugin):
 
     def get_metadata_collector(self, *args, **kwargs):
         return MyMetadataCollector(*args, **kwargs)
@@ -145,15 +146,13 @@ class MyPlugin(HDF5PLugin):
         return MyMetrics(**kwargs)
 ```
 
-### Elementwise comparison between Attributes
+#### Running the change analysis
 
-Even though in the current implementation Attributes are compared as a single item, it is possible to perform a more granular comparison.
-Attributes in HDF5 are mappings between text keys and values, where values can be of any supported data type.
-Effectively, for the purpose of a comparison, Attributes can be considered a flat Group (i.e. no sub-groups) with one or more Datasets.
-Therefore, comparisons between Attributes has similar semantics to comparison between Groups:
+Finally, to run the change analysis using the newly-created plug-in, pass the path to the module containing the plug-in to the `-p/--plugin` option:
 
-- Attribute keys can be present in only one of the Objects being compared; in both and values are equal; or in both and values are different
-- For Attribute values, the types of change are the same as for Datasets
+```sh
+dacman diff my_file_A.h5 my_file_B.h5 --plugin /path/to/my_plugin.py
+```
 
 ### Changing the indexing of the comparison pairs
 
@@ -171,14 +170,16 @@ class UIDDatasetPlugin(HDF5Plugin):
     @staticmethod
     def record_key_getter(metadata):
         if metadata['type_h5'] == h5py.Dataset:
-    return metadata['attributes']['uid']
+            return metadata['attributes']['uid']
         return metadata['name']
 ```
 
-And, in a subclass of `HDF5Plugin`:
+### Elementwise comparison between Attributes
 
-```py
-def get_record(self, file, **kwargs):
-    ...
-    return Record(obj, key_getter=uid_key_getter)
-```
+Even though in the current implementation Attributes are compared as a single item, it is possible to perform a more granular comparison.
+Attributes in HDF5 are mappings between text keys and values, where values can be of any supported data type.
+Effectively, for the purpose of a comparison, Attributes can be considered a flat Group (i.e. no sub-groups) with one or more Datasets.
+Therefore, comparisons between Attributes has similar semantics to comparison between Groups:
+
+- Attribute keys can be present in only one of the Objects being compared; in both and values are equal; or in both and values are different
+- For Attribute values, the types of change are the same as for Datasets
