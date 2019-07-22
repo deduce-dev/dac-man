@@ -53,15 +53,23 @@ In addition, the `h5py` Python package is required.
 
 ### Using the HDF5 Plug-in
 
-### From the command line (standalone mode)
+#### From the Dac-Man framework (default)
 
-After installing Dac-Man and `h5py`, run:
+As part of the core Dac-Man plug-ins, when analyzing changes in HDF5 files, the `hdf5` plug-in will be used by default.
+
+To compare the two files `A.h5` and `B.h5`, after installing Dac-Man and `h5py`, run:
+
+```sh
+dacman diff A.h5 B.h5
+```
+
+#### From the command line (standalone mode, optional)
+
+Optionally, the `hdf5` plugin can be used as a standalone CLI utility:
 
 ```sh
 python -m dacman.plugins.hdf5 A.h5 B.h5
 ```
-
-where `A.h5` and `B.h5` are the two HDF5 files to compare.
 
 Use the `--help` flag for a complete list of command-line options:
 

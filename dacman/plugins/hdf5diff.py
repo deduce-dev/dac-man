@@ -108,13 +108,15 @@ def diff_groups(file1, grp1, file2, grp2, path):
         diff_groups(file1, grp1[name], file2, grp2[name], path+name+"/")
 
 
-class HDF5Plugin(Comparator):
+class SimpleHDF5Plugin(Comparator):
     def __init__(self):
         pass
 
     def supports(self):
-        support = ['h5']
-        return support
+        # support = ['h5']
+        # temporarily remove support for ".h5" files so that the `hdf5.HDF5Plugin` plug-in is loaded by default
+        # this will probably be superseded completely by `hdf5.HDF5Plugin` once all missing functionality is implemented.
+        return []
 
     def description(self):
         description = '''Default HDF5 comparator using ndiff.'''
