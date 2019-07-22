@@ -138,10 +138,10 @@ class MyMetrics(ObjMetadataMetrics):
 ```py
 class MyPlugin(HDF5PLugin):
 
-    def get_collector(self, **kwargs):
-        return MyMetadataCollector(**kwargs)
+    def get_metadata_collector(self, *args, **kwargs):
+        return MyMetadataCollector(*args, **kwargs)
 
-    def get_metrics(self, **kwargs):
+    def get_comparison_metrics(self, *args, **kwargs):
         return MyMetrics(**kwargs)
 ```
 
@@ -160,13 +160,19 @@ Therefore, comparisons between Attributes has similar semantics to comparison be
 By default, the plug-in uses the `name` property (corresponding to the `Object.name` attribute in `h5py`) as the comparison pair index,
 i.e. the key used to select corresponding Objects from each input File and associate them for the pairwise comparison.
 
-There can be circumstances where the Object name is not unique or is not the most  representative property for a particular file structure, e.g. if Datasets have a `uid` Attribute representing a unique ID that is the same in both Files.
+There can be circumstances where the Object name is not unique or is not the most representative property for a particular file structure,
+e.g. if Datasets have a `uid` Attribute representing a unique ID that is the same in both Files.
 
-For these cases, it's possible to customize the creation of the Record index by passing a custom function through the `key_getter` parameter:
+For these cases, it's possible to customize the creation of the Record index by passing by creating a subclass of `HDF5Plugin` and overriding the `record_key_getter` staticmethod:
 
 ```py
-def uid_key_getter(metadata):
+class UIDDatasetPlugin(HDF5Plugin):
+
+    @staticmethod
+    def record_key_getter(metadata):
+        if metadata['type_h5'] == h5py.Dataset:
     return metadata['attributes']['uid']
+        return metadata['name']
 ```
 
 And, in a subclass of `HDF5Plugin`:

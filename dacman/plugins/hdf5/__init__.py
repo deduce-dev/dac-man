@@ -38,9 +38,11 @@ class Record:
     def default_key_getter(md):
         return md['name']
 
-    def __init__(self, source, key_getter=None, **kwargs):
+    def __init__(self, source=None, collector=None, key_getter=None, **kwargs):
 
-        collector = metadata.RecursiveMetadataCollector(source, **kwargs)
+        if collector is None:
+            collector = metadata.RecursiveMetadataCollector(source, **kwargs)
+
         collector.collect()
 
         metadata_items = collector
@@ -368,6 +370,13 @@ class HDF5Plugin(base.Comparator):
         # because the comparees are given as args to compare() and not as attributes to __init__()).
         self._metrics = []
 
+    @staticmethod
+    def record_key_getter(metadata):
+        return metadata['name']
+
+    def get_metadata_collector(self, *args, **kwargs):
+        return metadata.RecursiveMetadataCollector(*args, **kwargs)
+
     def get_record(self, file=None, path=None, obj_name=None):
 
         # TODO we could move this logic to a Record classmethod
@@ -375,7 +384,9 @@ class HDF5Plugin(base.Comparator):
             file = h5.File(path, 'r')
 
         obj = file[obj_name] if obj_name else file
-        record = Record(obj, key_getter=lambda md: md['name'])
+
+        collector = self.get_metadata_collector(obj)
+        record = Record(collector=collector, key_getter=self.record_key_getter)
 
         file.close()
         return record
@@ -409,6 +420,9 @@ class HDF5Plugin(base.Comparator):
 
         for key_comp, key_a, key_b in keys_comp_a_b:
             yield key_comp, (a.get(key_a, {}), b.get(key_b, {}))
+
+    def get_comparison_metrics(self, *args, **kwargs):
+        return ObjMetadataMetrics(*args, **kwargs)
 
     def compare(self, path_a, path_b, *args, obj_name=None, subset=None, **kwargs):
         # this assumes that the inputs are paths
