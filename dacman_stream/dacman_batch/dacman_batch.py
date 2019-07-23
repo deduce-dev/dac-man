@@ -3,6 +3,7 @@ import sys
 import csv
 import h5py
 import socket
+import marshal, types
 import numpy as np
 import time
 import uuid
@@ -92,6 +93,19 @@ def write_to_csv(rank=0):
                 writer.writerow([key, value])
 
 
+def func_deserializer_file(file):
+    '''
+    Deserialize analyzer function from a file
+    '''
+    with open(file, 'rb') as f:
+        code = marshal.load(f)
+    func = types.FunctionType(code, globals(), "analyzer")
+
+    return func
+
+#### Not using it anymore to match the dacman_stream behavior
+#### by loading the serialized function instead using
+#### func_deserializer_file(file)
 def two_frame_analysis(data_a, data_b):
     rms_log = None
     t_test_t = None
@@ -150,7 +164,7 @@ def get_change_pairs(dataset, job_num=3000):
             #exit()
 
             job_count = 0
-            while job_count <= job_num:
+            while job_count < job_num:
                 if ii == n_frames-1:
                     ii = 0
                 jj = ii + 1
@@ -170,6 +184,8 @@ def get_change_pairs(dataset, job_num=3000):
 
                 #print(datetime.now() - startTime)
                 #exit()
+            print("Rank 0 finished sending jobs. # of jobs: %s" % \
+                (str(job_count)))
 
 
 def diff_edf_mpi(dataset, job_num):
@@ -187,22 +203,30 @@ def diff_edf_mpi(dataset, job_num):
 
     if rank == 0:
         script_start_ts = time.time()
-        print("Rank:", str(rank), "started")      
+        print("Rank:", str(rank), "started")
         change_pair_num = 0
         closed_workers = 0
         num_workers = size - 1
-      
+        
+        finished_jobs_count = 0
+
         for change_pair in get_change_pairs(dataset, job_num):
-            result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            source = status.Get_source()
-            tag = status.Get_tag()
+            while True:
+                result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+                source = status.Get_source()
+                tag = status.Get_tag()
     
-            if tag == States.READY:
-                task_uuid = change_pair[0]
-                data_send_start[task_uuid] = time.time()
-                comm.send(change_pair, dest=source, tag=States.START)
-                data_send_end[task_uuid] = time.time()
-                print("Rank:", str(rank), "pushed", task_uuid, "to Worker:", str(source))
+                if tag == States.READY:
+                    task_uuid = change_pair[0]
+                    data_send_start[task_uuid] = time.time()
+                    comm.send(change_pair, dest=source, tag=States.START)
+                    data_send_end[task_uuid] = time.time()
+                    print("Rank:", str(rank), "pushed", task_uuid, "to Worker:", str(source))
+                    break
+                elif tag == States.DONE:
+                    finished_jobs_count += 1
+                else:
+                    print("Rank 0: weird tag %s" % (str(tag)))
 
         while closed_workers < num_workers:
             result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
@@ -212,6 +236,8 @@ def diff_edf_mpi(dataset, job_num):
             if tag == States.EXIT:
                 closed_workers += 1
             else:
+                if tag == States.DONE:
+                    finished_jobs_count += 1
                 comm.send(None, dest=source, tag=States.EXIT)
 
         script_end_ts = time.time()
@@ -222,7 +248,10 @@ def diff_edf_mpi(dataset, job_num):
         with open(os.path.join(OUTPUT_CSV_DIR, "dacman_batch_ts", 
             "dacman_batch_end_ts.txt"), 'w') as f:
             print(str(script_end_ts), file=f)
+
+        print("Rank 0: %s jobs has been processed" % (str(finished_jobs_count)))
     else:
+        custom_analyzer = func_deserializer_file("func_analyzer_mpi.marshal")
         while True:
             comm.send(None, dest=0, tag=States.READY)
             pull_start = time.time()
@@ -232,13 +261,16 @@ def diff_edf_mpi(dataset, job_num):
 
             if tag == States.START:
                 task_uuid = change_pair[0]
-                data_a = change_pair[1]
-                data_b = change_pair[2]
+                #data_a = change_pair[1]
+                #data_b = change_pair[2]
+                data_a = np.fromstring(change_pair[1], dtype='<f4')
+                data_b = np.fromstring(change_pair[2], dtype='<f4')
 
                 data_pull_start[task_uuid] = pull_start
                 data_pull_end[task_uuid] = pull_end
                 
-                two_frame_analysis(data_a, data_b)
+                #two_frame_analysis(data_a, data_b)
+                custom_analyzer(data_a, data_b)
                 job_end_processing[task_uuid] = time.time()
                 comm.send(None, dest=0, tag=States.DONE)
                 job_end_data_put[task_uuid] = time.time()

@@ -85,6 +85,15 @@ def update_multiple_csvs_to_dict(path):
 
     return dict_obj
 
+def read_file_to_timestamp(file):
+    '''
+    Read file content into timestamp. So the file should
+    contain one string value that's convertible to int/float  
+    '''
+    with open(file, mode='r') as infile:
+        timestamp = float(infile.read())
+    return timestamp
+
 def write_dict_to_csv(dict_obj, filename, path):
     '''
     Write a dict to csv file
@@ -423,6 +432,20 @@ def start_stats_calculation(dacman_batch_ts_dir,
     output_filename = open(os.path.join(output_dir, "stats.txt"), 'a')
 
     ###########################################################
+    # Reading dacman_batch scripts timestamps
+    ###########################################################
+
+    scp_start_file = os.path.join(dacman_batch_ts_dir, "scp_start.txt")
+    scp_end_file = os.path.join(dacman_batch_ts_dir, "scp_end.txt")
+    dacman_batch_start_ts_file = os.path.join(dacman_batch_ts_dir, "dacman_batch_start_ts.txt")
+    dacman_batch_end_ts_file = os.path.join(dacman_batch_ts_dir, "dacman_batch_end_ts.txt")
+
+    scp_start = read_file_to_timestamp(scp_start_file)
+    scp_end = read_file_to_timestamp(scp_end_file)
+    dacman_batch_start_ts = read_file_to_timestamp(dacman_batch_start_ts_file)
+    dacman_batch_end_ts = read_file_to_timestamp(dacman_batch_end_ts_file)
+
+    ###########################################################
     # Reading data_send_start, data_send_end & Initial data
     ###########################################################
 
@@ -487,6 +510,30 @@ def start_stats_calculation(dacman_batch_ts_dir,
     # Calculating Stats
     ###########################################################
 
+    #### Calculating scp Data transfer time [scp_end - scp_start]
+
+    scp_data_transfer_time = scp_end - scp_start
+    print("Data transfer time [scp_end - scp_start]: ", 
+        scp_data_transfer_time, file=output_filename)
+
+    #### Calculating Queue Wait time [dacman_batch_start_ts - scp_end]
+
+    queue_wait_time = dacman_batch_start_ts - scp_end
+    print("Queue Wait time [dacman_batch_start_ts - scp_end]: ", 
+        queue_wait_time, file=output_filename)
+
+    #### Calculating Total Processing time [dacman_batch_end_ts - dacman_batch_start_ts]
+
+    total_processing_time = dacman_batch_end_ts - dacman_batch_start_ts
+    print("Total Processing time [dacman_batch_end_ts - dacman_batch_start_ts]: ", 
+        total_processing_time, file=output_filename)
+
+    #### Calculating Turnaround time [dacman_batch_end_ts - scp_start]
+
+    turaround_time = dacman_batch_end_ts - scp_start
+    print("Turnaround time [dacman_batch_end_ts - scp_start]: ", 
+        turaround_time, file=output_filename)
+
     #### Calculating job arrival rate [n_jobs/(Max(data_send_end) - Min(data_send_end))]
 
     data_send_end_max = float('-inf')
@@ -504,27 +551,15 @@ def start_stats_calculation(dacman_batch_ts_dir,
     print("Job arrival rate [n_jobs / (data_send_end_max - data_send_end_min)]: %.1f job/s" % \
         job_arrival_rate, file=output_filename)
 
-    #### Calculating Turnaround time [Max(Job end) - Min(Data send start)]
+    #### Calculating pulling from Master overhead time [Avg(Data pull end - Data pull start)]
 
-    job_end_data_put_max = float('-inf')
-    data_send_start_min = float('inf')
-    for _, value in job_end_data_put.items():
-           job_end_data_put_max = max(float(value), job_end_data_put_max)
-           data_send_start_min = min(float(value), data_send_start_min)
-
-    turaround_time = job_end_data_put_max - data_send_start_min
-    print("Turnaround time [Max(Job end) - Min(Data send start)]: ", 
-        turaround_time, file=output_filename)
-
-    #### Calculating pulling from Redis overhead time [Avg(Data pull end - Data pull start)]
-
-    redis_overhead_time = []
+    master_overhead_time = []
     for key, time in data_send_start_sorted:
         diff_value = float(data_pull_end[key]) - float(data_pull_start[key])
-        redis_overhead_time.append(diff_value)
+        master_overhead_time.append(diff_value)
 
-    print("Redis pull overhead time [Avg(Data pull end - Data pull start)]: ", 
-        np.mean(redis_overhead_time), file=output_filename)
+    print("Master pull overhead time [Avg(Data pull end - Data pull start)]: ", 
+        np.mean(master_overhead_time), file=output_filename)
     #print("Redis pull overhead time: ", 
     #    redis_overhead_time, file=output_filename)
 
@@ -558,19 +593,6 @@ def start_stats_calculation(dacman_batch_ts_dir,
     for key, time in data_send_start_sorted:
         diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
         job_based_latency_list.append(diff_value)
-
-    # Remove this later
-    #u = 0
-    #for latency in job_based_latency_list:
-    #    print(latency)
-    #    u +=1
-    #    if u > 250:
-    #        break
-    #print("len(job_based_latency_list): " + str(len(job_based_latency_list)))
-    #with open('job_based_latency_list.csv', 'w', newline='') as f:
-    #    for latency in job_based_latency_list:
-    #        f.write(str(latency) + '\n')
-    # End
 
     #### Comparing the difference between the two event-time latencies
     #### (time based & job based) for verification
@@ -609,7 +631,7 @@ def start_stats_calculation(dacman_batch_ts_dir,
         pure_process_latencies_time_list_arr.append(
             float(job_end_processing[key]))
 
-    print("Pure-processing-time Latency [Avg(Job end processing - Job start)]: ", 
+    print("Pure-processing-time Latency [Avg(job_end_processing - data_pull_end)]: ", 
         np.mean(pure_processing_time_latency_list), file=output_filename)
 
     #### Calculating Processing-time-data-put Latency = 
@@ -688,72 +710,10 @@ def start_stats_calculation(dacman_batch_ts_dir,
     throughput_time_list_arr.append(
         throughput_time_list)
 
-    '''
-    to_n_elements = 300
-
-    event_time_latencies_arr.append(
-            aggregate_list(latency_list, to_n_elements))
-    pure_process_time_latencies_arr.append(
-            aggregate_list(pure_processing_time_latency_list, to_n_elements))
-    process_time_latencies_arr.append(
-            aggregate_list(processing_time_latency_list, to_n_elements))
-    throughput_job_count_list_arr.append(
-            aggregate_list(throughput_job_count_list, to_n_elements))
-    throughput_time_list_arr.append(
-            aggregate_list(throughput_time_list, to_n_elements))
-    '''
-
     n_jobs_arr.append(n_jobs)
     job_arrival_rate_arr.append(job_arrival_rate)
     n_nodes_arr.append(n_nodes)
     n_processes_arr.append(n_processes)
-
-    '''
-    #### Creates two subplots and unpacks the output array immediately
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10,10))
-
-    ax1.plot([i for i in range(1, len(latency_list)+1)], latency_list)
-    ax1.set(xlabel='job #', ylabel='Event-time latency (s)')
-
-    ax2.plot([i for i in range(1, len(processing_time_latency_list)+1)],
-        processing_time_latency_list)
-    ax2.set(xlabel='job #', ylabel='Processing-time latency (s)')
-    
-    ax1.grid()
-    ax2.grid()
-
-    ax1.set_ylim(bottom=0)
-    ax2.set_ylim(bottom=0)
-
-    fig.suptitle('%i jobs, data arrival rate: %.1f jobs/sec, %i nodes, %i processes'\
-         % (n_jobs, job_arrival_rate, n_nodes, n_processes))
-
-    png_filename = "latency_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
-        job_arrival_rate)
-
-    fig.savefig(os.path.join(output_dir, png_filename))
-    #plt.show()
-
-    #### Plotting Throughput
-
-    fig, ax1 = plt.subplots(1, 1, sharex=True)
-    ax1.plot(throughput_time_list, throughput_job_count_list)
-    ax1.set(xlabel='time (s)', ylabel='throughput (jobs/s)')
-
-    ax1.grid()
-
-    fig.suptitle('%i jobs, data arrival rate: %.1f jobs/sec, %i nodes, %i processes'\
-         % (n_jobs, job_arrival_rate, n_nodes, n_processes))
-
-    png_filename = "throughput_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
-        job_arrival_rate)
-
-    fig.savefig(os.path.join(output_dir, png_filename))
-    #plt.show()
-
-    print("====================================================",
-        file=output_filename)
-    '''
 
     output_filename.close()
 
