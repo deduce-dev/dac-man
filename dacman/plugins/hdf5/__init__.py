@@ -135,14 +135,14 @@ class ComparisonMetricsBase:
             return self.a[prop]
         return self.get_if_common(prop)
 
-    def get_values(self, prop, orient=dict, convert=None, as_type=None):
+    def get_values(self, prop, orient=dict, convert=None, as_type=None, fallback=None):
         if convert is None and as_type is not None:
             convert = as_type
 
         convert = convert or (lambda x: x)
 
-        val_a = convert(self.a[prop])
-        val_b = convert(self.b[prop])
+        val_a = convert(self.a.get(prop, fallback))
+        val_b = convert(self.b.get(prop, fallback))
 
         if orient in {tuple, list}:
             return val_a, val_b
@@ -219,6 +219,7 @@ class ObjMetadataMetrics(ComparisonMetricsBase):
             self['type_h5'] = self.a['type_h5']
 
         self.calc_for_obj()
+        self.calc_for_attributes()
 
         if self.is_dataset:
             self.calc_for_dataset()
@@ -238,6 +239,8 @@ class ObjMetadataMetrics(ComparisonMetricsBase):
         if self.is_changed_type:
             self.is_modified = True
             self['type_h5'] = self.get_values('type_h5')
+
+    def calc_for_attributes(self):
 
         if self.is_changed_attributes:
             self.is_modified = True
