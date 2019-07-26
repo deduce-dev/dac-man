@@ -63,12 +63,10 @@ class ObjMetadataCollector:
     Collect metadata from a single h5 Object.
     """
 
-    def __init__(self, *, obj=None, name=None, collect_dataset_values=True):
+    def __init__(self, *, obj=None, name=None):
         
         self.obj = obj
         self.name = name
-
-        self.collect_dataset_values = collect_dataset_values
 
         self._data = {}
 
@@ -117,28 +115,38 @@ class RecursiveMetadataCollector:
     Collect metadata for Objects. For Files or Groups, recursively collect metadata from all contained objects.
     """
 
-    def __init__(self, obj, name=None, collect_dataset_values=True):
+    def __init__(self, obj, name=None, obj_collector_cls=ObjMetadataCollector, max_count=None, **kwargs):
 
         self.obj = obj
         self.name = name or self.obj.name
 
-        self.collect_dataset_values = collect_dataset_values
+        self.obj_collector_cls = obj_collector_cls
+        self.obj_collector_kwargs = kwargs
+        self.max_count = max_count or np.inf
 
         self._items = []
 
     def __iter__(self):
         return iter(self._items)
 
+    def __len__(self):
+        return len(self._items)
+
     def add(self, props):
         self._items.append(props)
 
     def visit(self, name, obj):
-
-        metadata = ObjMetadataCollector(obj=obj, name=name, collect_dataset_values=self.collect_dataset_values)
+        metadata = self.obj_collector_cls(obj=obj, name=name, **self.obj_collector_kwargs)
 
         metadata.collect()
 
         self.add(dict(metadata))
+
+        if len(self) > self.max_count:
+            # I don't know if the fact that the exception being raised here is StopIteration actually makes a difference
+            # (I guess it depends on the implementation of h5.Group.visititems())
+            # in any case, it's a reasonable choice to express the fact that it's not caused by an error
+            raise StopIteration
 
     def collect(self):
 

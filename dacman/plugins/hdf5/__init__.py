@@ -450,8 +450,9 @@ class HDF5Plugin(base.Comparator):
         objs_metrics = []
 
         for key_comp, (obj_md_a, obj_md_b) in self.gen_comparison_pairs(rec_a, rec_b, subset=subset):
+
             # print(f'key_comp={key_comp}')
-            obj_pair_metrics = ObjMetadataMetrics(key_comp, obj_md_a, obj_md_b)
+            obj_pair_metrics = self.get_comparison_metrics(key_comp, obj_md_a, obj_md_b)
             # print(f'obj_pair_a={obj_pair_metrics.a}')
             # print(f'obj_pair_b={obj_pair_metrics.b}')
             obj_pair_metrics.calculate()
