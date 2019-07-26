@@ -267,18 +267,6 @@ class DatasetMetadataMetrics(ComparisonMetricsBase):
     """
     Comparison metrics for Datasets, using metadata properties.
     """
-    
-    def change_in(self, prop):
-        val_a, val_b = self.get_values(prop, orient=tuple)
-
-        # TODO this could be a check on "prop" instead
-        if all(isinstance(val, np.ndarray) for val in (val_a, val_b)):
-            eq = np.array_equal(val_a, val_b)
-        else:
-            # TODO delegate to base class with `super()`
-            eq = val_a == val_b
-
-        return not eq
 
     @property
     def is_changed_ndim(self):
@@ -298,8 +286,6 @@ class DatasetMetadataMetrics(ComparisonMetricsBase):
 
     def calculate(self):
 
-        self.set_unchanged(['value'])
-
         if self.is_changed_ndim:
             self.is_modified = True
             self['ndim'] = self.get_values('ndim')
@@ -309,20 +295,31 @@ class DatasetMetadataMetrics(ComparisonMetricsBase):
         if self.is_changed_dtype:
             self.is_modified = True
             self['dtype'] = self.get_values('dtype')
-            if not self.is_changed_shape:
+            # this doesn't actually make much sense
+            # if not self.is_changed_shape:
                 # only store the value when the shape is the same, i.e. when only the dtype changes
-                self['value'] = self.get_values('value')
+                # self['value'] = self.get_dataset_values()
 
-        if not self.is_changed_dtype:
-            if self.is_changed_value:
-                self.is_modified = True
-                self['value'] = self.get_values('value')
-                if not self.is_changed_shape:
-                    arr_a, arr_b = self.get_values('value', orient=tuple)
+        if not any([self.is_changed_ndim, self.is_changed_shape, self.is_changed_dtype]):
+            self.calc_for_value()
 
-                    # add array comparison here (elementwise)
-                    self['delta_elementwise'] = arr_a - arr_b
-                    self['delta_mean'] = np.mean(self['delta_elementwise'])
+    def calc_for_value(self):
+        dset_a, dset_b = self.get_values('dataset_obj', orient=tuple)
+        val_a, val_b = [dset[:] for dset in (dset_a, dset_b)]
+        vals_eq = np.array_equal(val_a, val_b)
+
+        if not vals_eq:
+
+            self.is_modified = True
+            self['value'] = {'a': val_a, 'b': val_b}
+
+            try:
+                # TODO an additional check on dtype is needed here
+                # to exclude those for which elementwise difference doesn't make sense
+                self['delta_elementwise'] = val_a - val_b
+                self['delta_mean'] = np.mean(self['delta_elementwise'])
+            except TypeError:
+                pass
 
 
 class GroupMetadataMetrics(ComparisonMetricsBase):
@@ -380,18 +377,13 @@ class HDF5Plugin(base.Comparator):
     def get_metadata_collector(self, *args, **kwargs):
         return metadata.RecursiveMetadataCollector(*args, **kwargs)
 
-    def get_record(self, file=None, path=None, obj_name=None):
-
-        # TODO we could move this logic to a Record classmethod
-        if file is None and path is not None:
-            file = h5.File(path, 'r')
+    def get_record(self, file, obj_name=None):
 
         obj = file[obj_name] if obj_name else file
 
         collector = self.get_metadata_collector(obj)
         record = Record(collector=collector, key_getter=self.record_key_getter)
 
-        file.close()
         return record
 
     def gen_comparison_keys_common(self, keys):
@@ -441,8 +433,10 @@ class HDF5Plugin(base.Comparator):
 
         print(f'obj_names={obj_names}')
 
-        rec_a = self.get_record(path=path_a, obj_name=obj_names[0])
-        rec_b = self.get_record(path=path_b, obj_name=obj_names[1])
+        file_a, file_b = [h5.File(path, 'r') for path in (path_a, path_b)]
+
+        rec_a = self.get_record(file=file_a, obj_name=obj_names[0])
+        rec_b = self.get_record(file=file_b, obj_name=obj_names[1])
 
         if subset is True:
             subset = [tuple(obj_names)]
@@ -461,8 +455,12 @@ class HDF5Plugin(base.Comparator):
             obj_pair_metrics.calculate()
             objs_metrics.append(obj_pair_metrics)
 
+
         self._metrics = self.get_metrics(objs_metrics)
 
+        # are the files closed automatically where these variables are garbage-collected?
+        file_a.close()
+        file_b.close()
         return dict(self._metrics)
 
     def get_metrics(self, objs_metrics):

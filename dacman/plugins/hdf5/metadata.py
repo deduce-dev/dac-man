@@ -34,14 +34,7 @@ def collect_from_dataset(d, dataset):
         d['dtype_error'] = str(e)
 
     d['dtype'] = dtype
-
-
-def collect_from_dataset_value(d, dataset):
-
-    value =  dataset[()]
-
-    d['type_value'] = type(value)
-    d['value'] = value
+    d['dataset_obj'] = dataset
 
 
 def collect_from_group(d, group):
@@ -98,8 +91,6 @@ class ObjMetadataCollector:
         if self.is_dataset:
             self['dataset'] = {}
             collect_from_dataset(self['dataset'], self.obj)
-            if self.collect_dataset_values:
-                collect_from_dataset_value(self['dataset'], self.obj)
 
         if self.is_group:
             self['group'] = {}
