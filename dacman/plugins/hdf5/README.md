@@ -51,9 +51,17 @@ Whenever possible, the nomenclature is consistent with the `h5py` API.
 Similarly to Dac-Man, the `hdf5` plug-in is compatible with Python 3.6+.
 In addition, the `h5py` Python package is required.
 
-### Using the HDF5 Plug-in
+To install it, from the environment where Dac-Man is installed, run:
 
-#### From the Dac-Man framework (default)
+```sh
+# install using Conda
+conda install h5py
+
+# or, alternatively, using pip
+python -m pip install h5py
+```
+
+### Using the HDF5 Plug-in
 
 As part of the core Dac-Man plug-ins, when analyzing changes in HDF5 files, the `hdf5` plug-in will be used by default.
 
@@ -63,21 +71,7 @@ To compare the two files `A.h5` and `B.h5`, after installing Dac-Man and `h5py`,
 dacman diff A.h5 B.h5
 ```
 
-#### As a standalone tool (optional)
-
-Optionally, the `hdf5` plugin can be used as a standalone CLI utility:
-
-```sh
-python -m dacman.plugins.hdf5 A.h5 B.h5
-```
-
-Use the `--help` flag for a complete list of command-line options:
-
-```sh
-python -m dacman.plugins.hdf5 --help
-```
-
-## Customizing the Plug-in
+## Extending the Plug-in
 
 The capability of HDF5 files of storing arbitrary data within a complex structure means that the types of possible comparisons is effectively unlimited.
 Rather than trying to anticipate all possible use cases, the plug-in is designed so that it is possible for users to modify the default behavior, and extend it with more specialized functionality.
