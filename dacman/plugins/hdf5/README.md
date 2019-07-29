@@ -77,76 +77,94 @@ The capability of HDF5 files of storing arbitrary data within a complex structur
 Rather than trying to anticipate all possible use cases, the plug-in is designed so that it is possible for users to modify the default behavior, and extend it with more specialized functionality.
 In this section, a few cases are given as examples.
 
-### Add specialized comparisons for Datasets
+---
+
+### Example use case: analyzing changes in EDF tomography data
 
 A common use case would be to add a comparison for a specialized type of Dataset.
 The additional functionality can be added by minimally extending the main classes involved in the change analysis chain.
 
-For this example, we can consider the case of comparing images stored in an HDF5 files in the EDF format by analyzing changes in the mean intensity and number of unique values.
-All of the following Python code is located in a single Python module `/path/to/my_plugin.py`.
+As an example case study, we consider analyzing changes in images stored in HDF5 files in the EDF format.
+The complete code for this example can be found in [`dacman/plugins/als_tomo.py`](https://github.com/dghoshal-lbl/dac-man/blob/feature/hdf5-plugin/dacman/plugins/als_tomo.py).
 
-#### Collecting metadata
+#### Installing extra dependencies
 
-```py
-def collect_from_edf(d, dataset):
-    image = dataset[...]
+On top of the default Dac-Man dependencies and the `h5py` package required by the HDF5 plug-in, custom change analyses might require additional dependencies.
 
-    d['mean_intensity'] = numpy.mean(image, axes=(1, 2))
-    d['n_unique'] = numpy.unique(image).size
+The `als_tomo` change analysis uses functions from the `numpy`, `scipy`, and `scikit-learn` Python modules.
+To install them, from the environment where Dac-Man is installed, run:
 
+```sh
+# install packages using Conda
+conda install numpy scipy scikit-learn
 
-class MyMetadataCollector(MetadataCollector):
-
-    @property
-    def is_image_edf(self):
-        return self.is_dataset and self.obj.name.endswith('.edf')
-
-    def collect(self):
-        super().collect()
-
-        if self.is_image_edf:
-            self['image_edf'] = {}
-            collect_from_edf(self['image_edf'], self.obj)
+# or, alternatively, using pip
+python -m pip install numpy scipy scikit-learn
 ```
 
-#### Calculating comparison metrics
+#### Developing the extension
 
-```py
-class MyMetrics(ObjMetadataMetrics):
+A brief walkthrough of the code for `als_tomo.py` is presented below.
 
-    @property
-    def is_image_edf(self):
-        return 'image_edf' in self.properties
+##### Collecting metadata
 
-    def calculate(self):
-        super().calculate()
+The first step is to define how metadata will be collected from each Object in each input File.
+For this, we create `ALSTomoMetadataCollector`, a subclass of `dacman.plugins.hdf5.metadata.MetadataCollector`.
 
-        if self.is_image_edf:
-            if change_in('image_edf'):
-                val_a, val_b = self.get_values('image_edf', orient=tuple)
-                self['delta_mean_intensity'] = val_a['mean_intensity'] - val_b['mean_intensity']
-                self['delta_n_unique'] = val_a['n_unique'] - val_b['n_unique']
-```
+Looking more in detail at its methods:
 
-#### Creating the custom plug-in
+- The `is_edf_dataset` property is used to define which Datasets should be treated as EDF images.
+  In the example, the name of the Dataset is used as the basis for the criteria, but other properties could be used as well, to e.g. select Datasets based on their shape or data type
+- The `collect()` method defines how the metadata is collected depending on the characteristics of the Object.
+  In our case, the metadata relative to EDF images are stored under the `image_edf` key, and the metadata collection itself happens in the `collect_from_edf()` function
 
-```py
-class MyHDF5Plugin(HDF5PLugin):
+In the `collect_from_edf()` function:
 
-    def get_metadata_collector(self, *args, **kwargs):
-        return MyMetadataCollector(*args, **kwargs)
+- Various components of the Dataset's name are calculated and saved.
+  In these files, for corresponding images, the full Dataset name changes from one file to the other, but it contains a common suffix or identifier.
+  Separating and isolating the common component of the Dataset name is therefore necessary to correctly associate the images in the two files
+- Because of their relatively large size, instead of storing the full content of each image,
+  a handle to the `h5py.Dataset` object is saved in the metadata.
+  This will be accessed at a later stage, when calculating the change metrics.
 
-    def get_comparison_metrics(self, *args, **kwargs):
-        return MyMetrics(**kwargs)
-```
+##### Calculating comparison metrics
+
+The change metric calculations are defined in the `ALSTomoChangeMetrics` class, inheriting from `dacman.plugins.hdf5.ObjMetadataMetrics`.
+
+- The actual calculations take place in the `calculate()` method
+  - For metadata that does not refer to EDF images, the default change metrics (from the `ObjMetadataMetrics` base class) are calculated
+  - For EDF image metadata, the raw image value is accessed from the `h5py.Dataset` object collected under `dataset_obj`, and the various change metrics are computed from those
+- General options of the change metrics calculations (`do_ttest`, `normalize`) are used to customize the level of detail
+- For these example files, changes in Attributes for the EDF images are not interesting (as opposed to changes in File or Group Attributes).
+  Therefore, the `calc_for_attributes()` method of the parent class is overridden to skip calculating change metrics for Attributes for EDF images.
+
+##### Defining the comparator
+
+The overall behavior of the change analysis is expressed in the `ALSTomoPlugin` comparator, inheriting from the `dacman.plugins.hdf5.HDF5Plugin` class.
+
+- The `get_metadata_collector()` and `get_comparison_metrics()` methods tell the comparator to use our custom classes `ALSTomoMetadataCollector` and `ALSTomoChangeMetrics` to collect metadata and calculate change metrics, respectively, together with relevant options
+- The `record_key_getter()` method defines which of the metadata properties should be used to create the Record index for each input file, which in turn determines which Objects will be compared in the change analysis. For this change analysis, we want to use the `image_id` metadata property, whose value is common to images in both files, for EDF images, and the `name` property for any other Object
+- The `stats()` method customizes the format and amount of information returned by the change analysis
 
 #### Running the change analysis
 
-Finally, to run the change analysis using the newly-created plug-in, pass the path to the module containing the plug-in to the `-p/--plugin` option:
+After making sure that the `als_tomo.py` file is in the Dac-Man plug-in directory `dacman/plugins`,
+edit the `~/.dacman/config/plugins.yaml` configuration file to override the base HDF5 plug-in:
+
+```yaml
+# in ~/.dacman/config/plugins.yaml
+
+default: DefaultPlugin
+h5: ALSTomoPlugin
+```
+
+Then, run `dacman diff` on the two HDF5 files:
 
 ```sh
-dacman diff my_file_A.h5 my_file_B.h5 --plugin /path/to/my_plugin.py
+dacman diff als-tomo-A.h5 als-tomo-B.h5
 ```
+
+---
 
 ### Changing the indexing of the comparison pairs
 
