@@ -305,8 +305,16 @@ class DatasetMetadataMetrics(ComparisonMetricsBase):
 
     def calc_for_value(self):
         dset_a, dset_b = self.get_values('dataset_obj', orient=tuple)
-        val_a, val_b = [dset[:] for dset in (dset_a, dset_b)]
-        vals_eq = np.array_equal(val_a, val_b)
+
+        # first assume that the Datasets are arrays
+        # (we know that the shape is the same, so we can assume that this applies to both)
+        try:
+            val_a, val_b = [dset[:] for dset in (dset_a, dset_b)]
+            vals_eq = np.array_equal(val_a, val_b)
+        except (ValueError, TypeError):
+            # the content of the Datasets are scalars
+            val_a, val_b = [dset[()] for dset in (dset_a, dset_b)]
+            vals_eq = val_a == val_b
 
         if not vals_eq:
 
