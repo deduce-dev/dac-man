@@ -5,8 +5,8 @@ import os
 
 
 def get_install_requires():
-        # TODO in principle there's a conceptual difference between install_requires and requirements.txt
-        # https://packaging.python.org/discussions/install-requires-vs-requirements/
+    # TODO in principle there's a conceptual difference between install_requires and requirements.txt
+    # https://packaging.python.org/discussions/install-requires-vs-requirements/
     # so we move dependencies from requirements.txt files to setup.py
     # with open('requirements.txt') as file_requirements:
         # if we want to use requirements.txt as a common basis, we should split/strip "pinned" dependencies
@@ -29,6 +29,29 @@ def get_install_requires():
     ]
 
     return install_deps
+
+
+def get_extras_require():
+    """
+    Return optional dependencies in the format required by the `extras_require` option.
+
+    These dependencies can then be specified when installing Dac-Man:
+
+    $ git clone <dacman-repo-url> && cd dac-man/
+    $ pip install .               # only install core dependencies
+    $ pip install .[fits]         # install also dependencies necessary for FITS files
+    $ pip install .[fits,h5,hpc]  # install multiple optional dependencies
+    """
+    d = {}
+
+    # TODO check which of these are redundant because numpy is already a dependency
+    d['fits'] = ['numpy', 'astropy']
+    d['edf'] = ['numpy', 'fabio']
+    d['h5'] = ['numpy', 'h5py']
+
+    d['hpc'] = ['numpy', 'mpi4py']
+
+    return d
 
 
 def get_version():
@@ -61,6 +84,7 @@ setup(name='dacman',
                    'License :: OSI Approved :: 3-clause BSD License'
       ],
       install_requires=get_install_requires(),
+      extras_require=get_extras_require(),
       entry_points={'console_scripts': ['dacman = dacman.cli:main']},
       data_files=[(os.path.join(dacman_dir, 'config'), ['config/logging.yaml']),
                   (os.path.join(dacman_dir, 'config'), ['config/plugins.yaml'])
