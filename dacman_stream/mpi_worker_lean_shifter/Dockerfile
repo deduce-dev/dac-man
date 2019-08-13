@@ -18,7 +18,6 @@ RUN apt-get update -y && \
     apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
-
 #### ADD DEFAULT USER ####
 RUN adduser --disabled-password --gecos "" ${USER} && \
     echo "${USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -53,6 +52,7 @@ RUN pip3 install --user scikit-learn
 RUN pip3 install --user redis==2.10.6
 RUN pip3 install --user numpy
 
+ENV PYTHONPATH=${HOME}/.local/lib/python3.6/site-packages:$PYTHONPATH
 
 #ENTRYPOINT ["python3", "stream_worker.py"]
 #CMD ["blot.lbl.gov", "6378", "0", "task_queue:f5b4873137a332836e384ecbc8c9a4a876d267f2"]

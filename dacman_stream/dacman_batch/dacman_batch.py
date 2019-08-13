@@ -13,8 +13,10 @@ from scipy import stats
 
 from mpi4py import MPI
 
+data_ready = {}
 data_send_start = {}
 data_send_end = {}
+worker_ready = {}
 data_pull_start = {}
 data_pull_end = {}
 job_end_processing = {}
@@ -22,8 +24,10 @@ job_end_data_put = {}
 
 TASK_PREFIX = "task"
 CSV_DICTS_DIRS = [
+    "data_ready",
     "data_send_start",
     "data_send_end",
+    "worker_ready",
     "data_pull_start",
     "data_pull_end",
     "job_end_processing",
@@ -44,7 +48,7 @@ def write_to_csv(rank=0):
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in data_send_start.items():
+            for key, value in data_ready.items():
                 writer.writerow([key, value])
 
         name = CSV_DICTS_DIRS[1]
@@ -53,25 +57,25 @@ def write_to_csv(rank=0):
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in data_send_end.items():
+            for key, value in data_send_start.items():
                 writer.writerow([key, value])
-    else:
+
         name = CSV_DICTS_DIRS[2]
         output_full_path = os.path.join(output_dir_path, name,
                 '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in data_pull_start.items():
+            for key, value in data_send_end.items():
                 writer.writerow([key, value])
-
+    else:
         name = CSV_DICTS_DIRS[3]
         output_full_path = os.path.join(output_dir_path, name,
                 '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in data_pull_end.items():
+            for key, value in worker_ready.items():
                 writer.writerow([key, value])
 
         name = CSV_DICTS_DIRS[4]
@@ -80,10 +84,28 @@ def write_to_csv(rank=0):
 
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
-            for key, value in job_end_processing.items():
+            for key, value in data_pull_start.items():
                 writer.writerow([key, value])
 
         name = CSV_DICTS_DIRS[5]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in data_pull_end.items():
+                writer.writerow([key, value])
+
+        name = CSV_DICTS_DIRS[6]
+        output_full_path = os.path.join(output_dir_path, name,
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in job_end_processing.items():
+                writer.writerow([key, value])
+
+        name = CSV_DICTS_DIRS[7]
         output_full_path = os.path.join(output_dir_path, name,
                 '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
 
@@ -211,6 +233,7 @@ def diff_edf_mpi(dataset, job_num):
         finished_jobs_count = 0
 
         for change_pair in get_change_pairs(dataset, job_num):
+            pair_ready = time.time()
             while True:
                 result = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
                 source = status.Get_source()
@@ -218,6 +241,7 @@ def diff_edf_mpi(dataset, job_num):
     
                 if tag == States.READY:
                     task_uuid = change_pair[0]
+                    data_ready[task_uuid] = pair_ready
                     data_send_start[task_uuid] = time.time()
                     comm.send(change_pair, dest=source, tag=States.START)
                     data_send_end[task_uuid] = time.time()
@@ -253,6 +277,7 @@ def diff_edf_mpi(dataset, job_num):
     else:
         custom_analyzer = func_deserializer_file("func_analyzer_mpi.marshal")
         while True:
+            w_ready = time.time()
             comm.send(None, dest=0, tag=States.READY)
             pull_start = time.time()
             change_pair = comm.recv(source=0, tag=MPI.ANY_TAG, status=status)
@@ -261,16 +286,17 @@ def diff_edf_mpi(dataset, job_num):
 
             if tag == States.START:
                 task_uuid = change_pair[0]
-                #data_a = change_pair[1]
-                #data_b = change_pair[2]
-                data_a = np.fromstring(change_pair[1], dtype='<f4')
-                data_b = np.fromstring(change_pair[2], dtype='<f4')
+                data_a = change_pair[1]
+                data_b = change_pair[2]
+                #data_a = np.fromstring(change_pair[1], dtype='<f4')
+                #data_b = np.fromstring(change_pair[2], dtype='<f4')
 
+                worker_ready[task_uuid] = w_ready
                 data_pull_start[task_uuid] = pull_start
                 data_pull_end[task_uuid] = pull_end
                 
                 #two_frame_analysis(data_a, data_b)
-                custom_analyzer(data_a, data_b)
+                _, _, _ = custom_analyzer(data_a, data_b)
                 job_end_processing[task_uuid] = time.time()
                 comm.send(None, dest=0, tag=States.DONE)
                 job_end_data_put[task_uuid] = time.time()

@@ -160,7 +160,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         'DAR: Data arrival rate' \
          
 
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "event_latencies_scatter_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -212,7 +212,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         'DAR: Data arrival rate' \
          
 
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "event_latencies_bar_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -261,7 +261,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         'DAR: Data arrival rate' \
          
 
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "pure_processing_latencies_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -310,7 +310,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         'DAR: Data arrival rate' \
          
 
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "processing_data_put_latencies_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -354,7 +354,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         '--' + '\n' + \
     #         'DAR: Data arrival rate' \
          
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "throughputs_scatter_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -398,7 +398,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #         '--' + '\n' + \
     #         'DAR: Data arrival rate' \
          
-    fig.suptitle(title)
+    #fig.suptitle(title)
 
     png_filename = "throughputs_line_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
@@ -506,9 +506,11 @@ def start_stats_calculation(data_send_start_path,
     #### Calculating Turnaround time [Max(Job end) - Min(Data send start)]
 
     job_end_data_put_max = float('-inf')
-    data_send_start_min = float('inf')
     for _, value in job_end_data_put.items():
            job_end_data_put_max = max(float(value), job_end_data_put_max)
+
+    data_send_start_min = float('inf')
+    for _, value in data_send_start.items():
            data_send_start_min = min(float(value), data_send_start_min)
 
     turaround_time = job_end_data_put_max - data_send_start_min
@@ -524,6 +526,9 @@ def start_stats_calculation(data_send_start_path,
 
     print("Redis pull overhead time [Avg(Data pull end - Data pull start)]: ", 
         np.mean(redis_overhead_time), file=output_filename)
+
+    print("Total Redis pull overhead time [Sum(redis_overhead_time)]: ", 
+        np.sum(redis_overhead_time), file=output_filename)
     #print("Redis pull overhead time: ", 
     #    redis_overhead_time, file=output_filename)
 
@@ -611,6 +616,9 @@ def start_stats_calculation(data_send_start_path,
     print("Pure-processing-time Latency [Avg(Job end processing - Job start)]: ", 
         np.mean(pure_processing_time_latency_list), file=output_filename)
 
+    print("Total Pure-processing-time Latency [Sum(pure_processing_time_latency_list)]: ", 
+        np.sum(pure_processing_time_latency_list), file=output_filename)
+
     #### Calculating Processing-time-data-put Latency = 
     #### Job processing time + data put [Avg(Job end data put - Job start)]
 
@@ -621,6 +629,9 @@ def start_stats_calculation(data_send_start_path,
 
     print("Processing-time-data-put Latency [Avg(Job end data put - Job start)]: ", 
         np.mean(processing_time_latency_list), file=output_filename)
+
+    print("Total Processing-time-data-put Latency [Sum(processing_time_latency_list)]: ", 
+        np.sum(processing_time_latency_list), file=output_filename)
 
     #### Calculating Throughput [n(Jobs)/Turnaround time]
 
@@ -653,6 +664,9 @@ def start_stats_calculation(data_send_start_path,
     data_transfer_overhead = np.mean(data_transfer_overhead_list)
     print("Data transfer overhead [Avg(Data send end - Data send start)]: ", 
         data_transfer_overhead, file=output_filename)
+
+    print("Total Data transfer overhead [Sum(data_transfer_overhead_list)]: ", 
+        np.sum(data_transfer_overhead_list), file=output_filename)
 
     #### Calculating job arrival rate [Max(data_send_end) - Min(data_send_end)]
 

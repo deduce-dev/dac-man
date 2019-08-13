@@ -416,8 +416,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
 
 def start_stats_calculation(dacman_batch_ts_dir,
+                            data_ready_dir,
                             data_send_start_dir,
                             data_send_end_dir,
+                            worker_ready_dir,
                             data_pull_start_dir,
                             data_pull_end_dir,
                             job_end_processing_dir,
@@ -446,9 +448,10 @@ def start_stats_calculation(dacman_batch_ts_dir,
     dacman_batch_end_ts = read_file_to_timestamp(dacman_batch_end_ts_file)
 
     ###########################################################
-    # Reading data_send_start, data_send_end & Initial data
+    # Reading data_ready, data_send_start, data_send_end 
     ###########################################################
 
+    data_ready = update_multiple_csvs_to_dict(data_ready_dir)
     data_send_start = update_multiple_csvs_to_dict(data_send_start_dir)
     data_send_end = update_multiple_csvs_to_dict(data_send_end_dir)
 
@@ -459,6 +462,7 @@ def start_stats_calculation(dacman_batch_ts_dir,
     # Reading data_pull_start, data_pull_end & job_end_data_put
     ###########################################################
 
+    worker_ready = update_multiple_csvs_to_dict(worker_ready_dir)
     data_pull_start = update_multiple_csvs_to_dict(data_pull_start_dir)
     data_pull_end = update_multiple_csvs_to_dict(data_pull_end_dir)
     job_end_processing = update_multiple_csvs_to_dict(job_end_processing_dir)
@@ -505,6 +509,8 @@ def start_stats_calculation(dacman_batch_ts_dir,
     data_send_start_sorted = [(k, d1[k]) for k in sorted(d1, key=d1.get)]
     d2 = job_end_data_put
     job_end_data_put_sorted = [(k, float(d2[k])) for k in sorted(d2, key=d2.get)]
+    d3 = data_ready
+    data_ready_sorted = [(k, float(d3[k])) for k in sorted(d3, key=d3.get)]
 
     ###########################################################
     # Calculating Stats
@@ -534,6 +540,17 @@ def start_stats_calculation(dacman_batch_ts_dir,
     print("Turnaround time [dacman_batch_end_ts - scp_start]: ", 
         turaround_time, file=output_filename)
 
+    #### Calculating Time diff between each data pair
+    data_ready_time_diff = []
+    for i in range(1, len(data_ready_sorted)):
+        _, v1 = data_ready_sorted[i]
+        _, v2 = data_ready_sorted[i-1]
+        diff_value = float(v1) - float(v2)
+        data_ready_time_diff.append(diff_value)
+
+    print("Time diff between each data pair [Avg(data_ready_sorted[i] - data_ready_sorted[i-1])]: ", 
+        np.mean(data_ready_time_diff), file=output_filename)
+
     #### Calculating job arrival rate [n_jobs/(Max(data_send_end) - Min(data_send_end))]
 
     data_send_end_max = float('-inf')
@@ -551,20 +568,62 @@ def start_stats_calculation(dacman_batch_ts_dir,
     print("Job arrival rate [n_jobs / (data_send_end_max - data_send_end_min)]: %.1f job/s" % \
         job_arrival_rate, file=output_filename)
 
-    #### Calculating pulling from Master overhead time [Avg(Data pull end - Data pull start)]
+    #### Calculating Data ready waiting overhead [Avg(data_send_start - data_ready)]
+
+    data_ready_wait_overhead = []
+    for key, time in data_send_start_sorted:
+        diff_value = float(data_send_start[key]) - float(data_ready[key])
+        #print(diff_value)
+        data_ready_wait_overhead.append(diff_value)
+
+    print("Data ready waiting overhead [Avg(data_send_start - data_ready)]: ", 
+        np.mean(data_ready_wait_overhead), file=output_filename)
+
+    #### Calculating Worker sending READY status overhead [Avg(data_pull_start - worker_ready)]
+
+    worker_ready_overhead_time = []
+    for key, time in data_send_start_sorted:
+        diff_value = float(data_pull_start[key]) - float(worker_ready[key])
+        #print(diff_value)
+        worker_ready_overhead_time.append(diff_value)
+
+    print("Worker sending READY status overhead [Avg(data_pull_start - worker_ready)]: ", 
+        np.mean(worker_ready_overhead_time), file=output_filename)
+
+    #### Calculating Data transfer overhead [Avg(data_send_end - data_send_start)]
+
+    data_transfer_overhead_list = []
+    for key, time in data_send_start_sorted:
+        diff_value = float(data_send_end[key]) - float(data_send_start[key])
+        data_transfer_overhead_list.append(diff_value)
+
+    data_transfer_overhead = np.mean(data_transfer_overhead_list)
+    print("Data transfer overhead [Avg(data_send_end - data_send_start)]: ", 
+        data_transfer_overhead, file=output_filename)
+
+    #### Calculating worker pulling from Master overhead time [Avg(Data pull end - Data pull start)]
 
     master_overhead_time = []
     for key, time in data_send_start_sorted:
         diff_value = float(data_pull_end[key]) - float(data_pull_start[key])
+        #print(diff_value)
         master_overhead_time.append(diff_value)
 
-    print("Master pull overhead time [Avg(Data pull end - Data pull start)]: ", 
+    print("Worker pull from Master overhead time [Avg(data_pull_end - data_pull_start)]: ", 
         np.mean(master_overhead_time), file=output_filename)
-    #print("Redis pull overhead time: ", 
-    #    redis_overhead_time, file=output_filename)
+
+    #### Calculating Worker waiting time to start job [Avg(data_pull_end - worker_ready)]
+
+    master_overhead_time = []
+    for key, time in data_send_start_sorted:
+        diff_value = float(data_pull_end[key]) - float(worker_ready[key])
+        master_overhead_time.append(diff_value)
+
+    print("Worker waiting time [Avg(data_pull_end - worker_ready)]: ", 
+        np.mean(master_overhead_time), file=output_filename)
 
     #### Calculating Event-time Latency time based
-    #### [Avg(job_end_data_put - Data data_send_end end)]
+    #### [Avg(job_end_data_put - data_ready)]
     '''
     difference_count = 0
     for i in range(len(job_end_data_put_sorted)):
@@ -580,20 +639,21 @@ def start_stats_calculation(dacman_batch_ts_dir,
 
     time_based_latency_list = []
     for key, time in job_end_data_put_sorted:
-        diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
+        diff_value = float(job_end_data_put[key]) - float(data_ready[key])
         time_based_latency_list.append(diff_value)
         event_latencies_time_list_arr.append(time)
         #event_latencies_time_list_arr.append(
         #    float(job_end_data_put[key]))
 
     #### Calculating Event-time Latency job based 
-    #### [Avg(job_end_data_put - Data data_send_end end)]
+    #### [Avg(job_end_data_put - data_ready)]
 
     job_based_latency_list = []
     for key, time in data_send_start_sorted:
-        diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
+        diff_value = float(job_end_data_put[key]) - float(data_ready[key])
         job_based_latency_list.append(diff_value)
 
+    '''
     #### Comparing the difference between the two event-time latencies
     #### (time based & job based) for verification
 
@@ -612,17 +672,18 @@ def start_stats_calculation(dacman_batch_ts_dir,
         print("max diff between jobs-sent-first & jobs-finished-first: "
             + str(max(event_latencies_diff_list)), file=output_filename)
         #print("difference_count: " + str(difference_count))
+    '''
 
     #### Already sorted: To be fixed -- event_latencies_time_list_arr[0]
     event_latency_time_min = min(event_latencies_time_list_arr)
     event_latencies_time_list_arr[:] = \
         [x - event_latency_time_min for x in event_latencies_time_list_arr]
 
-    print("Event-time Latency [Avg(Job start - Data send end)]: ", 
+    print("Event-time Latency [Avg(job_end_data_put - data_ready)]: ", 
         np.mean(job_based_latency_list), file=output_filename)
 
     #### Calculating Pure Processing-time latency = 
-    #### Job processing time [Avg(Job end processing - Job start)]
+    #### Job processing time [Avg(job_end_processing - data_pull_end)]
 
     pure_processing_time_latency_list = []
     for key, time in data_send_start_sorted:
@@ -635,14 +696,14 @@ def start_stats_calculation(dacman_batch_ts_dir,
         np.mean(pure_processing_time_latency_list), file=output_filename)
 
     #### Calculating Processing-time-data-put Latency = 
-    #### Job processing time + data put [Avg(Job end data put - Job start)]
+    #### Job processing time + data put [Avg(job_end_data_put - data_pull_end)]
 
     processing_time_latency_list = []
     for key, time in data_send_start_sorted:
         diff_value = float(job_end_data_put[key]) - float(data_pull_end[key])
         processing_time_latency_list.append(diff_value)
 
-    print("Processing-time-data-put Latency [Avg(Job end data put - Job start)]: ", 
+    print("Processing-time-data-put Latency [Avg(job_end_data_put - data_pull_end)]: ", 
         np.mean(processing_time_latency_list), file=output_filename)
 
     #### Calculating Throughput [n(Jobs)/Turnaround time]
@@ -665,31 +726,6 @@ def start_stats_calculation(dacman_batch_ts_dir,
     for k, v in throughput_per_second.items():
         throughput_time_list.append(k)
         throughput_job_count_list.append(v)
-
-    #### Calculating Data transfer overhead [Avg(Data send end - Data send start)]
-
-    data_transfer_overhead_list = []
-    for key, time in data_send_start_sorted:
-        diff_value = float(data_send_end[key]) - float(data_send_start[key])
-        data_transfer_overhead_list.append(diff_value)
-
-    data_transfer_overhead = np.mean(data_transfer_overhead_list)
-    print("Data transfer overhead [Avg(Data send end - Data send start)]: ", 
-        data_transfer_overhead, file=output_filename)
-
-    #### Calculating job arrival rate [Max(data_send_end) - Min(data_send_end)]
-
-    data_send_end_max = float('-inf')
-    data_send_end_min = float('inf')
-    for _, value in data_send_end.items():
-           data_send_end_max = max(float(value), data_send_end_max)
-           data_send_end_min = min(float(value), data_send_end_min)
-
-    data_send_end_diff = data_send_end_max - data_send_end_min
-    print("Job arrival time period [Max(Data send end) - Min(Data send end)]: ", 
-        data_send_end_diff, file=output_filename)
-
-    job_arrival_rate = float(n_jobs)/data_send_end_diff
 
     ###########################################################
     # Plotting
@@ -751,16 +787,20 @@ def main(argv):
     else:
     '''
     dacman_batch_ts_dir = os.path.join(input_dir, 'dacman_batch_ts')
+    data_ready_dir = os.path.join(input_dir, 'data_ready')
     data_send_start_dir = os.path.join(input_dir, 'data_send_start')
     data_send_end_dir = os.path.join(input_dir, 'data_send_end')
+    worker_ready_dir = os.path.join(input_dir, 'worker_ready')
     data_pull_start_dir = os.path.join(input_dir, "data_pull_start")
     data_pull_end_dir = os.path.join(input_dir, "data_pull_end")
     job_end_processing_dir = os.path.join(input_dir, "job_end_processing")
     job_end_data_put_dir = os.path.join(input_dir, "job_end_data_put")
 
     start_stats_calculation(dacman_batch_ts_dir,
+                            data_ready_dir,
                             data_send_start_dir,
                             data_send_end_dir,
+                            worker_ready_dir,
                             data_pull_start_dir,
                             data_pull_end_dir,
                             job_end_processing_dir,
