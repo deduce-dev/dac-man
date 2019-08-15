@@ -88,6 +88,9 @@ processing_batch_debug = (
 
 ind = np.arange(N) 
 width = 0.25
+
+plt.figure(figsize=(10,7))
+
 plt.bar(ind, turnaround_stream, width, label='DacMan-Stream')
 plt.bar(ind + width, turnaround_batch_realtime, width,
     label='Batch-Job-realtime')
@@ -96,7 +99,8 @@ plt.bar(ind + 2*width, turnaround_batch_debug, width,
 
 plt.ylabel('Turnaround Time (s)')
 
-plt.xticks(ind + width, ('N1', 'N2', 'N4', 'N6', 'N8'))
+
+plt.xticks(ind + width, ('32', '64', '128', '192', '256'))
 plt.legend(loc='best')
 #plt.show()
 
@@ -106,27 +110,31 @@ plt.clf()
 
 ind = np.arange(N) 
 width = 0.25
+
+plt.figure(figsize=(10,7))
+
 plt.bar(ind, turnaround_stream, width, label='DacMan-Stream')
 
-bar_d_and_q = np.add(data_transfer_batch_realtime, queue_wait_batch_realtime).tolist()
+bar_d_and_p = np.add(data_transfer_batch_realtime, processing_batch_realtime).tolist()
 plt.bar(ind + width, data_transfer_batch_realtime, width,
     label='Batch-Job-realtime-DataTransfer-T')
-plt.bar(ind + width, queue_wait_batch_realtime, width,
-    bottom=data_transfer_batch_realtime, label='Batch-Job-realtime-Queue-T')
 plt.bar(ind + width, processing_batch_realtime, width,
-    bottom=bar_d_and_q, label='Batch-Job-realtime-Process-T')
+    bottom=data_transfer_batch_realtime, label='Batch-Job-realtime-Process-T')
+plt.bar(ind + width, queue_wait_batch_realtime, width,
+    bottom=bar_d_and_p, label='Batch-Job-realtime-Queue-T')
 
-bar_d_and_q = np.add(data_transfer_batch_debug, queue_wait_batch_debug).tolist()
+bar_d_and_p = np.add(data_transfer_batch_debug, processing_batch_debug).tolist()
 plt.bar(ind + 2*width, data_transfer_batch_debug, width,
     label='Batch-Job-debug-DataTransfer-T')
-plt.bar(ind + 2*width, queue_wait_batch_debug, width,
-    bottom=data_transfer_batch_debug, label='Batch-Job-debug-Queue-T')
 plt.bar(ind + 2*width, processing_batch_debug, width,
-    bottom=bar_d_and_q, label='Batch-Job-debug-Process-T')
+    bottom=data_transfer_batch_debug, label='Batch-Job-debug-Process-T')
+plt.bar(ind + 2*width, queue_wait_batch_debug, width,
+    bottom=bar_d_and_p, label='Batch-Job-debug-Queue-T')
 
 plt.ylabel('Turnaround Time (s)')
+plt.xlabel('# of Cores')
 
-plt.xticks(ind + width, ('N1', 'N2', 'N4', 'N6', 'N8'))
+plt.xticks(ind + width, ('32', '64', '128', '192', '256'))
 plt.legend(loc='best')
 #plt.show()
 
