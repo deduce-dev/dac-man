@@ -1,4 +1,6 @@
+import os
 import sys
+import csv
 import uuid
 import time
 import redis
@@ -35,6 +37,8 @@ def calc_stats():
     d1 = data_send_start
     data_send_start_sorted = [(k, d1[k]) for k in sorted(d1, key=d1.get)]
 
+    total_sum = 0
+
     diff_sum = 0
     for k, v in data_send_start_sorted:
         send_start = data_send_start[k]
@@ -43,6 +47,7 @@ def calc_stats():
         diff = send_end - send_start
         diff_sum += diff
 
+    total_sum += diff_sum
     print("Sending to Redis total time:", diff_sum)
 
     diff_sum = 0
@@ -50,6 +55,7 @@ def calc_stats():
         diff = hash_end - hash_start
         diff_sum += diff
 
+    total_sum += diff_sum
     print("Hashing total time:", diff_sum)
 
     diff_sum = 0
@@ -57,10 +63,13 @@ def calc_stats():
         diff = r_req_end - r_req_start
         diff_sum += diff
 
+    total_sum += diff_sum
     print("Requesting Redis info (memory size):", diff_sum)
 
+    return total_sum
 
-def publish_tasks(task_queue_hs, data_a, data_b):
+
+def publish_tasks(r, task_queue_hs, data_a, data_b):
     data_hash_start_t = time.time()
 
     hash1 = blake2b(digest_size=20)
@@ -69,10 +78,10 @@ def publish_tasks(task_queue_hs, data_a, data_b):
     hash1.update(data_a)
     hash2.update(data_b)
 
-    hash1_string = "%s:%s" % (_settings.DATABLOCK_PREFIX, hash1.hexdigest())
-    hash2_string = "%s:%s" % (_settings.DATABLOCK_PREFIX, hash2.hexdigest())
+    hash1_string = "%s:%s" % ('datablock', hash1.hexdigest())
+    hash2_string = "%s:%s" % ('datablock', hash2.hexdigest())
 
-    task_uuid = "%s:%s" % ("task", str(uuid.uuid4()))
+    task_uuid = "%s:%s" % ('task', str(uuid.uuid4()))
 
     data_hash_end_t = time.time()
 
@@ -105,9 +114,10 @@ def generate(number_of_bytes):
 
 
 def generate_sample():
-    a, b = np.random.random_sample()
+    a = np.random.random_sample()
+    b = np.random.random_sample()
 
-    return a, b
+    return np.float32(a), np.float32(b)
 
 
 def s_main(args):
@@ -131,6 +141,8 @@ def s_main(args):
     # level: 22 -- 4 MB -- 2**22
     # level: 23 -- 8 MB -- 2**23
     # level: 24 -- 16 MB -- 2**24
+
+    task_queue = args['task_queue']
     level = args['level']
     output_dir = args['output_dir']
 
@@ -140,43 +152,49 @@ def s_main(args):
     )
 
     redis_size_t_start = time.time()
-    redis_used_size = r.info('used_memory')
+    redis_used_size = r.info('memory')
+    redis_used_size = int(redis_used_size['used_memory'])
     redis_size_t_end = time.time()
 
     redis_size_request_start.append(redis_size_t_start)
     redis_size_request_end.append(redis_size_t_end)
 
-    print("redis_used_size")
-    print(redis_used_size)
-
     job_count = 0
-    while redis_used_size < (2**34):
+    while redis_used_size < (2**20 * 1):
         #data_a, data_b = generate(2**level)
         data_a, data_b = generate_sample()
 
-        publish_tasks(queue_hash, data_a, data_b)
+        publish_tasks(r, task_queue, data_a, data_b)
 
         job_count += 1
 
         redis_size_t_start = time.time()
-        redis_used_size = r.info('used_memory')
+        redis_used_size = r.info('memory')
+        redis_used_size = int(redis_used_size['used_memory'])
         redis_size_t_end = time.time()
+
+        print("redis_used_size: %f GB" % float(redis_used_size)/(10**6))
 
         redis_size_request_start.append(redis_size_t_start)
         redis_size_request_end.append(redis_size_t_end)
 
-
     script_end = time.time()
-    print("Script total time:", script_end-script_start)
 
-    write_dict_to_csv(data_send_start, output_dir, "redis_size_request_start.csv", arr=True)
-    write_dict_to_csv(data_send_start, output_dir, "redis_size_request_end.csv", arr=True)
-    write_dict_to_csv(data_send_start, output_dir, "data_hashing_start.csv", arr=True)
-    write_dict_to_csv(data_send_start, output_dir, "data_hashing_end.csv", arr=True)
+    script_time = script_end-script_start
+    print("Script total time:", script_time)
+
     write_dict_to_csv(data_send_start, output_dir, "data_send_start.csv", arr=False)
-    write_dict_to_csv(data_send_start, output_dir, "data_send_end.csv", arr=False)
+    write_dict_to_csv(data_send_end, output_dir, "data_send_end.csv", arr=False)
+    write_dict_to_csv(data_hashing_start, output_dir, "data_hashing_start.csv", arr=True)
+    write_dict_to_csv(data_hashing_end, output_dir, "data_hashing_end.csv", arr=True)
+    write_dict_to_csv(redis_size_request_start, output_dir, "redis_size_request_start.csv", arr=True)
+    write_dict_to_csv(redis_size_request_end, output_dir, "redis_size_request_end.csv", arr=True)
 
-    calc_stats()
+    utilized_time = calc_stats()
+
+    not_utilized_time = script_time - utilized_time
+
+    print("Not Utilized time:", not_utilized_time)
 
 
 if __name__ == '__main__':
