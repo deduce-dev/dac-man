@@ -1,6 +1,7 @@
 *.log
 *.pyc
 *.png
+*.csv
 .AppleDouble
 .DS_Store
 _build

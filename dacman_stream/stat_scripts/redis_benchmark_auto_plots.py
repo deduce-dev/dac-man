@@ -12,8 +12,8 @@ def get_filename_info(filename):
     f_info = filename.split('_')
 
     cmd = '_'.join(f_info[:-6])
-    n_cli = f_info[-5]
-    n_reqs = f_info[-3]
+    n_cli = int(f_info[-5])
+    n_reqs = int(f_info[-3])
     payload_size = ' '.join([f_info[-2], f_info[-1].split('.')[0].upper()])
 
     return cmd, n_cli, n_reqs, payload_size
@@ -26,6 +26,8 @@ def scandir_csv(path):
         if entry.is_dir(follow_symlinks=False):
             continue
         else:
+            if entry.name == ".DS_Store":
+                continue
             yield entry
 
 def csv_to_arr(csvfile, stop_at):
@@ -155,10 +157,11 @@ def s_main(args):
 
         avg_cmd_dict[cmd][payload_size] = np.mean(new_arr)
         std_cmd_dict[cmd][payload_size] = np.std(new_arr)
-    
-    plot_filename = "plots/redis_benchmark_plot_n_%s_%s.png" % (str(n_cli), str(n_reqs))
 
     avg_cmd_dict, std_cmd_dict, ticks_labels = get_sorted_mean_std_arrs(avg_cmd_dict, std_cmd_dict)
+
+    plot_filename = "plots/redis_benchmark_plot_c_%d_n_%d_d_%d.png" % \
+         (n_cli, n_reqs, len(ticks_labels))
 
     plot_r_benchmarks(n_cli, n_reqs,
         avg_cmd_dict, std_cmd_dict,
