@@ -14,7 +14,7 @@ def get_filename_info(filename):
     cmd = '_'.join(f_info[:-6])
     n_cli = f_info[-5]
     n_reqs = f_info[-3]
-    payload_size = f_info[-2] + f_info[-1].split('.')[0].upper()
+    payload_size = ' '.join([f_info[-2], f_info[-1].split('.')[0].upper()])
 
     return cmd, n_cli, n_reqs, payload_size
 
@@ -42,15 +42,52 @@ def csv_to_arr(csvfile, stop_at):
 
     return myarr
 
+def payload_size_to_int(payload_size_str):
+    byte_sizes = ['B', 'KB', 'MB', 'GB']
+
+    byte_sizes_dict = {}
+    for i, b_s in enumerate(byte_sizes):
+        byte_sizes_dict[b_s] = 10**(i*3)
+
+    payload_num, payload_unit_num = \
+        payload_size_str.split()
+
+    return int(payload_num) * byte_sizes_dict[payload_unit_num]
+
+
+def get_sorted_mean_std_arrs(avg_cmd_dict, std_cmd_dict):
+
+    first_cmd = list(avg_cmd_dict.keys())[0]
+    #print(avg_cmd_dict.items())
+
+    sorted_size_pair = sorted(avg_cmd_dict[first_cmd].items(), 
+        key=lambda kv: payload_size_to_int(kv[0]))
+    #print(sorted_size_pair)
+
+    sorted_size_keys = [k for k,_ in sorted_size_pair]
+    #print(sorted_size_keys)
+    #print(avg_cmd_dict[first_cmd][sorted_size_keys[0]])
+    
+    avg_dict = defaultdict(list)
+    std_dict = defaultdict(list)
+
+    for cmd, _ in avg_cmd_dict.items():
+        for size_key in sorted_size_keys:
+            avg_dict[cmd].append(avg_cmd_dict[cmd][size_key])
+            std_dict[cmd].append(std_cmd_dict[cmd][size_key])
+
+    return avg_dict, std_dict, sorted_size_keys
+
 def plot_r_benchmarks(n_cli, n_reqs,
                     avg_cmd_dict, std_cmd_dict,
-                    ticks_labels, filename):
+                    ticks_labels, filename, csv_dir):
     width = 0.35
 
     plt.figure(figsize=(10,7))
 
     i = 0
     for cmd, avg_val_arr in avg_cmd_dict.items():
+        avg_val_arr = avg_cmd_dict[cmd]
         std_val_arr = std_cmd_dict[cmd]
         
         n_vars = len(avg_val_arr)
@@ -65,24 +102,30 @@ def plot_r_benchmarks(n_cli, n_reqs,
 
     plt.ylabel('requests/s')
 
-    plt.xticks(ind + i*width/2, ticks_labels)
+    plt.xticks(ind + (i-1)*width/2, ticks_labels)
+    #plt.xticks(ind, ticks_labels)
     plt.legend(loc='best')
 
     plt.title("redis-benchmark (%s client & %s requests)" % \
         (n_cli, n_reqs))
     #plt.show()
 
-    plt.savefig(filename)
+    plots_dir = filename.split('/')[0]
+
+    plots_full_path = os.path.join(csv_dir, plots_dir)
+    if not os.path.exists(plots_full_path):
+        os.makedirs(plots_full_path)
+
+    print(os.path.join(csv_dir, filename))
+    plt.savefig(os.path.join(csv_dir, filename))
 
 
 def s_main(args):
     csv_dir = args['csv_dir']
     stop_at = int(args['stop_at'])
 
-    avg_cmd_dict = defaultdict(list)
-    std_cmd_dict = defaultdict(list)
-
-    payload_sizes = []
+    avg_cmd_dict = defaultdict(lambda: defaultdict(float))
+    std_cmd_dict = defaultdict(lambda: defaultdict(float))
 
     n_cli = None
     n_reqs = None
@@ -105,18 +148,21 @@ def s_main(args):
         
         first_loop = False
 
-        if payload_size not in payload_sizes:
-            payload_sizes.append(payload_size)
-
         new_arr = csv_to_arr(entry, stop_at)
 
-        avg_cmd_dict[cmd].append(np.mean(new_arr))
-        std_cmd_dict[cmd].append(np.std(new_arr))
+        #avg_cmd_dict[cmd][payload_size].append(np.mean(new_arr))
+        #std_cmd_dict[cmd][payload_size].append(np.std(new_arr))
+
+        avg_cmd_dict[cmd][payload_size] = np.mean(new_arr)
+        std_cmd_dict[cmd][payload_size] = np.std(new_arr)
     
-    plot_filename = "redis_benchmark_plot_n_%s_%s" % (str(n_cli), str(n_reqs))
+    plot_filename = "plots/redis_benchmark_plot_n_%s_%s.png" % (str(n_cli), str(n_reqs))
+
+    avg_cmd_dict, std_cmd_dict, ticks_labels = get_sorted_mean_std_arrs(avg_cmd_dict, std_cmd_dict)
 
     plot_r_benchmarks(n_cli, n_reqs,
-        avg_cmd_dict, std_cmd_dict, payload_sizes, plot_filename)
+        avg_cmd_dict, std_cmd_dict,
+        ticks_labels, plot_filename, csv_dir)
 
 
 if __name__ == '__main__':
