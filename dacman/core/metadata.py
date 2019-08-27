@@ -23,7 +23,6 @@ import pwd
 import grp
 import fnmatch
 #from datetime import datetime
-from dacman.core.persistence import DirectoryTree
 from dacman.core.utils import cprint, get_hash_id
 import dacman.core.utils as dacman_utils
 import logging
