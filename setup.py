@@ -5,13 +5,53 @@ import os
 
 
 def get_install_requires():
-    with open('requirements.txt') as file_requirements:
-        # TODO in principle there's a conceptual difference between install_requires and requirements.txt
-        # https://packaging.python.org/discussions/install-requires-vs-requirements/
+    # TODO in principle there's a conceptual difference between install_requires and requirements.txt
+    # https://packaging.python.org/discussions/install-requires-vs-requirements/
+    # so we move dependencies from requirements.txt files to setup.py
+    # with open('requirements.txt') as file_requirements:
         # if we want to use requirements.txt as a common basis, we should split/strip "pinned" dependencies
         # (i.e. package==version -> package)
-        install_deps = file_requirements.read().splitlines()
+        # install_deps = file_requirements.read().splitlines()
+
+    install_deps = [
+        'scandir>=1.5',
+        # TODO decide if we should drop support for 2.7
+        'six>=1.10.0',
+        # NOTE "4.2" caused problems when installing from conda
+        # I suspect it might be a matter of differences in package names
+        # using "4.2b1" since it seems to be working with both pip and conda
+        'PyYAML>=4.2b1',
+        'straight.plugin',
+        # numpy is required, but only for file-level comparisons
+        # (as opposed to directory-level comparisons)
+        # should it be considered a core dependency?
+        # 'numpy'
+    ]
+
     return install_deps
+
+
+def get_extras_require():
+    """
+    Return optional dependencies in the format required by the `extras_require` option.
+
+    These dependencies can then be specified when installing Dac-Man:
+
+    $ git clone <dacman-repo-url> && cd dac-man/
+    $ pip install .               # only install core dependencies
+    $ pip install .[fits]         # install also dependencies necessary for FITS files
+    $ pip install .[fits,h5,hpc]  # install multiple optional dependencies
+    """
+    d = {}
+
+    # TODO check which of these are redundant because numpy is already a dependency
+    d['fits'] = ['numpy', 'astropy']
+    d['edf'] = ['numpy', 'fabio']
+    d['h5'] = ['numpy', 'h5py']
+
+    d['hpc'] = ['numpy', 'mpi4py']
+
+    return d
 
 
 def get_version():
@@ -44,6 +84,7 @@ setup(name='dacman',
                    'License :: OSI Approved :: 3-clause BSD License'
       ],
       install_requires=get_install_requires(),
+      extras_require=get_extras_require(),
       entry_points={'console_scripts': ['dacman = dacman.cli:main']},
       data_files=[(os.path.join(dacman_dir, 'config'), ['config/logging.yaml']),
                   (os.path.join(dacman_dir, 'config'), ['config/plugins.yaml'])
