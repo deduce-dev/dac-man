@@ -6,7 +6,10 @@ import pandas as pd
 
 from dacman.compare import base
 
-from IPython.display import display  # for debugging
+try:
+    from IPython.display import display  # for debugging
+except ImportError:
+    display = print
 
 
 class ChangeStatus:

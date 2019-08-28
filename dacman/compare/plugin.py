@@ -3,6 +3,10 @@ from straight.plugin import load
 from dacman.compare.base import Comparator
 import dacman.core.utils as dacman_utils
 import os
+import logging
+
+
+LOG = logging.getLogger(__name__)
 
 
 class PluginManager(object):
@@ -11,6 +15,7 @@ class PluginManager(object):
         plugin_config = os.path.join(os.getenv('HOME'), '.dacman/config/plugins.yaml')
         if os.path.exists(plugin_config):
             plugin_info = dacman_utils.load_yaml(plugin_config)
+            LOG.debug(f'COMPARATORS_MAP={COMPARATORS_MAP}')
             if plugin_info is not None:
                 if data_type in plugin_info:
                     # check if it's one of the default plugins for the data type
@@ -41,12 +46,13 @@ class PluginManager(object):
 
 
 def _get_comparators():
-    plugins = load("dacman.plugins", subclasses=Comparator)
+    plugins = load("dacman.plugins", subclasses=Comparator, recurse=True)
     comparators = {}
     for plugin in plugins:
         comparator = plugin()
+        LOG.debug(f'comparator={comparator}')
         supports = comparator.supports()
-        # print("Plugin {} supports: {}".format(plugin.__name__, supports))
+        LOG.info("Plugin {} supports: {}".format(plugin, supports))
         if type(supports) == list:
             for s in supports:
                 _add_comparator(s, comparator, comparators)
