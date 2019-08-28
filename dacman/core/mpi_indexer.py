@@ -15,7 +15,6 @@ import yaml
 import sys
 import os
 import hashlib
-import time
 
 try:
     from mpi4py import MPI
@@ -23,10 +22,8 @@ try:
 except ImportError:
     __AVAIL_MPI__ = False
 
-import multiprocessing
-
 import dacman.core.scanner as scanner
-from dacman.core.utils import cprint, dict_to_file
+from dacman.core.utils import dict_to_file, get_hash_id
 import dacman.core.utils as dacman_utils
 
 import logging
@@ -101,7 +98,7 @@ def index(datapath, custom_stagingdir):
         logger.error('mpi4py is not installed or not in path')
         sys.exit()
 
-    index_metafile = os.path.join(stagingdir, 'indexes/INDEXED_PATHS')
+    index_metafile = os.path.join(custom_stagingdir, 'indexes/INDEXED_PATHS')
     indexing_info = {datapath: os.path.basename(indexdir)}
     dacman_utils.update_yaml(indexing_info, index_metafile)
 

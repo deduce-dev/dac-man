@@ -27,7 +27,7 @@ Installation
 
 Dac-Man is developed in Python, with the following minimal requirements:
 
-* Python (>= 2.7)
+* Python (>= 3.6)
 * pip (>= 9.0)
 
 For HPC support, you need:
@@ -46,7 +46,7 @@ The `examples/` directory contains a simple example and related data to test
 Dac-Man command-line. To test, run the following commands:
 
         cd examples
-        ./simple.sh
+        ./scripts/simple.sh
 
 Running the test suite
 ----------------------

@@ -13,10 +13,9 @@
 
 import sys
 import os
-import uuid
 
 import dacman.core.indexer as indexer
-from dacman.core.utils import cprint, get_hash_id
+from dacman.core.utils import get_hash_id
 import dacman.core.utils as dacman_utils
 
 import logging
@@ -168,65 +167,7 @@ def compare(old_datapath, new_datapath, custom_stagingdir):
                 
     for old_filepath in old_path_indexes:
         _deleted.append(old_filepath)
-    
-    """
-    '''
-    This logic doesn't allow for multiple files in the same directory
-    structure to have the same data (YAML would raise duplicate key error).
-    The first loop identifes matches between the old and new data.
-    The second loop identifies the data that are added in new. 
-    '''
-    for index in old_data_indexes:
-        old_data_name = old_data_indexes[index]
-        '''
-        if the contents of two files are same, then they are unchanged
-        even if their names changed
-        '''
-        if index in new_data_indexes:
-            new_data_name = new_data_indexes.pop(index)
-            _unchanged[new_data_name] = old_data_name            
-            base_new_data = os.path.basename(new_data_name)
-            path_indexes = new_name_indexes[base_new_data]
-            path_indexes.pop(new_data_name)
-            if len(new_name_indexes[base_new_data]) == 0:
-                new_name_indexes.pop(base_new_data)
-        else:
-            '''
-            - if the file and directory remain same, but contents changed, 
-              then it's a modification
-            - if a file with the same name is present (can be under a
-              different directory), but the contents changed
-              then it's a modification 
-            - else a deletion
-            '''
-            base_old_data = os.path.basename(old_data_name)
-            if base_old_data in new_name_indexes:
-                #_modified[old_name_indexes[old_data_name]] = new_name_indexes[old_data_name]
-                #_modified[new_name_indexes[old_data_name]] = old_name_indexes[old_data_name]
-                path_indexes = new_name_indexes[base_old_data]
-                if old_data_name in path_indexes:
-                    data_hash = path_indexes.pop(old_data_name)
-                    new_data_name = new_data_indexes.pop(data_hash)
-                else:
-                    path, data_hash = path_indexes.popitem()
-                    new_data_name = new_data_indexes.pop(data_hash)
-                #data_hash = new_name_indexes[base_old_data]
-                #new_data_name = new_data_indexes.pop(data_hash)                
-                _modified[new_data_name] = old_data_name
-                if len(new_name_indexes[base_old_data]) == 0:
-                    new_name_indexes.pop(base_old_data)
-            else:
-                _deleted.append(old_data_name)            
-            
-    for index in new_data_indexes:
-        _added.append(new_data_indexes[index])
 
-    """
-
-    #cprint(__modulename__, 'Calculating change')        
-    #logger.info('Calculating metrics for quantifying changes')
-    #change_file = os.path.join(new_stagingdir, 'CHANGE')
-    #change_id = str(uuid.uuid4())
     '''
     Saving change information in cache
     '''

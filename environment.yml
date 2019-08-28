@@ -1,0 +1,11 @@
+name: dacman-env
+channels:
+  - conda-forge
+  - default
+dependencies:
+  - python=3.7
+  - pip
+  - nomkl  # force using OpenBLAS instead of Intel MKL (which is ~200 MB to download and ~600 MB when installed)
+  - numpy<=1.17
+  - pip:
+    - git+https://github.com/dghoshal-lbl/dac-man#egg=dacman
