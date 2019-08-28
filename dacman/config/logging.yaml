@@ -19,7 +19,6 @@ handlers:
         maxBytes: 10485760
         backupCount: 20
         encoding: utf8
-        encoding: utf8
 root:
     level: INFO
     handlers: [console, file_handler]    

@@ -14,6 +14,8 @@ def get_install_requires():
         # install_deps = file_requirements.read().splitlines()
 
     install_deps = [
+        # TODO check a reasonable minimum version for this
+        'setuptools',
         'scandir>=1.5',
         # TODO decide if we should drop support for 2.7
         'six>=1.10.0',
@@ -62,9 +64,11 @@ def get_version():
 
     return _locals['__version__']
 
-dacman_dir = os.path.join(os.getenv('HOME'), '.dacman')
-if not os.path.exists(dacman_dir):
-    os.makedirs(dacman_dir)
+# dacman_dir = os.path.join(os.getenv('HOME'), '.dacman')
+# dacman_dir_config = os.path.join(dacman_dir, 'config')
+
+# # os.makedirs create parent directories like mkdir -p
+# os.makedirs(dacman_dir_config, exist_ok=True)
 
 setup(name='dacman',
       version=get_version(),
@@ -72,9 +76,6 @@ setup(name='dacman',
       author='Devarshi Ghoshal',
       author_email='dghoshal@lbl.gov',
       keywords='',
-      packages=find_packages(exclude=['ez_setup', 'tests', 'plugins']),
-      include_package_data=True,
-      zip_safe=False,
       classifiers=['Development Status :: 1 - Alpha',
                    'Intended Audience :: Science/Research',
                    'Natural Language :: English',
@@ -83,10 +84,14 @@ setup(name='dacman',
                    'Topic :: Scientific/Engineering',
                    'License :: OSI Approved :: 3-clause BSD License'
       ],
+      # TODO does this "plugins" here refer to the old plug-ins directory?
+      # if so, then we don't need it anymore
+      packages=find_packages(exclude=['ez_setup', 'tests', 'plugins']),
+      include_package_data=True,
+      package_data={'dacman': ['config/*.yaml']},
+      zip_safe=False,
       install_requires=get_install_requires(),
       extras_require=get_extras_require(),
       entry_points={'console_scripts': ['dacman = dacman.cli:main']},
-      data_files=[(os.path.join(dacman_dir, 'config'), ['config/logging.yaml']),
-                  (os.path.join(dacman_dir, 'config'), ['config/plugins.yaml'])
-                 ]
+
 )
