@@ -72,7 +72,8 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
 
 def _external(plugin, new_file, old_file, *argv):
     proc = subprocess.Popen([plugin, new_file, old_file, *argv],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            env=_get_env_with_added_to_PATH('./'),
     out, err = proc.communicate()
     if err:
         logger.error('Error analyzing changes: %s', err)
@@ -81,3 +82,13 @@ def _external(plugin, new_file, old_file, *argv):
         out_decoded = out.decode(sys.stdout.encoding).strip()
         logger.info('Change calculation completed with output: %s', out_decoded)
         return out_decoded
+def _get_updated_env(updates):
+    env = dict(os.environ)
+    env.update(updates)
+    return env
+
+
+def _get_env_with_added_to_PATH(dir_):
+    old_path = os.environ['PATH']
+    new_path = dir_ + ':' + old_path
+    return _get_updated_env({'PATH': new_path})
