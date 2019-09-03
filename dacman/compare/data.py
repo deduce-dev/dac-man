@@ -53,10 +53,10 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
 
     if external_plugin:
         print("External comparator plugin = {}".format(comparator_plugin))
-        result = _external(comparator_plugin, new_file, old_file, *argv)
         logger.info('Comparing {} and {} using {}'.format(new_file,
                                                           old_file,
                                                           comparator_plugin))
+        result = _external(comparator_plugin, new_file, old_file, *argv)
     else:
         print("Data comparator plugin = {}".format(comparator.__class__.__name__))
 
@@ -74,14 +74,19 @@ def _external(plugin, new_file, old_file, *argv):
     proc = subprocess.Popen([plugin, new_file, old_file, *argv],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=_get_env_with_added_to_PATH('./'),
+                            # universal_newlines forces the output of communicate()
+                            # to be returned as strings instead of bytes
+                            universal_newlines=True
+                            )
     out, err = proc.communicate()
     if err:
-        logger.error('Error analyzing changes: %s', err)
+        logger.error('Error analyzing changes:\n%s', err)
         return None
     else:
-        out_decoded = out.decode(sys.stdout.encoding).strip()
-        logger.info('Change calculation completed with output: %s', out_decoded)
-        return out_decoded
+        logger.info('Change calculation completed')
+        return out
+
+
 def _get_updated_env(updates):
     env = dict(os.environ)
     env.update(updates)
