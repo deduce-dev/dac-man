@@ -1,0 +1,5 @@
+# a single commented line
+site_id,message,date,temperature
+C,Some text,8/15/2019,24.1
+A,Some other text,3/2/2019,35.3
+B,,1/1/2018,42.8
