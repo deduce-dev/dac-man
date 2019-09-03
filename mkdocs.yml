@@ -1,0 +1,53 @@
+site_name: Dac-Man
+theme:
+  name: material
+  palette:
+    primary: teal
+nav:
+  - Introduction: index.md
+  - Installation:
+    - Requirements: install/index.md
+    - Using Conda: install/conda.md
+    - From source: install/source.md
+    - Optional dependencies: install/dependencies.md
+  - Quickstart: quickstart.md
+  - Using Dac-Man:
+    - On desktops: use/desktop.md
+    - On HPC clusters: use/hpc.md
+    - Plug-ins: use/plugins.md
+  - Customization: config.md
+  - API:
+      Dac-Man: api/dacman.md
+      Plug-ins: api/plugins.md
+  - Dac-Man Plug-ins:
+    # - Introduction: plugins/introduction.md
+    - Default: plugins/default.md
+    - HDF5: plugins/hdf5.md
+    - CSV: plugins/csv.md
+    - Extending plug-ins: plugins/extend-hdf5.md
+  - Examples:
+      HDF5 and EDF files: examples/hdf5-edf.md
+      # CSV files: examples/csv.md
+      # Excel files: examples/excel.md
+  - For developers:
+    - Running tests: develop/tests.md
+    - Documentation: develop/docs.md
+  - License: license.md
+  - About: about.md
+
+copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
+repo_name: dghoshal-lbl/dac-man
+repo_url: https://github.com/dghoshal-lbl/dac-man
+
+extra:
+  social:
+    - type: globe
+      link: http://deduce.lbl.gov
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+      linenums: false
+  - toc:
+      permalink: true

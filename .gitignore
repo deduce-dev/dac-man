@@ -38,3 +38,6 @@ _build
 # dacman output files
 *.log
 diff_*.yml
+
+# mkdocs
+site/
