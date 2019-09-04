@@ -48,7 +48,8 @@ dacman diff /path/to/dir1 /path/to/dir2 --datachange --script /usr/bin/diff
 
 The `--datachange` option tells to compare the data within the files of the two directories.
 
-### Dac-Man API
+!!! example
+    An example showing how to use custom scripts for data change analysis can be found [here](../../examples/script).
 
 Users can write their own change analysis pipelines using the Dac-Man API.
 The API also provides the necessary module for users to specify a plug-in in their code.
