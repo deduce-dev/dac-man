@@ -9,7 +9,6 @@ nav:
     - Requirements: install/index.md
     - Using Conda: install/conda.md
     - Additional dependencies: install/dependencies.md
-    - Optional dependencies: install/dependencies.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
     - On desktops: use/desktop.md
@@ -28,7 +27,9 @@ nav:
   - Examples:
     - Using custom analysis scripts: examples/script.md
     - Adapting the CSV plug-in to custom data: examples/csv-simple.md
-      # Excel files: examples/excel.md
+    - HDF5 and EDF files: examples/hdf5-edf.md
+    # - CSV files: examples/csv.md
+    # - Excel files: examples/excel.md
   - For developers:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md

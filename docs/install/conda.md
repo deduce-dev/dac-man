@@ -41,7 +41,7 @@ After the installation is complete, verify that the environment is active:
 # e.g. "/opt/conda/envs/dacman-env/bin/python"
 ```
 
-!!! note
+!!! important
     The Conda environment where Dac-Man is installed needs to be activated (`conda activate dacman-env`) whenever a new shell session is started.
 
 Finally, verify that the `dacman` command-line tool is working properly:

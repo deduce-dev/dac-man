@@ -12,7 +12,7 @@ pip install mkdocs mkdocs-material
 
 ## Previewing changes locally
 
-From the root directory of the Dac-Man source repository
+From the root directory of the Dac-Man source code repository
 (i.e. where the `mkdocs.yml` file is located),
 run `mkdocs serve` to start a local web server that will auto-reload
 every time a change is made to one of the files in the `docs` directory.

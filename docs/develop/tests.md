@@ -15,7 +15,7 @@ conda env update --name dacman-env --file ../environment/pytest.yml
 ```
 
 Finally, run the tests with `pytest`.
-The `--verbose` flag is optional, and gives more information about individual tests being run.
+The `--verbose` flag (optional) gives more information about individual tests being run.
 
 ```sh
 pytest --verbose

@@ -17,7 +17,7 @@ and that it accepts exactly two arguments when invoked via the command line,
 corresponding to the pair of files being compared.
 
 To make a script executable, the exact procedure depends on the operating system (OS).
-For most UNIX-based OSes, including macOS and GNU-Linux,
+For most UNIX-based OSes, including macOS and GNU/Linux,
 the executable permissions need to be set (`chmod +x my_change_analysis`),
 and the first line of the file should indicate how the file should be run
 via the so-called "shebang" (`#!`) notation, e.g. `#!/bin/bash` for a Bash script.

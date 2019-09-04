@@ -51,7 +51,10 @@ The `--datachange` option tells to compare the data within the files of the two 
 !!! example
     An example showing how to use custom scripts for data change analysis can be found [here](../../examples/script).
 
-Users can write their own change analysis pipelines using the Dac-Man API.
+### Using the Dac-Man API
+
+In addition to using the `dacman` command-line utility,
+users can write their own change analysis pipelines using the Dac-Man API.
 The API also provides the necessary module for users to specify a plug-in in their code.
 
 ```py
