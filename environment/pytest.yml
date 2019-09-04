@@ -1,0 +1,12 @@
+name: dacman-env
+channels:
+  - conda-forge
+  - default
+dependencies:
+  - pip
+  - nomkl  # force using OpenBLAS instead of Intel MKL (which is ~200 MB to download and ~600 MB when installed)
+  - numpy<=1.17
+  - pandas
+  - pip:
+    - pytest
+    - pytest-console-scripts
