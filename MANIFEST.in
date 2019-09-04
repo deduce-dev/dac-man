@@ -2,3 +2,5 @@
 # which in turn is required for tox to install the dependencies
 include *.txt
 
+# necessary to include package_data when creating sdist
+graft dacman
