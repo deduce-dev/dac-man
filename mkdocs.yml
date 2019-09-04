@@ -27,7 +27,7 @@ nav:
     - Extending plug-ins: plugins/extend-hdf5.md
   - Examples:
     - Using custom analysis scripts: examples/script.md
-      # CSV files: examples/csv.md
+    - Adapting the CSV plug-in to custom data: examples/csv-simple.md
       # Excel files: examples/excel.md
   - For developers:
     - Running tests: develop/tests.md

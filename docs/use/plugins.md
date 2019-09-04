@@ -68,3 +68,6 @@ def my_diff(file1, file2):
 Users can also create and register their own plug-ins in Dac-Man.
 The [Plug-in API](../../api/plugins) section describes the Dac-Man plug-in API
 that can be used to create user-defined plug-ins in Dac-Man.
+
+!!! example
+    An example showing how to extend Dac-Man's built-in plug-ins, and use Dac-Man's API to incorporate them into custom analysis scripts can be found [here](../../examples/csv-simple).
