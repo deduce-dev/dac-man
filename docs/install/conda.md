@@ -14,16 +14,14 @@ for detailed information on how to install `conda` for your system.
 
 ## Installing Dac-Man in a new Conda environment
 
-After installing `conda`, download the `environment.yml` file,
-either through a web browser, by clicking on [this link](https://raw.githubusercontent.com/dghoshal-lbl/dac-man/master/environment.yml),
-or from the command line, using e.g. `curl`:
+After installing `conda`, clone the Dac-Man source code repository using Git
+and navigate to the root of the repository:
 
 ```sh
-curl -O https://raw.githubusercontent.com/dghoshal-lbl/dac-man/master/environment.yml
+git clone https://github.com/dghoshal-lbl/dac-man && cd dac-man
 ```
 
-From the directory where the `environment.yml` file was saved,
-run this command to automatically create a Conda environment and install Dac-Man at the same time:
+Then, run this command to automatically create a Conda environment and install Dac-Man at the same time:
 
 ```sh
 conda env create --file environment.yml && conda activate dacman-env
@@ -57,10 +55,11 @@ Now that `dacman` is operational, head over to the [next section](../../use/desk
 
 Instead of creating a Conda environment for Dac-Man from scratch, it's possible to install Dac-Man in an existing environment.
 
-After activating the environment, install Dac-Man using Pip:
+From the root of Dac-Man's repository, after activating the environment,
+install Dac-Man using Pip:
 
 ```sh
-pip install git+https://github.com/dghoshal-lbl/dac-man#egg=dacman
+pip install .
 ```
 
 ## Installing Dac-Man on NERSC

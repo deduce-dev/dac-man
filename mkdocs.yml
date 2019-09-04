@@ -8,7 +8,7 @@ nav:
   - Installation:
     - Requirements: install/index.md
     - Using Conda: install/conda.md
-    - From source: install/source.md
+    - Additional dependencies: install/dependencies.md
     - Optional dependencies: install/dependencies.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
