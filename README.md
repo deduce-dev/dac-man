@@ -7,7 +7,7 @@ in large scientific data sets.
 
 You can find the changes between two datasets using the command-line utility:
 
-        dacman diff <old datapath> <new datapath>
+    dacman diff <old datapath> <new datapath>
 
 Features
 --------
@@ -19,61 +19,20 @@ Dac-Man is much more powerful than a simple diff utility.
 * It allows users to associate user-defined metadata for any dataset.
 * It is capable of identifying both file and data level changes.
 * It allows users to plugin their own scripts for richer change analysis.
-* It identifies changes between non-co-located datasets without the need for transferring
-the data, i.e., datasets need not be moved to a common location for comparison.
+* It identifies changes between non-co-located datasets without the need      for transferring the data, i.e., datasets need not be moved to a common location for comparison.
 
-Installation
-------------
+Documentation
+-------------
 
-Dac-Man is developed in Python, with the following minimal requirements:
-
-* Python (>= 3.6)
-* pip (>= 9.0)
-
-For HPC support, you need:
-
-* numpy   : Python library for operations on large, multi-dimensional arrays
-* mpi4py  : Python MPI bindings
-
-To install Dac-Man, run the setup script:
-
-        python setup.py install
-
-Test
------
-
-The `examples/` directory contains a simple example and related data to test
-Dac-Man command-line. To test, run the following commands:
-
-        cd examples
-        ./scripts/simple.sh
-
-Running the test suite
-----------------------
-
-Dac-man's test suite can be found in the `tests/` directory.
-The [Tox](https://tox.readthedocs.io/en/latest/) utility is used to run the test suite automatically over multiple Python versions.
-
-To run the test suite using Tox, from the root of the repository:
-
-```sh
-pip install tox
-tox
-```
-
-Depending on which Python interpreters are available in the environment, some tests might fail.
-The [tox-conda](https://github.com/tox-dev/tox-conda) plugin allows Tox to use Conda to install and manage packages and environments:
-
-```sh
-pip install tox tox-conda
-tox
-```
+Installation and usage instructions,
+as well as commented examples illustrating Dac-Man's features,
+are available on [Dac-Man's documentation website](https://dst.lbl.gov/projects/deduce/dac-man/).
 
 Contribute
 ----------
 
-- Issue Tracker: https://github.com/dghoshal-lbl/dac-man/issues
-- Source Code: https://github.com/dghoshal-lbl/dac-man
+* Issue Tracker: <https://github.com/dghoshal-lbl/dac-man/issues>
+* Source Code: <https://github.com/dghoshal-lbl/dac-man>
 
 Support
 -------
