@@ -27,6 +27,9 @@ Then, run this command to automatically create a Conda environment and install D
 conda env create --file environment.yml && conda activate dacman-env
 ```
 
+!!! tip
+    This will install only the dependencies needed for Dac-Man's core functionality. [These additional instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+
 ## Testing the installation
 
 After the installation is complete, verify that the environment is active:

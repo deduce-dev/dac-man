@@ -46,23 +46,18 @@ Whenever possible, the nomenclature is consistent with the `h5py` API.
 
 ## Usage
 
-### Dependencies
+### Requirements
 
-Similarly to Dac-Man, the `hdf5` plug-in is compatible with Python 3.6+.
-In addition, the `h5py` Python package is required.
+The `h5py` Python package is required as an additional dependency.
 
-To install it, from the environment where Dac-Man is installed, run:
-
-```sh
-# install using Conda
-conda install h5py
-```
+!!! tip
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
 
 ### Using the HDF5 Plug-in
 
-As part of the core Dac-Man plug-ins, when analyzing changes in HDF5 files, the `hdf5` plug-in will be used by default.
+As part of the built-in Dac-Man plug-ins, when analyzing changes in HDF5 files, the `hdf5` plug-in will be used by default.
 
-To compare the two files `A.h5` and `B.h5`, after installing Dac-Man and `h5py`, run:
+To compare the two files `A.h5` and `B.h5`, after activating Dac-Man's Conda environment and installing the dependencies, run:
 
 ```sh
 dacman diff A.h5 B.h5

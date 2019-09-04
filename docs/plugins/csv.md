@@ -18,23 +18,23 @@ performed using generic tools for text files such as `diff`, including:
 - Obtaining domain-specific information in the change analysis by allowing users
   to easily customize and extend all parts of the change analysis pipeline
 
-## Installation
+## Usage
 
-The pandas package is required as an additional dependency for this plug-in.
+### Dependencies
 
-pandas can be installed with `conda`, or alternatively using `pip`.
-From the environment where Dac-Man is installed, run:
+The `pandas` package is required as an additional dependency for this plug-in.
 
-if using `conda`:
+!!! tip
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+
+### Using the CSV Plug-in
+
+As part of the built-in Dac-Man plug-ins, when analyzing changes in CSV files, the CSV plug-in will be used by default.
+
+To compare the two files `A.csv` and `B.csv`, after activating Dac-Man's Conda environment and installing the dependencies, run:
 
 ```sh
-conda install pandas
-```
-
-if using `pip`:
-
-```sh
-pip install pandas
+dacman diff A.csv B.csv
 ```
 
 ## Key concepts
