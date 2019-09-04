@@ -15,25 +15,25 @@ and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
 
 ## Usage
 
-The plug-ins in Dac-Man are generally placed inside the `dacman/plugins/` directory of the source code.
-Dac-Man automatically selects the specific plug-in at runtime based on the file types.
-However, users can also specify explicitly which plug-in to use for data comparisons.
+By default, Dac-Man automatically selects at runtime which plug-in to use for data comparison,
+based on the file types,
+choosing among available plug-ins placed inside the `dacman/plugins/` directory of the source code.
 
-Generally, plug-ins in Dac-Man can be specified in three different ways,
-described below.
+However, users can also specify explicitly which plug-in to use for data comparisons
+in several ways, described below.
 
-### Plug-ins configuration
+### Configuring plug-in selection for specific file types
 
-When Dac-Man is installed, a plug-ins configuration file is created in the user's home directory,
+When Dac-Man is run for the first time, a plug-ins configuration file is created in the user's home directory,
 under `$HOME/.dacman/config/plugins.yaml`.
 
-This file may contain all the registered internal plug-ins in Dac-Man.
-Users can edit this file to specify the selection of a plug-in for specific file-type comparisons.
+Users can edit this file to override the default behavior and customize the selection of a plug-in for comparisons of specific file types.
+This file may contain any of the available plug-ins registered with the Dac-Man plug-in framework.
 
-### Command-line
+### Specifying custom analysis scripts via the command line
 
-Dac-Man also allows users to use their own change analysis scripts,
-by specifying the path to an executable with the `--script` option when invoking Dac-Man:
+Dac-Man also allows users to use their own change analysis scripts instead of the available plug-ins,
+by specifying the path to an executable with the `--script` option when invoking Dac-Man via the command-line interface:
 
 ```sh
 dacman diff <file1> <file2> --script /path/to/myscript
