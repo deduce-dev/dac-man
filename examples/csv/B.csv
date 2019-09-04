@@ -1,0 +1,11 @@
+# a 
+# longer
+# comment
+# spanning
+# several
+# lines
+site_id,temperature,message,day
+B,42.1,Some new text,01/01/2018
+# some random comments in the middle
+A,35.3,Some other text,03/02/2019
+C,24.1,Some text,09/15/2019

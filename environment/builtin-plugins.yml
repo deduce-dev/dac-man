@@ -7,5 +7,8 @@ dependencies:
   - pip
   - nomkl  # force using OpenBLAS instead of Intel MKL (which is ~200 MB to download and ~600 MB when installed)
   - numpy<=1.17
-  - pip:
-    - '.'
+  - pandas
+  - h5py
+  - astropy
+  - fabio
+

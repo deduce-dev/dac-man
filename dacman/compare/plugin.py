@@ -46,7 +46,7 @@ class PluginManager(object):
 
 
 def _get_comparators():
-    plugins = load("dacman.plugins", subclasses=Comparator, recurse=True)
+    plugins = load("dacman.plugins", subclasses=Comparator)
     comparators = {}
     for plugin in plugins:
         comparator = plugin()

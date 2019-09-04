@@ -281,8 +281,8 @@ def main(args):
     oldpath = args.oldpath
     newpath = args.newpath
     stagingdir = args.stagingdir
-    analyzer = args.plugin
-    recursive = args.detailed
+    analyzer = args.script
+    recursive = args.datachange
     outdir = args.outdir
     executor = args.executor
 

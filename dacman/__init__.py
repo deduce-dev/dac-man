@@ -49,7 +49,9 @@ def _setup_user_dir(resource_names=None):
         # print(f'res_name={res_name}')
         # print(f'filepath={filepath}')
         # print(f'basepath={basepath}')
-        if not filepath.exists():
+        if filepath.exists() and filepath.stat().st_size > 0:
+            continue
+        else:
             # print(f'filepath.exists()={filepath.exists()}')
             filepath.parent.mkdir(exist_ok=True, parents=True)
             # TODO add try/except here if resource is not found

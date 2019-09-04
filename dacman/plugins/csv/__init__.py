@@ -951,8 +951,9 @@ class CSVPlugin(base.Comparator):
             print(f'percent change: {self.percent_change():04.2f}%')
 
         if detail_level >= 1:
+            with pd.option_context('display.max_columns', None):
             # overview table with per-column statistics for all columns
-            print(df_table)
+                print(df_table)
 
         if detail_level >= 2:
             # complete change data, assumed to be dict-like (with no assumptions on structure)
