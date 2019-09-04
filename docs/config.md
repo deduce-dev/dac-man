@@ -35,7 +35,7 @@ You can use your own custom scripts as plug-ins by simply providing the path to 
 For example, `myscript` can be used as a plug-in:
 
 ```sh
-dacman diff /old/path/file1 /new/path/file1 -p myscript
+dacman diff /old/path/file1 /new/path/file1 --script myscript
 ```
 
 The command above uses `myscript` as an external plug-in to compare the contents of files `/old/path/file1` and `/new/path/file1` instead of the default data comparator.
@@ -43,10 +43,10 @@ If you want to use Unix diff to compare all the modified files in the directorie
 run the following command:
 
 ```sh
-dacman diff /path/to/dir1 /path/to/dir2 --detailed --plugin /usr/bin/diff
+dacman diff /path/to/dir1 /path/to/dir2 --datachange --script /usr/bin/diff
 ```
 
-The `--detailed` option tells to compare the data within the files of the two directories.
+The `--datachange` option tells to compare the data within the files of the two directories.
 
 Finally, you can build your own plug-ins by extending the `ComparatorBase` class.
 Please refer to the [plug-ins usage section](../use/plugins) for details.

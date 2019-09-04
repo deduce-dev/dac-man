@@ -8,7 +8,7 @@ dacman diff data/simple/v0 data/simple/v1
 sleep 2
 
 echo "*** Dac-Man diff (data-level) data directories ***"
-dacman diff data/simple/v0 data/simple/v1 --detailed -p /usr/bin/diff
+dacman diff data/simple/v0 data/simple/v1 --datachange --script /usr/bin/diff
 
 echo "------- End test: simple --------"
 

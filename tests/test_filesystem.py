@@ -19,7 +19,7 @@ def test_diff_default_mode(script_runner, working_dir, dacman_args):
 
 
 def test_diff_with_data_comparison(script_runner, working_dir, dacman_args):
-    dacman_args += ['--detailed']
+    dacman_args += ['--datachange']
 
     res = script_runner.run(*dacman_args, cwd=working_dir)
 

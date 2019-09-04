@@ -10,10 +10,12 @@ dacman diff dir1 dir2
 ```
 
 The above command identifies the number of files changed between the two directories.
-In order to retrieve detailed information about the changes, you can use the following command:
+In order to retrieve information about data changes,
+i.e. changes in the data contained in each file,
+you can use the following command:
 
 ```sh
-dacman diff dir1 dir2 --detailed
+dacman diff dir1 dir2 --datachange
 ```
 
 ## Command-line
@@ -28,7 +30,7 @@ This command scans and saves the directory structure and other metadata related 
 You can specify an optional staging directory, where the metadata information will be saved.
 
 ```sh
-dacman scan <path> [-s STAGINGDIR] [-i [IGNORE [IGNORE ...]]] [–nonrecursive] [–symlinks]
+dacman scan <path> [-s STAGINGDIR] [-i [IGNORE [IGNORE ...]]] [--nonrecursive] [--symlinks]
 ```
 
 The options to this command are:
@@ -75,7 +77,7 @@ The options to this command are:
 This command retrieves changes between two datapaths.
 
 ```sh
-dacman diff <oldpath> <newpath> [-s STAGINGDIR] [-o OUTDIR] [-p PLUGIN] [--datachange] [-e default,threaded,mpi,tigres]
+dacman diff <oldpath> <newpath> [-s STAGINGDIR] [-o OUTDIR] [--script SCRIPT] [--datachange] [-e default,threaded,mpi,tigres]
 ```
 
 The options to this command are:
@@ -84,8 +86,8 @@ The options to this command are:
 | --- | --- |
 | `-s STAGINGDIR` | Directory where filesystem metadata and indexes are saved |
 | `-o OUTDIR` | Directory where the summary of changes is saved |
-| `-p PLUGIN` | User-defined script for analyzing data changes |
-| `--detailed` | Calculate data-level changes in addition to file-level changes |
+| `--script SCRIPT` | User-defined script for analyzing data changes |
+| `--datachange` | Calculate data-level changes in addition to file-level changes |
 | `-e default,threaded,tigres,mpi` | Type of executor (or runtime) for parallel data change capture. The options are: `default`, `threaded`, `tigres`, `mpi`. The `default` option uses single-threaded execution. The `threaded` option uses the Python multiprocessing module that is suitable for parallelizing on one node. For multi-node parallelism, users can select between MPI or tigres. |
 
 ---

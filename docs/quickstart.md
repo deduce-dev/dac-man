@@ -41,10 +41,10 @@ Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
 ### Comparing specific files
 
 To compare two specific files for changes, run the `dacman diff` command with the `--datachange` option.
-The `--plugin` option allows you to specify a particular change analysis script, in this case the built-in Unix `diff` tool.
+The `--script` option allows you to specify a particular change analysis script, in this case the built-in Unix `diff` tool.
 
 ```sh
-dacman diff data/simple/v0 data/simple/v1 --datachange --plugin /usr/bin/diff
+dacman diff data/simple/v0 data/simple/v1 --datachange --script /usr/bin/diff
 ```
 
 This comparison will produce output that lists the number of changes to data values between these folders.

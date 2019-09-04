@@ -25,7 +25,7 @@ def script_name():
 
 @pytest.fixture
 def dacman_args_with_script(dacman_args, script_name):
-    return dacman_args + ['--plugin', script_name]
+    return dacman_args + ['--script', script_name]
 
 
 def is_plugin_used(plugin_name, text):

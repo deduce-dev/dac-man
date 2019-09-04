@@ -32,21 +32,21 @@ Users can edit this file to specify the selection of a plug-in for specific file
 
 ### Command-line
 
-Dac-Man also allows users to use their own change analysis scripts as plug-ins.
-To use this, users need to provide the `-p/--plugin` option when invoking Dac-Man:
+Dac-Man also allows users to use their own change analysis scripts,
+by specifying the path to an executable with the `--script` option when invoking Dac-Man:
 
 ```sh
-dacman diff <file1> <file2> --plugin /path/to/myscript
+dacman diff <file1> <file2> --script /path/to/myscript
 ```
 
 For example, to use the Unix `diff` tool to compare all the modified files in the directories `dir1` and `dir2`,
 run the following command:
 
 ```sh
-dacman diff /path/to/dir1 /path/to/dir2 --detailed --plugin /usr/bin/diff
+dacman diff /path/to/dir1 /path/to/dir2 --datachange --script /usr/bin/diff
 ```
 
-The `--detailed` option tells to compare the data within the files of the two directories.
+The `--datachange` option tells to compare the data within the files of the two directories.
 
 ### Dac-Man API
 
