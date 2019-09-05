@@ -4,13 +4,13 @@ A common use case for using plug-ins would be to add a comparison for a speciali
 The additional functionality can be added by minimally extending the main classes involved in the change analysis chain.
 
 As an example case study, we consider analyzing changes in images stored in HDF5 files in the EDF format.
-The complete code for this example can be found in [`dacman/plugins/als_tomo.py`](https://github.com/dghoshal-lbl/dac-man/blob/feature/hdf5-plugin/dacman/plugins/als_tomo.py).
+The complete code for this example can be found in [`examples/hdf5_edf/edf_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/hdf5_edf/edf_change_ana.py).
 
 ## Installing extra dependencies
 
 On top of the default Dac-Man dependencies and the `h5py` package required by the [HDF5 plug-in](../../plugins/hdf5), custom change analyses might require additional dependencies.
 
-The `als_tomo` change analysis uses functions from the `numpy`, `scipy`, and `scikit-learn` Python modules.
+The `edf_change_ana` change analysis uses functions from the `numpy`, `scipy`, and `scikit-learn` Python modules.
 To install them, from the environment where Dac-Man is installed, run:
 
 ```sh
@@ -23,7 +23,7 @@ python -m pip install numpy scipy scikit-learn
 
 ## Developing the extension
 
-A brief walkthrough of the code for `als_tomo.py` is presented below.
+A brief walkthrough of the code for `edf_change_ana.py` is presented below.
 
 ### Collecting metadata
 
@@ -67,18 +67,9 @@ The overall behavior of the change analysis is expressed in the `ALSTomoPlugin` 
 
 ## Running the change analysis
 
-After making sure that the `als_tomo.py` file is in the Dac-Man plug-in directory `dacman/plugins`,
-edit the `~/.dacman/config/plugins.yaml` configuration file to override the base HDF5 plug-in:
-
-```yaml
-# in ~/.dacman/config/plugins.yaml
-
-default: DefaultPlugin
-h5: ALSTomoPlugin
-```
-
-Then, run `dacman diff` on the two HDF5 files:
+After making sure that the `edf_change_ana.py` file is executable,
+run `dacman diff` on the two HDF5 files specifying the script's path with the `--script` option:
 
 ```sh
-dacman diff als-tomo-A.h5 als-tomo-B.h5
+dacman diff als-tomo-A.h5 als-tomo-B.h5 --script edf_change_ana.py
 ```
