@@ -1,0 +1,6 @@
+name: dacman-env
+channels:
+  - conda-forge
+dependencies:
+  - openmpi
+  - mpi4py

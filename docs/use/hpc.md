@@ -1,5 +1,11 @@
 # Using Dac-Man on HPC Clusters
 
+## Requirements
+
+The `mpi4py` is required to enable running Dac-Man with MPI.
+Refer to [this section](../../install/dependencies/) for installation steps and additional information
+on how to install Dac-Man's MPI dependencies.
+
 ## Using MPI
 
 Dac-Man allows you to parallelize `index` and `diff` steps.
