@@ -13,8 +13,8 @@ performed using generic tools for text files such as `diff`, including:
   including widely-used conventions such as comment characters and embedded metadata
 - Providing change information for individual values in each row (line),
   rather than only for the whole line
-- Collecting change metrics specific to the tabular data content,
-  by comparing values as e.g. numeric values rather than text
+- More specific change analysis of the tabular data content
+  by interpreting table values as numeric data rather than text
 - Obtaining domain-specific information in the change analysis by allowing users
   to easily customize and extend all parts of the change analysis pipeline
 
@@ -76,7 +76,7 @@ Also, using more specific data types allows to compute the delta `a - b` between
 which is not possible when considering the values as text.
 For example, if `a = datetime(2019, 1, 11)` and `b = datetime(2019, 1, 13)`, `a - b = timedelta(-2 days)`.
 
-To properly account for both of these aspects, the Dac-Man CSV plug-in creates two tables in two different formats.uses a dual format when creating the data table.
+To properly account for both of these aspects, the Dac-Man CSV plug-in creates two tables in two different formats to manage the tabular data.
 
 First, the content of the source file is loaded in a table applying the least possible amount of processing.
 The format of this table is called `orig`, for "original".
