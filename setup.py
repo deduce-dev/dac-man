@@ -24,10 +24,7 @@ def get_install_requires():
         # using "4.2b1" since it seems to be working with both pip and conda
         'PyYAML>=4.2b1',
         'straight.plugin',
-        # numpy is required, but only for file-level comparisons
-        # (as opposed to directory-level comparisons)
-        # should it be considered a core dependency?
-        # 'numpy'
+        'numpy',
     ]
 
     return install_deps
@@ -46,12 +43,12 @@ def get_extras_require():
     """
     d = {}
 
-    # TODO check which of these are redundant because numpy is already a dependency
-    d['fits'] = ['numpy', 'astropy']
-    d['edf'] = ['numpy', 'fabio']
-    d['h5'] = ['numpy', 'h5py']
+    d['fits'] = ['astropy']
+    d['edf'] = ['fabio']
+    d['h5'] = ['h5py']
+    d['csv'] = ['pandas']
 
-    d['hpc'] = ['numpy', 'mpi4py']
+    d['hpc'] = ['mpi4py']
 
     return d
 
@@ -64,11 +61,6 @@ def get_version():
 
     return _locals['__version__']
 
-# dacman_dir = os.path.join(os.getenv('HOME'), '.dacman')
-# dacman_dir_config = os.path.join(dacman_dir, 'config')
-
-# # os.makedirs create parent directories like mkdir -p
-# os.makedirs(dacman_dir_config, exist_ok=True)
 
 setup(name='dacman',
       version=get_version(),
