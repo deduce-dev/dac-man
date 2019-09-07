@@ -11,7 +11,7 @@ git clone https://github.com/dghoshal-lbl/dac-man && cd dac-man/tests
 Then, install the additional dependencies by updating Dac-Man's environment:
 
 ```sh
-conda env update --name dacman-env --file ../environment/pytest.yml
+conda env update --name dacman-env --file ../dependencies/conda/pytest.yml
 ```
 
 Finally, run the tests with `pytest`.

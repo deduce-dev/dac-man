@@ -1,33 +1,39 @@
-# Installing additional dependencies
+# Installing plug-in dependencies
 
 Dac-Man has a modular structure, and by default will only install packages that are necessary to its core functionality.
+To enable Dac-Man's built-in plug-ins, the required additional dependencies must be installed.
 
-It's possible to install additional dependencies by updating Dac-Man's Conda environment
-using environment files in the `environment` directory of the source code repository.
-
-!!! tip
-    For more information on individual dependencies, refer to the contents of each environment file.
+It's possible to install additional dependencies by updating Dac-Man's environment
+using files in the `dependencies/` directory of the source code repository.
 
 ## Installing dependencies for all built-in plug-ins
 
-To update Dac-Man's environment to enable all built-in plug-ins,
-from the root of the local copy of the Dac-Man source code repository,
-run:
+### Using Conda
+
+If Dac-Man was installed using Conda,
+run this command from the root of the local copy of the Dac-Man source code repository
+to update Dac-Man's environment and enable all built-in plug-ins:
 
 ```sh
-conda env update --name dacman-env --file environment/builtin-plugins.yml
+conda env update --name dacman-env --file dependencies/conda/builtin-plugins.yml
 ```
 
-## Installing dependencies for running Dac-Man with MPI
+### Using Pip
 
-The `mpi4py` package is required to use Dac-Man with MPI.
-
-To update Dac-Man's environment, run this command from the root of the local copy
-of the Dac-Man's source code repository:
+If Dac-Man was installed using Pip,
+activate Dac-Man's environment, and then run the following command instead:
 
 ```sh
-conda env update --name dacman-env --file environment/mpi.yml
+pip install --requirement dependencies/pip/builtin-plugins.txt
 ```
 
-!!! important
-    Different computing environments might have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's own documentation to find out how to enable MPI.
+## Built-in plug-ins dependencies
+
+More information on the individual dependencies required by the built-in plug-ins is given in the following table.
+
+| Package name | Documentation URL | Required by plug-in | Required for |
+|: --- |: --- :| --- | -- |
+| `h5py` | [Link](http://docs.h5py.org/en/latest/index.html) | Default, HDF5 | Reading `.h5` files |
+| `astropy` | [Link](http://docs.astropy.org/en/stable/) | Default | Reading `.fits` files |
+| `fabio` | [Link](https://fabio.readthedocs.io/en/latest/) | Default | Reading `.edf` and `.tif` files |
+| `pandas` | [Link](https://pandas.pydata.org/pandas-docs/stable/) | CSV | Reading `.csv` files, data processing |
