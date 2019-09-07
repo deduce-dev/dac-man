@@ -2,7 +2,12 @@ from pathlib import Path
 from collections import defaultdict
 
 import numpy as np
-import pandas as pd
+
+try:
+    import pandas as pd
+except ImportError:
+    from dacman.core.utils import dispatch_import_error
+    dispatch_import_error(module_name='pandas', plugin_name='CSV')
 
 from dacman.compare import base
 
@@ -182,7 +187,7 @@ class TableColumnChangeMetrics(ChangeMetricsBase):
 
         self['values'] = col_metrics_from_value_metrics
 
-    def get_column_metrics_from_values(self, metrics_table: pd.DataFrame):
+    def get_column_metrics_from_values(self, metrics_table):
         m = {}
         df = metrics_table
 
@@ -285,7 +290,7 @@ class TableColumnsRecord(_BaseRecord):
         return mapping
 
 
-def get_lines_frame(path, comment_char=None) -> pd.DataFrame:
+def get_lines_frame(path, comment_char=None):
     """Read lines and associated metadata from a file"""
     with Path(path).open() as f:
         lines = pd.DataFrame({'content': list(f)})

@@ -3,8 +3,22 @@
 ## Requirements
 
 The `mpi4py` is required to enable running Dac-Man with MPI.
-Refer to [this section](../../install/dependencies/) for installation steps and additional information
-on how to install Dac-Man's MPI dependencies.
+Installation steps and additional information
+on how to install Dac-Man's MPI dependencies are given in the following.
+
+### Installing dependencies for running Dac-Man with MPI
+
+The `mpi4py` package is required to use Dac-Man with MPI.
+
+To update Dac-Man's environment, run this command from the root of the local copy
+of the Dac-Man's source code repository:
+
+```sh
+conda env update --name dacman-env --file dependencies/conda/mpi.yml
+```
+
+!!! important
+    Different computing environments might have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's own documentation to find out how to enable MPI.
 
 ## Using MPI
 

@@ -6,12 +6,12 @@ theme:
 nav:
   - Introduction: index.md
   - Installation:
-    - Requirements: install/index.md
-    - Using Conda: install/conda.md
-    - Additional dependencies: install/dependencies.md
+    - Installing Dac-Man: install/index.md
+    - Installing plug-in dependencies: install/dependencies.md
+    - Testing the installation: install/test.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
-    - On desktops: use/desktop.md
+    - General use: use/general.md
     - On HPC clusters: use/hpc.md
     - Plug-ins: use/plugins.md
   - Customization: config.md
@@ -36,7 +36,6 @@ nav:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md
   - License: license.md
-  - About: about.md
 
 copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
 repo_name: dghoshal-lbl/dac-man

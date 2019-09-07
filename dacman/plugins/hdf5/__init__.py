@@ -1,5 +1,10 @@
 import numpy as np
-import h5py as h5
+
+try:
+    import h5py as h5
+except ImportError:
+    from dacman.core.utils import dispatch_import_error
+    dispatch_import_error(module_name='h5py', plugin_name='HDF5')
 
 from dacman.compare import base
 

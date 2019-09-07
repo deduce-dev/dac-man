@@ -15,6 +15,8 @@ import yaml
 import os
 import time
 import hashlib
+import sys
+import logging
 
 DACMAN_STAGING_LOC = os.path.join(os.getenv('HOME'), '.dacman/data')
 
@@ -104,3 +106,19 @@ def get_nfiles(path, stagingdir):
     with open(scan_file) as f:
         nlines = sum(1 for line in f)
     return nlines
+
+
+def dispatch_import_error(module_name, plugin_name=None, abort=None):
+    logger = logging.getLogger(__name__)
+
+    msg = f'module "{module_name}" is required'
+    if plugin_name:
+        msg += f' by plug-in "{plugin_name}". To enable plug-in "{plugin_name}", install the required dependencies.'
+
+    logger.warn(msg)
+
+    if abort:
+        sys.exit(1)
+    else:
+        # this should be caught by straight.plugin
+        raise ImportError

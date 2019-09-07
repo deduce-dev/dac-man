@@ -4,6 +4,7 @@ from dacman.compare.base import Comparator
 import dacman.core.utils as dacman_utils
 import os
 import logging
+from functools import lru_cache
 
 
 LOG = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ LOG = logging.getLogger(__name__)
 class PluginManager(object):
     @classmethod
     def load_comparator(cls, data_type):
+        COMPARATORS_MAP = get_comparators_map()
         plugin_config = os.path.join(os.getenv('HOME'), '.dacman/config/plugins.yaml')
         if os.path.exists(plugin_config):
             plugin_info = dacman_utils.load_yaml(plugin_config)
@@ -69,4 +71,15 @@ def _add_comparator(supports, comparator, comparators):
         comparators[supports] = [comparator]
 
 
-COMPARATORS_MAP = _get_comparators()
+# using a function instead of a global variable,
+# so that the _get_comparators() function (and thus the leading of plug-ins)
+# happens at runtime (i.e. only when Comparators are needed)
+# rather than at import time (i.e. everytime `dacman` is invoked,
+# even for actions that do not require Comparators)
+# using lru_cache ensures that the _get_comparators() itself is only called once,
+# since subsequent calls to get_comparators_map() will return the cached result:
+# lru_cache uses a function's arguments as the cache key, and this function takes no arguments,
+# so the "maxsize" argument has no effect and the cache size will always be 1
+@lru_cache(maxsize=None)
+def get_comparators_map():
+    return _get_comparators()

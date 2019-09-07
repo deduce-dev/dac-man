@@ -1,4 +1,4 @@
-# Using Dac-Man on Desktop Computers
+# Using Dac-Man
 
 ## Quick Tutorial
 

@@ -12,22 +12,16 @@ can be found in the [*Using Dac-Man*](../use/desktop) section of the documentati
 
 ## A step-by-step example running `diff`
 
-### Accessing example data
-
-From a terminal, download the Dac-Man source code
-and enter the `examples/` directory containing example files and datasets:
-
-```sh
-git clone https://github.com/dghoshal-lbl/dac-man
-cd dac-man/examples
-```
-
 ### Comparing directories
 
 Dac-Man is able to compare directories of files as well as individual files for changes.
-To compare two directories for changes, run the `dacman diff` command with the directories as arguments:
+
+After activating Dac-Man's environment,
+navigate to the `examples` directory of Dac-Man's source code repository.
+Then, to compare two directories for changes, run the `dacman diff` command with the directories as arguments:
 
 ```sh
+cd dac-man/examples
 dacman diff data/simple/v0 data/simple/v1
 ```
 
