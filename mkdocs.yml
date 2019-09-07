@@ -11,7 +11,7 @@ nav:
     - Testing the installation: install/test.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
-    - On desktops: use/desktop.md
+    - General use: use/general.md
     - On HPC clusters: use/hpc.md
     - Plug-ins: use/plugins.md
   - Customization: config.md
