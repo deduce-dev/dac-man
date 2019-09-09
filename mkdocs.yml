@@ -35,6 +35,7 @@ nav:
   - For developers:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md
+  - Troubleshooting: troubleshooting.md
   - License: license.md
 
 copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
