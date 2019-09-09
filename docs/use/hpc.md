@@ -22,22 +22,30 @@ conda env update --name dacman-env --file dependencies/conda/mpi.yml
 
 ## Using MPI
 
-Dac-Man allows you to parallelize `index` and `diff` steps.
+Dac-Man allows you to parallelize the following steps:
+
+- `index`
+- `diff` with the `--datachange` option
+
 To parallelize on HPC clusters, you need to enable the MPI support
 by using the appropriate flags:
 
 ```sh
 dacman index ... -m mpi
-dacman diff ... -e mpi
+dacman diff ... -e mpi --datachange
 ```
 
-To distribute the tasks to multiple workers, you need to use `mpirun` or `mpiexec`.
-For example, running Dac-Man on an HPC cluster with 8 nodes and 32 cores per node,
+To distribute the tasks to multiple workers,
+you need to use the MPI executable appropriate for the system in use,
+e.g. `srun`, `mpiexec`, `mpirun`, etc.
+
+For example, to run Dac-Man on an HPC cluster with 8 nodes and 32 cores per node,
+where the MPI executable is `srun`,
 you can use:
 
 ```sh
-mpiexec -n 256 dacman index ... -m mpi
-mpiexec -n 256 dacman diff ... -e mpi
+srun -n 256 dacman index ... -m mpi
+srun -n 256 dacman diff ... -e mpi --datachange
 ```
 
 ## Batch Script
@@ -54,7 +62,7 @@ The example below shows a batch script (`hpcEx.batch`) for the Slurm scheduler.
 #SBATCH -N 8
 #SBATCH -q myqueue
 
-mpiexec -n 256 dacman diff /old/data /new/data -e mpi
+srun -n 256 dacman diff /old/data /new/data -e mpi --datachange
 ```
 
 The script can then be submitted to the batch scheduler as:
