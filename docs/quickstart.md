@@ -53,7 +53,17 @@ Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
 \ No newline at end of file
 ```
 
-For more information about using Dac-Man's plug-ins, visit the [*Using plug-ins*](../use/plugins) section of the documentation.
+### Using Dac-Man plug-ins to compare files
+
+Dac-Man built-in plug-ins allow to analyze changes in a more specialized way, depending on the file type.
+When files of a supported type are compared,
+Dac-Man will automatically choose the corresponding plug-in to perform the comparison.
+To enable a particular plug-in, its required additional dependencies must be installed.
+
+For more information, refer to these sections of the documentation:
+
+- [Installing dependencies for Dac-Man's built-in plug-ins](../install/dependencies/)
+- [Using Dac-Man's plug-ins](../use/plugins/)
 
 ## Using Binder
 
