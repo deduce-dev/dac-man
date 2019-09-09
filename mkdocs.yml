@@ -14,7 +14,8 @@ nav:
     - General use: use/general.md
     - On HPC clusters: use/hpc.md
     - Plug-ins: use/plugins.md
-  - Customization: config.md
+    - Additional use cases: use/misc.md
+    - Customization: config.md
   - API:
       Dac-Man: api/dacman.md
       Plug-ins: api/plugins.md

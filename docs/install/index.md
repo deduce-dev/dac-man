@@ -48,8 +48,11 @@ cd dac-man
 conda env create --file ./environment.yml
 ```
 
-!!! tip
+!!! important
     This will install only the dependencies needed for Dac-Man's core functionality. [These additional instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+
+!!! note
+    By default, the name of the Conda environment is set in `environment.yml` as `dacman-env`. If for any reason a different name for the environment is needed, modify the value for `name` in `environment.yml`, and then adapt the steps described throughout this documentation specifying the new name to the `--name` option of `conda` commands.
 
 ## Installing Dac-Man in an existing environment
 
@@ -88,7 +91,6 @@ conda env update --name my-conda-env --file ./environment.yml
 
 !!! tip
     Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](../../install/dependencies), depending on whether Pip ([here](../../install/dependencies/#using-pip)) or Conda ([here](../../install/dependencies/#using-conda)) was used to install Dac-Man.
-
 
 ## Installing Dac-Man in Binder
 
