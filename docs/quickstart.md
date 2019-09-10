@@ -58,11 +58,19 @@ Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
 Dac-Man built-in plug-ins allow to analyze changes in a more specialized way, depending on the file type.
 When files of a supported type are compared,
 Dac-Man will automatically choose the corresponding plug-in to perform the comparison.
+
 To enable a particular plug-in, its required additional dependencies must be installed.
+Follow [these steps](../install/dependencies/) to install dependencies for all of Dac-Man's built-in plug-ins.
 
-For more information, refer to these sections of the documentation:
+After installing the dependencies, run the following command to test Dac-Man file comparison
+with example directories containing files of the types supported by the built-in plug-ins:
 
-- [Installing dependencies for Dac-Man's built-in plug-ins](../install/dependencies/)
+```sh
+dacman diff data/plugin_test/v0 data/plugin_test/v1 --datachange
+```
+
+For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
+
 - [Using Dac-Man's plug-ins](../use/plugins/)
 
 ## Using Binder
