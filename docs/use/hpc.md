@@ -92,7 +92,7 @@ module load python/3.7-anaconda-2019.07
 #### Installing Dac-Man
 
 Then, follow the same steps to install Dac-Man using Conda as illustrated in the [*Installing Dac-Man*](../../install/) section,
-including installing additional [plug-in dependencies](../../dependencies/) as needed:
+including installing additional [plug-in dependencies](../../install/dependencies/) as needed:
 
 ```sh
 git clone https://github.com/dghoshal-lbl/dac-man
