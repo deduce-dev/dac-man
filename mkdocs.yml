@@ -8,6 +8,7 @@ nav:
   - Installation:
     - Installing Dac-Man: install/index.md
     - Installing plug-in dependencies: install/dependencies.md
+    - Updating Dac-Man: install/update.md
     - Testing the installation: install/test.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
