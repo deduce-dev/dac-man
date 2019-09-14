@@ -28,12 +28,17 @@ The `pandas` package is required as an additional dependency for this plug-in.
 
 ### Using the CSV Plug-in
 
-As part of the built-in Dac-Man plug-ins, when analyzing changes in CSV files, the CSV plug-in will be used by default.
+As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
+the CSV plug-in will be used by default when comparing CSV files.
 
-To compare the two files `A.csv` and `B.csv`, after activating Dac-Man's Conda environment and installing the dependencies, run:
+The [`examples/plugin_test/`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
+contains two example CSV files in the two sub-directories `v0` and `v1`.
+To compare these example files, navigate to the `examples/plugin_test` directory
+and run `dacman diff` with the `--datachange` option:
 
 ```sh
-dacman diff A.csv B.csv
+cd examples/plugin_test
+dacman diff v0 v1 --datachange
 ```
 
 ## Key concepts

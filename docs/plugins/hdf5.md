@@ -59,12 +59,17 @@ The `h5py` Python package is required as an additional dependency.
 
 ### Using the HDF5 Plug-in
 
-As part of the built-in Dac-Man plug-ins, when analyzing changes in HDF5 files, the `hdf5` plug-in will be used by default.
+As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
+the HDF5 plug-in will be used by default when comparing HDF5 files.
 
-To compare the two files `A.h5` and `B.h5`, after activating Dac-Man's Conda environment and installing the dependencies, run:
+The [`examples/plugin_test/`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
+contains two example HDF5 files in the two sub-directories `v0` and `v1`.
+To compare these example files, navigate to the `examples/plugin_test` directory
+and run `dacman diff` with the `--datachange` option:
 
 ```sh
-dacman diff A.h5 B.h5
+cd examples/plugin_test
+dacman diff v0 v1 --datachange
 ```
 
 ## Extending the Plug-in
