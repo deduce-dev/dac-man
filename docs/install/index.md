@@ -48,8 +48,11 @@ cd dac-man
 conda env create --file ./environment.yml
 ```
 
-!!! tip
-    This will install only the dependencies needed for Dac-Man's core functionality. [These additional instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+!!! important
+    This will install only the dependencies needed for Dac-Man's core functionality. [These additional instructions](./dependencies/) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+
+!!! note
+    By default, the name of the Conda environment is set in `environment.yml` as `dacman-env`. If for any reason a different name for the environment is needed, modify the value for `name` in `environment.yml`, and then adapt the steps described throughout this documentation specifying the new name to the `--name` option of `conda` commands.
 
 ## Installing Dac-Man in an existing environment
 
@@ -87,8 +90,7 @@ conda env update --name my-conda-env --file ./environment.yml
 ---
 
 !!! tip
-    Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](../../install/dependencies), depending on whether Pip ([here](../../install/dependencies/#using-pip)) or Conda ([here](../../install/dependencies/#using-conda)) was used to install Dac-Man.
-
+    Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
 
 ## Installing Dac-Man in Binder
 
@@ -108,4 +110,4 @@ Clicking on this button will create a Dac-Man environment on Binder and open a w
 Although a valuable tool for distributing test environments, Binder's mode of operation might make it unsuitable for certain workflows and/or datasets.
 Make sure to read the [documentation](https://mybinder.readthedocs.io/en/latest/) carefully, in particular the [usage guidelines](https://mybinder.readthedocs.io/en/latest/user-guidelines.html) and the [user privacy policy](https://mybinder.readthedocs.io/en/latest/faq.html#how-does-mybinder-org-ensure-user-privacy).
 
-Outside of a quick evaluation, the recommended way of using Dac-Man is to install it in the users' computing environment, and run it on a [personal computer](../use/desktop) or on an [HPC cluster](../use/hpc).
+Outside of a quick evaluation, the recommended way of using Dac-Man is to install it in the users' computing environment.
