@@ -34,6 +34,10 @@ nav:
     - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
+  - Plug-in documentation WIP:
+    - Extending built-in plug-ins:
+      - CSV: plugins-docs/extend/csv.md
+      - HDF5: plugins-docs/extend/hdf5-edf.md
   - For developers:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md
