@@ -164,7 +164,7 @@ import numpy.linalg
 
 class MatrixTxtPlugin(base.Comparator):
 
-    self.threshold = 0.001
+    threshold = 0.001
 
 ...
 
