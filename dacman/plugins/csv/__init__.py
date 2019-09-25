@@ -34,8 +34,8 @@ class _InternalFields:
     """
     Utility class to access commonly used table/dict fields as constants rather than bare strings.
     """
-    LINENO = '__lineno'
-    ROWIDX = '__rowidx'
+    LOC_ORIG_ROW = '_loc_orig_row'
+    LOC_ORIG_COL = '_loc_orig_col'
 
     ORIG = 'orig'
     CALC = 'calc'
@@ -166,11 +166,6 @@ class TableColumnChangeMetrics(ChangeMetricsBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._supports_numeric_delta = None
-
-    @property
-    def supports_numeric_delta(self):
-        return self._supports_numeric_delta
 
     def calculate(self):
 
@@ -201,7 +196,7 @@ class TableColumnChangeMetrics(ChangeMetricsBase):
 
         m['frac_changed'] = m['n_changed'] / n_total
 
-        if self.supports_numeric_delta:
+        if not (df['delta'].isnull().all()):
             m['delta_mean'] = df['delta'].mean()
             m['delta_std'] = df['delta'].std()
 
@@ -567,7 +562,6 @@ class CSVTableColumnsRecord(_BaseRecord):
         return {'values_frame': pd.DataFrame([], columns=[_F.ORIG, _F.CALC, _F.LOC_ORIG_ROW])}
 
 
-
 class TableValuesRecord(_BaseRecord):
 
     def __init__(self, src: pd.DataFrame, **kwargs):
@@ -606,35 +600,33 @@ class TableColumnValuesChangeMetrics:
         
         return cls(values_a, values_b, col_metrics=col_metrics)
 
-
     def __init__(self, values_a, values_b, col_metrics=None):
         self.values_a = values_a
         self.values_b = values_b
         self.col_metrics = col_metrics
 
         self._table = None
+        self._supports_numeric_delta = None
+
+    @property
+    def supports_numeric_delta(self):
+        return self._supports_numeric_delta
 
     def get_table(self):
+        values_frames = {'a': self.values_a, 'b': self.values_b}
 
-        def rename_values_frame(df, key):
-            map_names = {
-                _F.CALC: f'{key}_calc',
-                _F.ORIG: f'{key}_orig',
-                _F.LINENO: f'{key}_lineno'
-            }
+        concat_opts = {
+            'axis': 'columns',
+            'join': 'outer',
+            'sort': False,
+        }
 
-            return df.rename(columns=map_names)
+        df = pd.concat(values_frames, **concat_opts)
 
-        a = self.values_a.pipe(rename_values_frame, 'a')
-        b = self.values_b.pipe(rename_values_frame, 'b')
-
-        # outer join: union of the two column's indices
-        df = (pd.concat([a, b], axis='columns', join='outer', sort=True)
-              # convert again lineno to int dtype after NaNs have been introduced with the outer join
-              .astype({'a_lineno': 'Int64', 'b_lineno': 'Int64'})
-             )
-        
-        return df
+        # TODO factor out this dtype assignment?
+        return (df
+                .astype({('a', _F.LOC_ORIG_ROW): 'Int64', ('b', _F.LOC_ORIG_ROW): 'Int64'})
+               )
 
     @property
     def table(self):
@@ -652,12 +644,11 @@ class TableColumnValuesChangeMetrics:
 
     def calc_change_metrics_base(self, df):
 
-        df.loc[:, 'is_equal'] = df['a_calc'] == df['b_calc']
-        df.loc[:, 'is_null_a'] = df['a_calc'].isna()
-        df.loc[:, 'is_null_b'] = df['b_calc'].isna()
+        df.loc[:, 'is_equal'] = df[('a', _F.CALC)] == df[('b', _F.CALC)]
+        df.loc[:, 'is_null_a'] = df[('a', _F.CALC)].isna()
+        df.loc[:, 'is_null_b'] = df[('b', _F.CALC)].isna()
         df.loc[:, 'is_null_both'] = df['is_null_a'] & df['is_null_b']
         df.loc[:, 'is_null_any'] = df['is_null_a'] | df['is_null_b']
-
         return df
 
     def calc_delta(self, df):
@@ -668,9 +659,7 @@ class TableColumnValuesChangeMetrics:
         # TODO since we need to know whether we can do numeric calculations or not in several places,
         # we could store this information as an attribute/property
         try:
-            # strictly speaking, this is not the delta, since delta is usually b - a
-            # so we might consider changing the name
-            delta = df['a_calc'] - df['b_calc']
+            delta = df[('b', _F.CALC)] - df[('a', _F.CALC)]
         except TypeError:
             self._supports_numeric_delta = False
             delta = np.nan
@@ -682,20 +671,21 @@ class TableColumnValuesChangeMetrics:
         return df
 
     def is_value_modified(self, df):
-        # TODO if we factor this out, it can be customized separately
+        epsilon = 1e-6
+
+        if self.supports_numeric_delta:
+            return ~df['is_equal'] & (df['delta'].abs() > epsilon)
         return ~df['is_equal']
 
     def assign_change_status(self, df):
         # TODO additional logic here would be e.g. implementing per-field or per-dtype thresholds
         # TODO make this a categorical
         status = pd.Series(_S.unset, index=df.index)
-
         status[df['is_null_a'] & (~df['is_null_b'])] = _S.added
         status[(~df['is_null_a']) & df['is_null_b']] = _S.deleted
 
-        status[(~df['is_equal']) & (~df['is_null_any'])] = _S.modified
+        status[(~df['is_null_any']) & self.is_value_modified(df)] = _S.modified
         status[status == _S.unset] = _S.unchanged
-
         df.loc[:, 'status'] = status
 
         return df
@@ -706,19 +696,26 @@ class TableColumnValuesChangeMetrics:
         for status in [_S.unchanged, _S.added, _S.deleted, _S.modified]:
             m_status = {}
             values_with_status = self._table[lambda d: d['status'] == status]
+            has_with_status = len(values_with_status) > 0
+
+            if not has_with_status:
+                # this "continue" means that change statuses with no values
+                # are not added to the metrics at all (as opposed to having `{count: 0}` or similar)
+                # it could possibly be exposed as an option
+                # depening on what are the requirements for the schema/structure of the output
+                continue
 
             f_aggregated = self.map_status_function_aggregated[status]
+
             m_status.update(f_aggregated(values_with_status))
 
             f_per_value = self.map_status_function_per_value[status]
 
             if f_per_value is not None:
-                if len(values_with_status) > 0:
+                per_value_metrics = []
+                if has_with_status:
                     per_value_metrics = values_with_status.apply(f_per_value, axis=1).to_list()
-                else:
-                    per_value_metrics = []
                 m_status['values'] = per_value_metrics
-
             m[status] = m_status
 
         return m
@@ -744,54 +741,37 @@ class TableColumnValuesChangeMetrics:
     def get_stats_default(self, values):
         return {'count': len(values)}
 
-    def get_stats(self, values, status):
-        stats = {}
-
-        stats['count'] = values.sum()
-
-        if status in {_S.added, _S.deleted}:
-            stats['count']
-
-    def get_colname(self):
-        d = {}
-        d['colidx'] = self.col_metrics.get_values('colidx')
-        d['colname'] = self.col_metrics.get_values('name_header')
-        return d
-
     def get_per_value_added(self, value_properties):
         return {
-            'value': value_properties['b_orig'],
-            'loc': {'lineno': value_properties['b_lineno'], **self.get_colname()}
+            'value': value_properties[('b', _F.ORIG)],
+            'loc': {'row': value_properties[('b', _F.LOC_ORIG_ROW)]}
         }
 
     def get_per_value_deleted(self, value_properties):
         return {
-            'value': value_properties['a_orig'],
-            'loc': {'lineno': value_properties['a_lineno'], **self.get_colname()}
+            'value': value_properties[('a', _F.ORIG)],
+            'loc': {'row': value_properties[('a', _F.LOC_ORIG_ROW)]}
         }
 
     def get_per_value_modified(self, value_properties):
         vp = value_properties
         m = {}
 
-        m['a'] = {
-            'original': vp['a_orig'],
-            'calculated_as': vp['a_calc'],
-            'loc': {
-                'line': vp['a_lineno'],
+        def get_m_for_side(d, side):
+            return {
+                'original': d[(side, _F.ORIG)],
+                'calculated_as': d[(side, _F.CALC)],
+                'loc': {
+                    'row': d[(side, _F.LOC_ORIG_ROW)]
+                }
             }
-        }
-
-        m['b'] = {
-            'original': vp['b_orig'],
-            'calculated_as': vp['b_calc'],
-            'loc': {
-                'lineno': vp['b_lineno'],
-                **self.get_colname(),
-            }
-        }
-
-        m['delta'] = vp['delta']
+        m['a'] = get_m_for_side(vp, 'a')
+        m['b'] = get_m_for_side(vp, 'b')
+        # the key must be ('delta', '') instead of only 'delta'
+        # otherwise strange and horrible errors (segmentation faults from numpy/pandas) will occur
+        # this could be a pandas bug, so it would be good to investigate this in more detail at some point
+        if self.supports_numeric_delta:
+            m['delta'] = vp[('delta', '')]
 
         return m
 
