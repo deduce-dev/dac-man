@@ -328,7 +328,82 @@ def convert_dtypes(df, converters=None):
                     df.loc[:, colname] = col
                     break
 
-    return df
+
+
+class ColumnnProcessor:
+    """
+    Utility class to perform per-column processing and hold data in various formats
+    as needed to create the column-level metadata.
+    """
+
+    def __init__(self, data_orig, name=None):
+        
+        self.data_orig = data_orig
+
+        self.data_calc = None
+
+        self.name = name
+        self.header = {}
+
+    def process_header(self, data, pos_mapper=None, pos='rel', **kwargs):
+
+        # pos: relative or absolute
+        # relative: count from start of subrange
+        # absolute: use _loc_orig_row
+        indexer = data.iloc
+        if pos.startswith('abs'):
+            indexer = data.loc
+
+        pos_mapper = pos_mapper or kwargs
+
+        to_drop = []
+
+        for key, pos in pos_mapper.items():
+            val = indexer[pos]
+            self.header[key] = val
+            to_drop.append(pos)
+
+        return data.drop(indexer[to_drop].index)
+
+    def process_rename(self, data, mapper):
+        self.name = self.header.get('name', self.name)
+
+        self.name = mapper.get(self.name, self.name)
+
+        if self.name:
+            data.name = self.name
+
+        return data
+
+    def process_dtype(self, data, dtype):
+        if dtype is True:
+            data = infer_dtypes(data)
+        else:
+            if dtype is None:
+                dtype = {}
+            data.astype(dtype.get(self.name, data.dtype))
+        return data
+
+    def get_values_frame(self, data_orig, data_calc, index=None):
+        df = pd.DataFrame({_F.ORIG: data_orig, _F.CALC: data_calc}, index=data_calc.index)
+        # print(f'{self.name}: dtypes={df.dtypes}')
+
+        # so here there are three cases for the index:
+        # - a data column
+        # - orig
+        # - none (reset)
+        #   - In this case, we don't particularly need to give it a name
+        # we can probably manage to express this by resetting the index in all three cases,
+        # and then setting the index appropriately
+        if isinstance(index, str) and index == 'orig':
+            df = df.reset_index().set_index(df.index.name, drop=False)
+        elif index is not None:
+            df = pd.merge(index, df, how='left', left_index=True, right_index=True).reset_index().set_index(index.name)
+        else:
+            # we need to be sure that we have the loc_orig_row as a column of this table
+            df = df.reset_index()
+
+        return df
 
 
 class CSVTableColumnsRecord(_BaseRecord):
