@@ -798,14 +798,8 @@ class CSVPlugin(base.Comparator):
         for key in keys_union:
             yield key, (a.get(key), b.get(key))
 
+    record_opts = {}
     comment_char = '#'
-    calc_options = {
-        # 'header_pos': 0,
-        # 'index': 'measurement_id',
-        # 'index': '',
-        # 'dtype': True,
-        # 'column_renames': {'date': 'measurement_date'}
-    }
 
     def get_file_metadata(self, src):
         """
@@ -846,8 +840,9 @@ class CSVPlugin(base.Comparator):
         """
         Return the Record object used to fetch, process and expose for comparison table columns.
         """
-        rec = CSVTableColumnsRecord(*args, comment_char=self.comment_char, **self.calc_options, **kwargs)
+        rec = CSVTableColumnsRecord(*args, comment_char=self.comment_char, **self.record_opts, **kwargs)
         rec.load()
+
         return rec
 
     def get_change_metrics_column(self, *args, **kwargs):
@@ -871,19 +866,21 @@ class CSVPlugin(base.Comparator):
         rec_a = self.get_record_columns(src_a)
         rec_b = self.get_record_columns(src_b)
 
+        # for each comparison pair of columns from the two tables
         for comp_key, (col_md_a, col_md_b) in self.gen_comparison_pairs(rec_a, rec_b):
+
+            # first, calculate the change metrics for the column as a whole
             metr_single_col = self.get_change_metrics_column(comp_key, col_md_a, col_md_b)
             metr_single_col.calculate()
 
-            # series_a, series_b = metr_single_col.get_values('series', orient=tuple)
-            # metr_values = self.get_change_metrics_column_values(series_a, series_b)
+            # then, calculate the change metrics for the column values
             metr_values = self.get_change_metrics_column_values(metr_single_col)
-
             metr_values_data = metr_values.calculate()
-            metr_table['values_by_column'][comp_key] = metr_values_data
 
+            # finally, add info about change in values to the column change metrics
             metr_single_col.calculate_from_value_metrics(metr_values.table)
 
+            metr_table['values_by_column'][comp_key] = metr_values_data
             metr_table['columns'][comp_key] = dict(metr_single_col)
 
         return metr_table
@@ -923,8 +920,12 @@ class CSVPlugin(base.Comparator):
 
         return df
 
-    def stats(self, changes, detail_level=1):
+    detail_level = 1
+
+    def stats(self, changes, detail_level=None):
         from .util import to_json
+
+        detail_level = detail_level or self.detail_level
 
         df_table = self.get_stats_table(changes['table_data'])
 
