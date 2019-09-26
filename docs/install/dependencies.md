@@ -36,4 +36,5 @@ More information on the individual dependencies required by the built-in plug-in
 | `h5py` | [Link](http://docs.h5py.org/en/latest/index.html) | Default, HDF5 | Reading `.h5` files |
 | `astropy` | [Link](http://docs.astropy.org/en/stable/) | Default | Reading `.fits` files |
 | `fabio` | [Link](https://fabio.readthedocs.io/en/latest/) | Default | Reading `.edf` and `.tif` files |
-| `pandas` | [Link](https://pandas.pydata.org/pandas-docs/stable/) | CSV | Reading `.csv` files, data processing |
+| `pandas` | [Link](https://pandas.pydata.org/pandas-docs/stable/) | CSV, Excel | Reading `.csv`/`.xls*` files, data processing |
+| `xlrd` | [Link](https://xlrd.readthedocs.io/en/latest/) | Excel | Reading `.xls*` files (through `pandas`), Excel utility functions |
