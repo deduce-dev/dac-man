@@ -15,7 +15,8 @@ nav:
     - General use: use/general.md
     - On HPC clusters: use/hpc.md
     - Plug-ins: use/plugins.md
-    - Additional use cases: use/misc.md
+    - Comparing read-only datasets: use/read-only.md
+    - Comparing datasets at different sites: use/different-sites.md
     - Customization: use/config.md
   - API:
       Dac-Man: api/dacman.md
