@@ -20,9 +20,6 @@ nav:
     - Customization: use/config.md
     - Using custom analysis scripts: use/scripts.md
   - Dac-Man and HPC: use/hpc/index.md
-  - API:
-      Dac-Man: api/dacman.md
-      Plug-ins: api/plugins.md
   - Plug-ins:
     - Overview: plugins/overview.md
     - Default: plugins/default.md
@@ -35,6 +32,10 @@ nav:
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
     - Extending plug-ins: plugins/extend.md
+  - API:
+      Dac-Man: api/dacman.md
+      Plug-ins: api/plugins.md
+  - Troubleshooting: troubleshooting.md
   - Examples:
     - Using custom analysis scripts: examples/script.md
     - Adapting the CSV plug-in to custom data: examples/csv-simple.md
@@ -45,7 +46,6 @@ nav:
   - For developers:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md
-  - Troubleshooting: troubleshooting.md
   - License: license.md
 
 copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
