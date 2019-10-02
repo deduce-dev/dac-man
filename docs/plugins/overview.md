@@ -1,4 +1,4 @@
-# Using Dac-Man's Plug-in Framework
+# Dac-Man's Plug-in Framework
 
 Scientific datasets come in various formats and data types.
 It is not a sustainable solution to compare files and datasets of different types in a single way.
