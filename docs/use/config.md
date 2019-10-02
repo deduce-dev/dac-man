@@ -49,7 +49,7 @@ dacman diff /path/to/dir1 /path/to/dir2 --datachange --script /usr/bin/diff
 The `--datachange` option tells to compare the data within the files of the two directories.
 
 Finally, you can build your own plug-ins by extending the `ComparatorBase` class.
-Please refer to the [plug-ins usage section](../plugins) for details.
+Please refer to the [plug-ins usage section](../../plugins) for details.
 
 ## Logging
 

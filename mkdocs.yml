@@ -14,14 +14,13 @@ nav:
   - Using Dac-Man:
     - General use: use/general.md
     - At NERSC: use/nersc.md
-    - Plug-ins: use/plugins.md
     - Comparing read-only datasets: use/read-only.md
     - Comparing datasets at different sites: use/different-sites.md
     - Customization: use/config.md
     - Using custom analysis scripts: use/scripts.md
-  - Dac-Man and HPC: use/hpc/index.md
+  - Dac-Man and HPC: hpc/index.md
   - Plug-ins:
-    - Overview: plugins/overview.md
+    - Overview: plugins/index.md
     - Default: plugins/default.md
     - Extending built-in plug-ins:
       - CSV: plugins/extend/csv.md
@@ -37,17 +36,16 @@ nav:
   - License: license.md
   - To be checked/removed:
     - Plug-ins:
-    - HDF5: plugins/hdf5.md
-    - CSV: 
-      - The CSV plug-in: plugins/csv/index.md
-      - API: plugins/csv/api.md
-    - Extending plug-ins: plugins/extend.md
-  - Examples:
-    - Using custom analysis scripts: examples/script.md
-    - Adapting the CSV plug-in to custom data: examples/csv-simple.md
-    - HDF5 and EDF files: examples/hdf5-edf.md
-    # - CSV files: examples/csv.md
-    # - Excel files: examples/excel.md
+      - HDF5: plugins/hdf5.md
+      - CSV: 
+        - The CSV plug-in: plugins/csv/index.md
+        - API: plugins/csv/api.md
+      - Extending plug-ins: plugins/extend.md
+    - Examples:
+      - Adapting the CSV plug-in to custom data: examples/csv-simple.md
+      - HDF5 and EDF files: examples/hdf5-edf.md
+      # - CSV files: examples/csv.md
+      # - Excel files: examples/excel.md
 
 copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
 repo_name: dghoshal-lbl/dac-man

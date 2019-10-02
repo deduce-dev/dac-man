@@ -116,4 +116,4 @@ dacman diff data/plugin_test/v0 data/plugin_test/v1 --datachange
 
 For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
 
-- [Using Dac-Man's plug-ins](../use/plugins/)
+- [Using Dac-Man's plug-ins](../plugins/)
