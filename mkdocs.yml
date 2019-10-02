@@ -18,6 +18,7 @@ nav:
     - Comparing read-only datasets: use/read-only.md
     - Comparing datasets at different sites: use/different-sites.md
     - Customization: use/config.md
+    - Using custom analysis scripts: use/scripts.md
   - Dac-Man and HPC: use/hpc/index.md
   - API:
       Dac-Man: api/dacman.md
