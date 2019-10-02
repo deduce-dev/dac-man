@@ -26,6 +26,10 @@ nav:
   - Plug-ins:
     - Overview: plugins/overview.md
     - Default: plugins/default.md
+    - Extending built-in plug-ins:
+      - CSV: plugins/extend/csv.md
+      - HDF5: plugins/extend/hdf5-edf.md
+    - Creating a plug-in from scratch: plugins/from-scratch.md
     - HDF5: plugins/hdf5.md
     - CSV: 
       - The CSV plug-in: plugins/csv/index.md
@@ -37,11 +41,7 @@ nav:
     - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
-  - Plug-in documentation WIP:
-    - Extending built-in plug-ins:
-      - CSV: plugins-docs/extend/csv.md
-      - HDF5: plugins-docs/extend/hdf5-edf.md
-    - Creating a plug-in from scratch: plugins-docs/from-scratch.md
+  - Plug-in documentation WIP: {}
   - For developers:
     - Running tests: develop/tests.md
     - Documentation: develop/docs.md
