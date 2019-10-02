@@ -13,11 +13,12 @@ nav:
   - Quickstart: quickstart.md
   - Using Dac-Man:
     - General use: use/general.md
-    - On HPC clusters: use/hpc.md
+    - At NERSC: use/nersc.md
     - Plug-ins: use/plugins.md
     - Comparing read-only datasets: use/read-only.md
     - Comparing datasets at different sites: use/different-sites.md
     - Customization: use/config.md
+  - Dac-Man and HPC: use/hpc/index.md
   - API:
       Dac-Man: api/dacman.md
       Plug-ins: api/plugins.md
