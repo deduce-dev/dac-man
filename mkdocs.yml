@@ -27,26 +27,27 @@ nav:
       - CSV: plugins/extend/csv.md
       - HDF5: plugins/extend/hdf5-edf.md
     - Creating a plug-in from scratch: plugins/from-scratch.md
+  - API:
+      Dac-Man: api/dacman.md
+      Plug-ins: api/plugins.md
+  - Troubleshooting: troubleshooting.md
+  - For developers:
+    - Running tests: develop/tests.md
+    - Documentation: develop/docs.md
+  - License: license.md
+  - To be checked/removed:
+    - Plug-ins:
     - HDF5: plugins/hdf5.md
     - CSV: 
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
     - Extending plug-ins: plugins/extend.md
-  - API:
-      Dac-Man: api/dacman.md
-      Plug-ins: api/plugins.md
-  - Troubleshooting: troubleshooting.md
   - Examples:
     - Using custom analysis scripts: examples/script.md
     - Adapting the CSV plug-in to custom data: examples/csv-simple.md
     - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
-  - Plug-in documentation WIP: {}
-  - For developers:
-    - Running tests: develop/tests.md
-    - Documentation: develop/docs.md
-  - License: license.md
 
 copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
 repo_name: dghoshal-lbl/dac-man
