@@ -1,0 +1,116 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* custom stuff */
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+
+.double-column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 2;
+}
+
+.flex-container {
+  display: flex;
+}
+
+.flex-body {
+  display: flex;
+  flex: 1;
+}
+
+.flex-content {
+  flex: 1;
+}
+
+.flex-sidebar {
+  flex: 0 0 20em;
+  order: -1;
+}
+
+.header {
+  background-color: #616161;
+  height: 50px;
+  display: flex;
+}
+
+.header div {
+  color: #fff;
+}
+
+.header .rightnav {
+  margin: 15px 20px 10px 20px;
+}
+
+.header .flex-right {
+  margin-left: auto;
+}
+
+.header .logo {
+  margin: 0;
+}
+
+.header .logo img {
+  height: 40px;
+  margin: 5px 5px 0 5px;
+}
+
+.header .logo .logo-text {
+  margin: 12px 0 10px 0;
+  font-size: x-large;
+  font-family: Menlo;
+}
+
+
+.sidebar {
+  background-color: #252525;
+}
+
+.metabuilder {
+  background-color: #ebedef;
+  min-height: 100vh;
+}
