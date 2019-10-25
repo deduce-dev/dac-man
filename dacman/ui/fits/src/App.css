@@ -1,5 +1,8 @@
+@import "../node_modules/material-design-icons/iconfont/material-icons.css";
+
 .App {
-  text-align: center;
+  /* text-align: center; */
+  font-family: Avenir;
 }
 
 .App-logo {
@@ -33,26 +36,6 @@
 }
 
 /* custom stuff */
-.row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  flex-basis: 100%;
-  flex: 1;
-}
-
-.double-column {
-  display: flex;
-  flex-direction: column;
-  flex-basis: 100%;
-  flex: 2;
-}
 
 .flex-container {
   display: flex;
@@ -61,6 +44,7 @@
 .flex-body {
   display: flex;
   flex: 1;
+  font-size: 14px;
 }
 
 .flex-content {
@@ -70,6 +54,8 @@
 .flex-sidebar {
   flex: 0 0 20em;
   order: -1;
+  color: #fff;
+  padding: 5px 20px;
 }
 
 .header {
@@ -113,4 +99,108 @@
 .metabuilder {
   background-color: #ebedef;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/** stuff related to the meta data cards */
+select, input{
+  background-color: #F1F3F4;
+  border-style: none;
+}
+
+.card {
+  font-size: 14px;
+  margin: 20px 100px 10px 50px;
+  padding: 30px 30px 30px 30px;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.2);
+  transition: 0.3s;
+  background-color: #fff;
+  color: #4d4d4d;
+}
+
+.card-title {
+  font-size: larger;
+  font-weight: bolder;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #979797;
+}
+
+.card-subsection {
+  padding-bottom: 30px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.table-prompt {
+  padding-bottom: 10px;
+}
+
+th, td {
+  padding: 5px 15px;
+  text-align: left;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group {
+  display: flex;
+  padding-right: 200px;
+}
+
+.input-group > label {
+  margin-right: 1em;
+  padding: .5em 0;
+}
+
+.radio-group {
+  padding: 10px 0;
+}
+
+.radio-group input {
+  margin-right: 10px;
+}
+
+.radio-group label {
+  margin-right: 20px;
+}
+
+.input-group input, .input-group select {
+  flex: 2;
+  padding: .5em;
+}
+
+
+
+.flex-form-row label {
+  margin-left: 10px;
+  margin-right: 10px;
+  flex: 1;
+}
+
+
+.flex-form-row input {
+  margin-left: 10px;
+  flex: 2;
+}
+
+
+.return {
+  padding: 10px 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #fff;
+}
+
+.comparator-section-title {
+  font-size: larger;
 }
