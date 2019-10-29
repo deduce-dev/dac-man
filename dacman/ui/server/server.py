@@ -16,6 +16,16 @@ def api_fits_test():
 		'output' : output
 	})
 
+@app.route('/api/fitsinfo')
+def api_fits_info():
+	hdul = fits.open('../spCFrame-b1-00161868.fits')
+	output = hdul.info(output=False)
+	#print("output is")
+	#print(output)
+	return json.jsonify({
+		'output' : output
+	})
+
 @app.route('/hello')
 def hello():
     return 'Hello World!'

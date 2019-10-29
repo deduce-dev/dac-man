@@ -170,14 +170,29 @@ class HeaderBar extends React.Component {
 
 
 
-function App() {
-  return (
-    <div className="App">
-      <HeaderBar />
-      <MainContent />
+class App extends React.Component {
 
-    </div>
-  );
+ componentDidMount() {
+    fetch('/api/fitsinfo')
+    .then(res => res.json())
+    .then((data) => {
+      console.log("test is ")
+      console.log(data)
+    })
+    .catch(
+      console.log("failed")
+    )
+  }
+
+  render() {
+    return (
+      <div className="App">
+        <HeaderBar />
+        <MainContent />
+
+      </div>
+    );
+  }
 }
 
 export default App;
