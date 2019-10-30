@@ -22,9 +22,10 @@ def api_fits_info():
 	output = hdul.info(output=False)
 	#print("output is")
 	#print(output)
-	return json.jsonify({
-		'output' : output
-	})
+	#return json.jsonify({
+	#	'output' : output
+	#})
+	return json.jsonify(output)
 
 @app.route('/hello')
 def hello():
