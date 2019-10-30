@@ -5,15 +5,25 @@ import './App.css';
 
 
 class FileType extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.handleSelectFileFormat = this.handleSelectFileFormat.bind(this);
+  }
+
+  handleSelectFileFormat(e) {
+    this.props.onSelectFileFormat(e.target.value);
+  }
+
   render() {
     return (
       <div class="card column">
         <div class="input-group">
           <label>File Format for Comparison</label>
-          <select id="file_format">
-            <option value="" ></option>
-            <option value="office" selected="selected">fits</option>
-            <option value="town_hall" >csv</option>
+          <select id="file_format" onChange={this.handleSelectFileFormat}>
+            <option value="" selected="selected"></option>
+            <option value="fits">fits</option>
+            <option value="csv" >csv</option>
           </select>
         </div>
       </div>
@@ -25,52 +35,72 @@ class DataModelInfo extends React.Component {
   constructor(props) {
     super(props);
     this.handleHduSelect = this.handleHduSelect.bind(this);
+    this.handleSelectFile = this.handleSelectFile.bind(this);
+
+    this.state = {
+      exampleFile: ""
+    };
   }
 
   handleHduSelect(e) {
     this.props.onHduSelectChange(e.target.id);
   }
 
-  render() {
-    return (
-      <div class="card column">
-        <div class="card-title">Data Model Information</div>
-        <div class="card-subsection">
-          <div class="input-group">
-            <label>Select Example File</label>
-            <input type="text" value="spCFrame-b1-00161868.fits"/>
-          </div>
-        </div>
-        <div>
-          <div class="table-prompt">Which HDU's do you want to compare?</div>
-          <table>
-            <thead> 
-              <tr>
-                <th>&nbsp;</th>
-                <th>No</th>
-                <th>Name</th>
-                <th>HDU Type</th>
-                <th>Dimension</th>
-                <th>Content Type</th>
-              </tr>
-            </thead>
-            <tbody>
-            {this.props.hdus.map((hdu) => (
-              <tr>
-                <td><input type="checkbox"  id={hdu[0]} name={hdu[0]} onChange={this.handleHduSelect} /></td>
-                <td>{hdu[0]}</td>
-                <td>{hdu[1]}</td>
-                <td>{hdu[3]}</td>
-                <td>({hdu[5][0]},{hdu[5][1]})</td>
-                <td><input type="text" /></td>
-              </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  handleSelectFile(e) {
+    this.setState({ 
+      exampleFile : e.target.value
+    });
+  }
 
-      </div>
-    );
+  render() {
+    if (this.props.fileFormat == "fits") {
+      return (
+        <div class="card column">
+          <div class="card-title">Data Model Information</div>
+          <div class="card-subsection">
+            <div class="input-group">
+              <label>Select Example File</label>
+              <select id="file" onChange={this.handleSelectFile}>
+                <option value="" selected="selected"></option>
+                <option value="spCFrame-b1-00161868.fits" >spCFrame-b1-00161868.fits</option>
+              </select>
+            </div>
+          </div>
+
+         { this.state.exampleFile != "" &&
+            <div>
+              <div class="table-prompt">Which HDU's do you want to compare?</div>
+              <table>
+                <thead> 
+                  <tr>
+                    <th>&nbsp;</th>
+                    <th>No</th>
+                    <th>Name</th>
+                    <th>HDU Type</th>
+                    <th>Dimension</th>
+                    <th>Content Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {this.props.hdus.map((hdu) => (
+                  <tr>
+                    <td><input type="checkbox"  id={hdu[0]} name={hdu[0]} onChange={this.handleHduSelect} /></td>
+                    <td>{hdu[0]}</td>
+                    <td>{hdu[1]}</td>
+                    <td>{hdu[3]}</td>
+                    <td>({hdu[5][0]},{hdu[5][1]})</td>
+                    <td><input type="text" /></td>
+                  </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      );
+    } else {
+      return (null);
+    }
   }
 }
 
@@ -80,6 +110,7 @@ class VisInfo extends React.Component {
   }
 
   render() {
+    if (this.props.selectedHDUS.length !== 0) {
       return (
         <div class="card column">
           <div class="card-title">Visualization Information</div>
@@ -105,7 +136,9 @@ class VisInfo extends React.Component {
           </div>
         </div>
       );
-    
+    } else {
+      return (null);
+    }
   }
 }
 
@@ -115,6 +148,8 @@ class ComparingFiles extends React.Component {
   }
 
   render() {
+
+    if (this.props.selectedHDUS.length !== 0) {
       return (
         <div class="card column">
           <div class="card-title">Comparing Files</div>
@@ -130,7 +165,9 @@ class ComparingFiles extends React.Component {
           </div>
         </div>
       );
-    
+    } else {
+      return (null);
+    }
   }
 }
 
@@ -170,9 +207,11 @@ class MetaBuilder extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedHDUS: []
+      selectedHDUS: [],
+      fileFormat: ""
     };
     this.onHduSelectChange = this.onHduSelectChange.bind(this);
+    this.onSelectFileFormat = this.onSelectFileFormat.bind(this);
   }
 
   onHduSelectChange(index) {
@@ -190,12 +229,28 @@ class MetaBuilder extends React.Component {
     
   }
 
+  onSelectFileFormat(format) {
+    this.setState({ 
+      fileFormat : format
+    });
+  }
+
+
+
   render() {
     return (
       <div class="metabuilder">
-        <FileType />
-        <DataModelInfo hdus={this.props.hdus} selectedHDUS={this.state.selectedHDUS} onHduSelectChange={this.onHduSelectChange}/>
-        <VisInfo hdus={this.props.hdus} selectedHDUS={this.state.selectedHDUS}/>
+        <FileType onSelectFileFormat={this.onSelectFileFormat}/>
+        <DataModelInfo 
+          hdus={this.props.hdus} 
+          selectedHDUS={this.state.selectedHDUS} 
+          onHduSelectChange={this.onHduSelectChange} 
+          fileFormat={this.state.fileFormat}
+        />
+        <VisInfo 
+          hdus={this.props.hdus} 
+          selectedHDUS={this.state.selectedHDUS}
+        />
         <ComparingFiles selectedHDUS={this.state.selectedHDUS} />
       </div>
     );
