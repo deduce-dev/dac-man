@@ -1,0 +1,43 @@
+version '3'
+
+services:
+  broker:
+    image: redis:latest
+    restart: always
+    container_name: dacman_broker
+    volumes:
+      - data/broker_backup:/data
+    ports:
+      - "6378:6379"
+
+  source:
+    image: aaelbashandy/dacman-source:0.1
+    restart: always
+    container_name: dacman_data_source
+    environment:
+      - WORKDIR = /app
+      - DATASET = /data/dataset/
+      - STREAMING_TIME = 5
+      - DATA_FRACTION = 1e-3
+      - SOURCE_RESULT_DIR = /data/results/sources/
+    volumes:
+      - data:/data
+    entrypoint: python3 dacman_stream.py ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
+
+  worker:
+    image: aaelbashandy/dacman-worker:0.1
+    restart: always
+    container_name: dacman_worker
+    environment:
+      - REDIS_HOST = "blot.lbl.gov"
+      - REDIS_PORT = "6378"
+      - REDIS_DB = 0
+      - TASK_QUEUE = "task_queue:f5b4873137a332836e384ecbc8c9a4a876d267f2"
+      - SOURCE_RESULT_DIR = /data/results/workers/
+    volumes:
+      - data:/data
+    entrypoint: python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${REDIS_DB} ${TASK_QUEUE} ${SOURCE_RESULT_DIR}
+
+volumes:
+  data:
+    external: true
