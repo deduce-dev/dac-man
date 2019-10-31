@@ -127,8 +127,16 @@ class VisInfo extends React.Component {
               {this.props.selectedHDUS.map((index) => (
                 <tr>
                   <td>{this.props.hdus[index][1]}</td>
-                  <td><input type="text" /></td>
-                  <td><input type="text" /></td>
+                  <td>
+                      <select>
+                        <option value="" selected="selected">array2 - array1</option>
+                      </select>
+                  </td>
+                  <td>
+                    <select>
+                        <option value="" selected="selected">histogram</option>
+                      </select>
+                  </td>
                 </tr>
                 ))}
               </tbody>
@@ -156,12 +164,12 @@ class ComparingFiles extends React.Component {
           <div class="radio-group">
             <input type="radio" />
             <label>Comparing 2 Files</label>
-            <input type="radio" />
+            <input type="radio" checked="checked"/>
             <label>Comparing Multiple Files/Directories</label>
           </div>
           <div class="input-group">
             <label>Compare Files</label>
-            <input type="text" />
+            <input type="text" value="*/*/spPlate*.fits"/>
           </div>
         </div>
       );

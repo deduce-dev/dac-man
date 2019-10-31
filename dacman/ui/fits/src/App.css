@@ -143,6 +143,10 @@ th, td {
   text-align: left;
 }
 
+td select {
+  width: 100%;
+}
+
 .row {
   display: flex;
   justify-content: center;
