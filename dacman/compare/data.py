@@ -66,8 +66,11 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
 
         changes = comparator.compare(new_file, old_file, *argv)
         result = comparator.stats(changes)
-    if result is not None:
-        print(result)
+    #if result is not None:
+    #    print(result)
+    result['new'] = new_file
+    result['old'] = old_file
+    return result
 
 
 def _external(plugin, new_file, old_file, *argv):

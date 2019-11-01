@@ -1,6 +1,6 @@
 from dacman.compare.base import Comparator
 from dacman.compare.adaptor import DacmanRecord
-
+import json
 
 class DefaultPlugin(Comparator):
     def __init__(self):
@@ -87,12 +87,18 @@ class DefaultPlugin(Comparator):
         return p_change
 
     def stats(self, changes):
+        data = {}
         print("Changes in headers:")
-        self._element_stats(changes['headers'])
+        data['header_changes'] = self._element_stats(changes['headers'])
         print("\t % Change = {}".format(self.p_change_header))
+        data['header_changes']['perc_change'] = self.p_change_header
+        
         print("Changes in values:")
-        self._element_stats(changes['values'])
+        data['value_changes'] = self._element_stats(changes['values'])
         print("\t % Change = {}".format(self.p_change_data))
+        data['value_changes']['perc_change'] = self.p_change_data
+        #return json.dumps(data, indent=4)
+        return data
 
     def _element_stats(self, changes):
         added = len(changes['added'])
@@ -103,6 +109,9 @@ class DefaultPlugin(Comparator):
                                                                           deleted,
                                                                           modified,
                                                                           unchanged))
+        change_summary = {'added': added, 'deleted': deleted,
+                          'modified': modified, 'unchanged': unchanged}
+        return change_summary
 
 
 
