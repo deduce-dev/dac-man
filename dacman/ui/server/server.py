@@ -2,6 +2,7 @@
 from flask import Flask, render_template, json
 from astropy.io import fits
 from dacman import Executor, DataDiffer
+import dacman
 from dacman.plugins.default import DefaultPlugin
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
@@ -30,11 +31,12 @@ def api_dacman_test():
 	print(results)
 	return json.jsonify(results)
 
-@app.route('/api/fitsinfo')
-def api_fits_info():
-	hdul = fits.open('../spCFrame-b1-00161868.fits')
-	output = hdul.info(output=False)
-	return json.jsonify(output)
+
+@app.route('/api/fitschangesummary')
+def api_fits_change_summary():
+	json_data = open('./output/summary.json')
+	data = json.load(json_data)
+	return json.jsonify(data)
 
 @app.route('/hello')
 def hello():

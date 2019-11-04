@@ -3,6 +3,7 @@
 .App {
   /* text-align: center; */
   font-family: Avenir;
+  background-color: #EBEDEF;
 }
 
 .App-logo {
@@ -91,6 +92,10 @@
   font-family: Menlo;
 }
 
+.header a {
+  color: #fff;
+  text-decoration: none;
+}
 
 .sidebar {
   background-color: #252525;
@@ -208,4 +213,15 @@ td select {
 .comparator-section-title {
   font-size: larger;
   padding-top: 10px;
+}
+
+/** summary page stuff **/
+.Summary {
+  background-color: #EBEDEF;
+  min-height: 100vh;
+}
+
+.topsummary {
+  display: flex;
+  justify-content: left;
 }

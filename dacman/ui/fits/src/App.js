@@ -1,5 +1,6 @@
 import React from 'react';
-import MainMetaBuilder from './MainMetaBuilder.jsx'
+import MainMetaBuilder from './MainMetaBuilder.jsx';
+import Summary from './Summary.jsx'
 import {
   HashRouter as Router,
   Switch,
@@ -28,13 +29,7 @@ class HeaderBar extends React.Component {
   }
 }
 
-class Home extends React.Component {
-  render() {
-    return (
-      <div>Home</div>
-    );
-  }
-}
+
 
 
 class App extends React.Component {
@@ -49,7 +44,7 @@ class App extends React.Component {
               <MainMetaBuilder />
             </Route>
             <Route path="/">
-              <Home />
+              <Summary />
             </Route>
           </Switch>
         </div>
