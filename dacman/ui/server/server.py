@@ -11,14 +11,11 @@ app = Flask(__name__, static_folder='../fits/build/static', template_folder='../
 def index():
 	return render_template('index.html')
 
-@app.route('/api/fitstest')
+@app.route('/api/fitsinfo')
 def api_fits_test():
 	hdul = fits.open('../spCFrame-b1-00161868.fits')
-	output = hdul[5].header[3]
-	print(output)
-	return json.jsonify({
-		'output' : output
-	})
+	output = hdul.info(output=False)
+	return json.jsonify(output)
 
 @app.route('/api/dacmantest')
 def api_dacman_test():
