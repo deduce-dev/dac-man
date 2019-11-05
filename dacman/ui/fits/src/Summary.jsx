@@ -12,7 +12,7 @@ class ModifiedCharts extends React.Component {
   render() {
     return (
       <div class="modifiedcharts">
-          testing that
+          
       </div>
     );
   }
@@ -23,15 +23,16 @@ class TopSummary extends React.Component {
     super(props);
     this.state = {
       changeData: {},
-      modifiedOptions : this.getModifiedOptions(),
-      addedOptions : this.getAddedOptions()
+      modifiedOptions : this.getOptions(),
+      addedOptions : this.getOptions(),
+      deletedOptions : this.getOptions(),
+      unchangedOptions : this.getOptions()
     };
   }
 
-  getModifiedOptions() {
-    var modifiedOptions = {
+  getOptions() {
+    var options = {
         chart: {
-          renderTo: 'container',
           type: 'pie',
           height: 200,
           width: 200
@@ -39,54 +40,34 @@ class TopSummary extends React.Component {
         credits: {
           enabled: false
         },
+        tooltip: { enabled: false },
         title: {
-          text: ''
+          text: '',
+          align: 'center',
+          verticalAlign: 'middle',
+          y: 9
         },
         plotOptions: {
           pie: {
-            innerSize: '60%',
+            innerSize: '80%',
             dataLabels: {
                 enabled: false,
             }
           }
         },
         series: [{
-          data: []
+          data: [],
+          enableMouseTracking: false
         }]
     };
-    return modifiedOptions;
-  }
-
-  getAddedOptions() {
-    var addedOptions = {
-        chart: {
-          renderTo: 'container',
-          type: 'pie',
-          height: 200,
-          width: 200
-        },
-        credits: {
-          enabled: false
-        },
-        title: {
-          text: ''
-        },
-        plotOptions: {
-          pie: {
-            innerSize: '60%',
-            dataLabels: {
-                enabled: false,
-            }
-          }
-        },
-        series: [{
-          data: []
-        }]
-    };
-    return addedOptions;
+    return options;
   }
 
   componentDidMount() {
+    this.renderChart();
+  }
+
+  renderChart() {
     fetch('/api/fitschangesummary')
     .then(res => res.json())
     .then((data) => {
@@ -94,32 +75,64 @@ class TopSummary extends React.Component {
       var total = data['counts']['added'] + data['counts']['modified'] + data['counts']['deleted'] + data['counts']['unchanged'];
       
 
-      var modifiedOptions = this.getModifiedOptions();
+      var modifiedOptions = this.getOptions();
       var mod_count = data['counts']['modified'];
-      modifiedOptions.series[0].data = [['Modified', mod_count], ['Other', (total-mod_count)]];
+      var mtitle = "Modified<br><span class='dchartnum'>" + mod_count + "</span>";
+      modifiedOptions.series[0].data = [
+        { name:'Modified', y: mod_count, color: "#00BCD4" },
+        { name:'Other', y: (total-mod_count), color: "#E9E7E6" }];
+      modifiedOptions.title = { text: mtitle};
       this.setState({
         modifiedOptions: modifiedOptions
       });
 
-      var addedOptions = this.getAddedOptions();
+      var addedOptions = this.getOptions();
       var add_count = data['counts']['added'];
-      addedOptions.series[0].data = [['Added', add_count], ['Other', (total-add_count)]];
+      var atitle = "Added<br><span class='dchartnum'>" + add_count + "</span>";
+      addedOptions.series[0].data = [
+        { name:'Added', y: add_count, color: "#9CC988" },
+        { name:'Other', y: (total-add_count), color: "#E9E7E6" }];
+      addedOptions.title = { text: atitle};
       this.setState({
         addedOptions: addedOptions
       });
 
+      var deletedOptions = this.getOptions();
+      var del_count = data['counts']['deleted'];
+      var dtitle = "Deleted<br><span class='dchartnum'>" + del_count + "</span>";
+      deletedOptions.series[0].data = [
+        { name:'Deleted', y: del_count, color: "#F05E61" },
+        { name:'Other', y: (total-del_count), color: "#E9E7E6" }];
+      deletedOptions.title = { text: dtitle};
+      this.setState({
+        deletedOptions: deletedOptions
+      });
+
+      var unchangedOptions = this.getOptions();
+      var uc_count = data['counts']['unchanged'];
+      var utitle = "Unchanged<br><span class='dchartnum'>" + uc_count + "</span>";
+      unchangedOptions.series[0].data = [
+        { name:'Unchanged', y: uc_count, color: "#676767" },
+        { name:'Other', y: (total-uc_count), color: "#E9E7E6" }];
+      unchangedOptions.title = { text: utitle};
+      this.setState({
+        unchangedOptions: unchangedOptions
+      });
+
     })
     .catch(
-      console.log("failed")
+      //console.log("failed")
     )
   }
 
   render() {
 
     return (
-      <div class="topsummary card">
+      <div class="topsummary card">        
         <HighchartsReact highcharts={Highcharts} options={this.state.modifiedOptions} />
         <HighchartsReact highcharts={Highcharts} options={this.state.addedOptions} />
+        <HighchartsReact highcharts={Highcharts} options={this.state.deletedOptions} />
+        <HighchartsReact highcharts={Highcharts} options={this.state.unchangedOptions} />
       </div>
     );
   }

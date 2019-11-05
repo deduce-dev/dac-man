@@ -224,4 +224,9 @@ td select {
 .topsummary {
   display: flex;
   justify-content: left;
+  padding: 0;
+}
+
+.dchartnum {
+  font-size: 20px;
 }
