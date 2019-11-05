@@ -24,15 +24,18 @@ data_pull_end = {}
 job_end_processing = {}
 job_end_data_put = {}
 
-def get_redis_instance(host, port, db):
+def get_redis_instance(host, port, db=0):
     '''
     Return a redis instance with the given config
     '''
-    r = redis.Redis(
-        host=host,
-        port=port
-    )
-
+    try: 
+        r = redis.Redis(
+            host=host,
+            port=port
+        )
+    except ValueError as e:
+        raise e("Couldn't connect to Redis")
+    
     return r
 
 
@@ -102,8 +105,11 @@ def process_task(r, task, custom_analyzer):
 
     return 1
 
-def write_to_csv():
-    output_dir_path = _config.OUTPUT_CSV_DIR
+def write_to_csv(output_dir_path):
+    #output_dir_path = _config.OUTPUT_CSV_DIR
+
+    if not os.path.exists(output_dir_path):
+        os.makedirs(output_dir_path)
 
     name = _config.CSV_DICTS_DIRS[0]
     output_full_path = os.path.join(output_dir_path, name, 
@@ -144,7 +150,7 @@ def write_to_csv():
 
 #def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False, 
 #                func_file= None, r_host=None, r_port=None, r_db=None):
-def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
+def diff_tasks(r, redis_queue_id, custom_analyzer, output_dir, is_mpi=False):
         '''
         function to execute diff tasks.
         '''
@@ -200,7 +206,7 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi=False):
                 time.sleep(1)
 
                 if failed_count == 5:
-                    _thread.start_new_thread(write_to_csv, ())
+                    _thread.start_new_thread(write_to_csv, (output_dir))
                 
 
 
@@ -217,10 +223,11 @@ def s_main(args):
 
     host = args['r_host']
     port = args['r_port']
-    db =  args['r_db']
 
     redis_queue_id = args['redis_queue_id']
     #custom_analyzer = func_deserializer(args['analyzer_string'])
+
+    output_dir = args['output_dir']
 
     func_file = args['func_file']
     executor = args['executor']
@@ -233,19 +240,24 @@ def s_main(args):
     custom_analyzer = func_deserializer_file(func_file)
 
     try:
-        r = get_redis_instance(host, port, db)
-        diff_tasks(r, redis_queue_id, custom_analyzer, is_mpi)
+        r = get_redis_instance(host, port)
+        diff_tasks(r, redis_queue_id, custom_analyzer, output_dir, is_mpi)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
 
 if __name__ == '__main__':
+    if (len(sys.argv) != 5):
+        print(len(sys.argv))
+        print("Usage: python stream_worker.py <redis_host> <redis_port> <redis_queue_id> <output_dir>")
+        exit()
+
     args = {
         'r_host': sys.argv[1],
         'r_port': sys.argv[2],
-        'r_db': sys.argv[3],
-        'redis_queue_id': sys.argv[4],
+        'redis_queue_id': sys.argv[3],
+        'output_dir': sys.argv[4]
     }
 
     args['func_file'] = str(_config.CUSTOM_ANALYZER_FILE)

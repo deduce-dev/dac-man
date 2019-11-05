@@ -1,4 +1,4 @@
-version '3'
+version: '3'
 
 services:
   broker:
@@ -6,7 +6,7 @@ services:
     restart: always
     container_name: dacman_broker
     volumes:
-      - data/broker_backup:/data
+      - dacman_data:/data
     ports:
       - "6378:6379"
 
@@ -14,30 +14,35 @@ services:
     image: aaelbashandy/dacman-source:0.1
     restart: always
     container_name: dacman_data_source
-    environment:
-      - WORKDIR = /app
-      - DATASET = /data/dataset/
-      - STREAMING_TIME = 5
-      - DATA_FRACTION = 1e-3
-      - SOURCE_RESULT_DIR = /data/results/sources/
+    links:
+      - broker:host
     volumes:
-      - data:/data
-    entrypoint: python3 dacman_stream.py ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
+      - dacman_data:/data
+    entrypoint: python3 dacman_stream.py redis_host ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
+    depends_on:
+      - broker
 
   worker:
     image: aaelbashandy/dacman-worker:0.1
     restart: always
     container_name: dacman_worker
-    environment:
-      - REDIS_HOST = "blot.lbl.gov"
-      - REDIS_PORT = "6378"
-      - REDIS_DB = 0
-      - TASK_QUEUE = "task_queue:f5b4873137a332836e384ecbc8c9a4a876d267f2"
-      - SOURCE_RESULT_DIR = /data/results/workers/
+    deploy:
+      replicas: 2
     volumes:
-      - data:/data
-    entrypoint: python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${REDIS_DB} ${TASK_QUEUE} ${SOURCE_RESULT_DIR}
+      - dacman_data:/data
+    entrypoint: python3 stream_worker.py redis_host ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_RESULT_DIR}
+    depends_on:
+      - broker
 
 volumes:
-  data:
+  dacman_data:
     external: true
+
+# example of volume creating
+#volumes:
+#  dbdata:
+#    driver: local
+#    driver_opts:
+#      type: 'none'
+#      o: 'bind' # this is important if you want to bind a volume to a specific path
+#      device: '/srv/db-data'
