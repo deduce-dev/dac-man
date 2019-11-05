@@ -12,7 +12,7 @@ def index():
 	return render_template('index.html')
 
 @app.route('/api/fitsinfo')
-def api_fits_test():
+def api_fits_info():
 	hdul = fits.open('../spCFrame-b1-00161868.fits')
 	output = hdul.info(output=False)
 	return json.jsonify(output)

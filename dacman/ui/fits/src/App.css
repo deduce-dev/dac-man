@@ -56,7 +56,7 @@
   flex: 0 0 20em;
   order: -1;
   color: #fff;
-  padding: 5px 20px;
+  padding: 5px 0px;
 }
 
 .header {
@@ -210,14 +210,65 @@ td select {
 
 
 .return {
-  padding: 10px 0;
-  margin-bottom: 10px;
+  padding: 10px 0px;
+  margin: 0px 20px 10px 20px;
   border-bottom: 1px solid #fff;
+}
+
+.sidebar_column {
+  min-height: 90vh;
 }
 
 .comparator-section-title {
   font-size: larger;
-  padding-top: 10px;
+  padding: 10px 20px 10px 20px;
+}
+
+.comparator-name {
+  padding: 10px 20px 10px 20px;
+}
+
+.current_comparator {
+  background-color: #000;
+}
+
+.arrow_box_right {
+  position: relative;
+  background: #000;
+  border: 1px solid #000;
+}
+.arrow_box_right:after, .arrow_box_right:before {
+  left: 100%;
+  top: 50%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.arrow_box_right:after {
+  border-color: rgba(0, 0, 0, 0);
+  border-left-color: #000;
+  border-width: 22px;
+  margin-top: -22px;
+}
+.arrow_box_right:before {
+  border-color: rgba(0, 0, 0, 0);
+  border-left-color: #000;
+  border-width: 16px;
+  margin-top: -16px;
+}
+
+.runbutton {
+  margin: auto 30px 30px 30px;
+  padding: 10px 20px;
+  border: none;
+  background-color: #0072a7;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.2);
 }
 
 /** summary page stuff **/

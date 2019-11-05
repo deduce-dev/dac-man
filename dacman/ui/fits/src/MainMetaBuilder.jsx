@@ -183,29 +183,53 @@ class ComparingFiles extends React.Component {
 class MainContent extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      fileFormat: ""
+    };
+    this.onSelectFileFormat = this.onSelectFileFormat.bind(this);
+  }
+
+
+  onSelectFileFormat(format) {
+    this.setState({ 
+      fileFormat : format
+    });
   }
 
   render() {
     return (
       <div class="maincontent flex-body">
-          <SideBar />
-          <MetaBuilder hdus={this.props.hdus}/> 
+          <SideBar fileFormat={this.state.fileFormat} />
+          <MetaBuilder 
+            hdus={this.props.hdus} 
+            fileFormat={this.state.fileFormat} 
+            onSelectFileFormat={this.onSelectFileFormat}
+          /> 
       </div>
     );
   }
 }
 
 class SideBar extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
   render() {
     return (
       <div class="sidebar flex-sidebar"> 
-        <div class="column">
+        <div class="column sidebar_column">
           <div class="return">
             <Link to="/"><i className='material-icons' style={{fontSize: '18px', width: '30px', verticalAlign: 'middle'}}>arrow_back_ios</i>Return to Overview</Link>
           </div>
           <div class="comparators">
             <div class="comparator-section-title">Custom Comparators</div>
+            <div class="comparator-name current_comparator arrow_box_right">{this.props.fileFormat} comparator</div>
           </div>
+          
+          <button class="runbutton">
+          RUN COMPARISONS
+          </button>
         </div>
       </div>
     );
@@ -216,11 +240,9 @@ class MetaBuilder extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedHDUS: [],
-      fileFormat: ""
+      selectedHDUS: []
     };
     this.onHduSelectChange = this.onHduSelectChange.bind(this);
-    this.onSelectFileFormat = this.onSelectFileFormat.bind(this);
   }
 
   onHduSelectChange(index) {
@@ -238,23 +260,18 @@ class MetaBuilder extends React.Component {
     
   }
 
-  onSelectFileFormat(format) {
-    this.setState({ 
-      fileFormat : format
-    });
-  }
 
 
 
   render() {
     return (
       <div class="metabuilder">
-        <FileType onSelectFileFormat={this.onSelectFileFormat}/>
+        <FileType onSelectFileFormat={this.props.onSelectFileFormat}/>
         <DataModelInfo 
           hdus={this.props.hdus} 
           selectedHDUS={this.state.selectedHDUS} 
           onHduSelectChange={this.onHduSelectChange} 
-          fileFormat={this.state.fileFormat}
+          fileFormat={this.props.fileFormat}
         />
         <VisInfo 
           hdus={this.props.hdus} 
