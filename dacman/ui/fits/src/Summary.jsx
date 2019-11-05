@@ -1,7 +1,10 @@
 import React from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-
+import {
+  HashRouter as Router,
+  Link
+} from "react-router-dom";
 
 
 class ModifiedCharts extends React.Component {
@@ -11,9 +14,42 @@ class ModifiedCharts extends React.Component {
 
   render() {
     return (
-      <div class="modifiedcharts">
-          
+      <div class="modifiedcharts arrow_box">
+        <div class="addplotlink">
+          <Link to="/meta">+ Add Custom Plots/Analysis</Link>
+        </div>
       </div>
+    );
+  }
+}
+
+class SummaryTable extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+
+  render() {
+
+    return (
+      <table class="summarytable">
+        <tr>
+          <th>Base</th>
+          <th>Number of Files</th>
+        </tr>
+        <tr>
+          <td>{this.props.baseInfo.dataset_id}</td>
+          <td>{this.props.baseInfo.nfiles}</td>
+        </tr>
+        <tr>
+          <th>Revision</th>
+          <th>&nbsp;</th>
+        </tr>
+        <tr>
+          <td>{this.props.revisionInfo.dataset_id}</td>
+          <td>{this.props.revisionInfo.nfiles}</td>
+        </tr>
+      </table>
     );
   }
 }
@@ -26,9 +62,14 @@ class TopSummary extends React.Component {
       modifiedOptions : this.getOptions(),
       addedOptions : this.getOptions(),
       deletedOptions : this.getOptions(),
-      unchangedOptions : this.getOptions()
+      unchangedOptions : this.getOptions(),
+      baseInfo : {dataset_id: '', nfiles: 0},
+      revisionInfo : {dataset_id: '', nfiles: 0},
     };
+
+    this.renderChart();
   }
+
 
   getOptions() {
     var options = {
@@ -64,16 +105,18 @@ class TopSummary extends React.Component {
   }
 
   componentDidMount() {
-    this.renderChart();
+    //this.renderChart();
   }
 
   renderChart() {
     fetch('/api/fitschangesummary')
     .then(res => res.json())
     .then((data) => {
-      console.log(data);
-      var total = data['counts']['added'] + data['counts']['modified'] + data['counts']['deleted'] + data['counts']['unchanged'];
-      
+
+      this.setState({ revisionInfo : data['revision'] });
+      this.setState({ baseInfo : data['base'] });
+
+      var total = data['counts']['added'] + data['counts']['modified'] + data['counts']['deleted'] + data['counts']['unchanged'];      
 
       var modifiedOptions = this.getOptions();
       var mod_count = data['counts']['modified'];
@@ -133,6 +176,7 @@ class TopSummary extends React.Component {
         <HighchartsReact highcharts={Highcharts} options={this.state.addedOptions} />
         <HighchartsReact highcharts={Highcharts} options={this.state.deletedOptions} />
         <HighchartsReact highcharts={Highcharts} options={this.state.unchangedOptions} />
+        <SummaryTable revisionInfo={this.state.revisionInfo} baseInfo={this.state.baseInfo} />
       </div>
     );
   }

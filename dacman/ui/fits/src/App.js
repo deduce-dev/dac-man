@@ -22,7 +22,7 @@ class HeaderBar extends React.Component {
           <div><img src={deducelogo} alt=""/></div>
           <div class="logo-text">Deduce</div>
         </div>
-        <div class="flex-right rightnav"><Link to="/meta">About</Link></div>
+        <div class="flex-right rightnav">About</div>
         <div class="rightnav">Documentation</div>
       </div>
     );

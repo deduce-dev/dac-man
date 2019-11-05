@@ -1,4 +1,8 @@
 import React from 'react';
+import {
+  HashRouter as Router,
+  Link
+} from "react-router-dom";
 
 
 class FileType extends React.Component {
@@ -197,7 +201,7 @@ class SideBar extends React.Component {
       <div class="sidebar flex-sidebar"> 
         <div class="column">
           <div class="return">
-            <i className='material-icons' style={{fontSize: '18px', width: '30px', verticalAlign: 'middle'}}>arrow_back_ios</i>Return to Overview
+            <Link to="/"><i className='material-icons' style={{fontSize: '18px', width: '30px', verticalAlign: 'middle'}}>arrow_back_ios</i>Return to Overview</Link>
           </div>
           <div class="comparators">
             <div class="comparator-section-title">Custom Comparators</div>

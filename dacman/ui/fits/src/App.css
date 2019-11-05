@@ -101,6 +101,11 @@
   background-color: #252525;
 }
 
+.sidebar a {
+  text-decoration: none;
+  color: #fff;
+}
+
 .metabuilder {
   background-color: #ebedef;
   min-height: 100vh;
@@ -227,6 +232,55 @@ td select {
   padding: 0;
 }
 
+.summarytable {
+  margin-top: 30px;
+  margin-left: 15px;
+  border-left: 1px solid #bebebe;
+  padding-left: 15px;
+}
+
 .dchartnum {
   font-size: 20px;
+}
+
+.modifiedcharts {
+  margin: 20px 100px 10px 50px;
+  padding-top: 10px;
+}
+
+.arrow_box {
+  position: relative;
+  border-top: 1px solid #979797;
+}
+.arrow_box:after, .arrow_box:before {
+  bottom: 100%;
+  left: 100px;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.arrow_box:after {
+  border-color: rgba(136, 183, 213, 0);
+  border-bottom-color: #ebedef;
+  border-width: 10px;
+  margin-left: -10px;
+}
+.arrow_box:before {
+  border-color: rgba(151, 151, 151, 0);
+  border-bottom-color: #979797;
+  border-width: 11px;
+  margin-left: -11px;
+}
+
+.addplotlink {
+  font-weight: bolder;
+}
+
+.addplotlink a {
+  text-decoration: none;
+  color: #0072A7;
 }
