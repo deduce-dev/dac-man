@@ -122,7 +122,7 @@ class TopSummary extends React.Component {
       var mod_count = data['counts']['modified'];
       var mtitle = "Modified<br><span class='dchartnum'>" + mod_count + "</span>";
       modifiedOptions.series[0].data = [
-        { name:'Modified', y: mod_count, color: "#00BCD4" },
+        { name:'Modified', y: mod_count, color: "#86B3E5" },
         { name:'Other', y: (total-mod_count), color: "#E9E7E6" }];
       modifiedOptions.title = { text: mtitle};
       this.setState({
@@ -133,7 +133,7 @@ class TopSummary extends React.Component {
       var add_count = data['counts']['added'];
       var atitle = "Added<br><span class='dchartnum'>" + add_count + "</span>";
       addedOptions.series[0].data = [
-        { name:'Added', y: add_count, color: "#9CC988" },
+        { name:'Added', y: add_count, color: "#A6EA8A" },
         { name:'Other', y: (total-add_count), color: "#E9E7E6" }];
       addedOptions.title = { text: atitle};
       this.setState({
@@ -144,7 +144,7 @@ class TopSummary extends React.Component {
       var del_count = data['counts']['deleted'];
       var dtitle = "Deleted<br><span class='dchartnum'>" + del_count + "</span>";
       deletedOptions.series[0].data = [
-        { name:'Deleted', y: del_count, color: "#F05E61" },
+        { name:'Deleted', y: del_count, color: "#E06681" },
         { name:'Other', y: (total-del_count), color: "#E9E7E6" }];
       deletedOptions.title = { text: dtitle};
       this.setState({
