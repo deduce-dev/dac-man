@@ -1,26 +1,24 @@
 version: '3'
 
 services:
-  broker:
-    image: redis:latest
-    restart: always
-    container_name: dacman_broker
-    volumes:
-      - dacman_data:/data
-    ports:
-      - "6378:6379"
+#  broker:
+#    image: redis:latest
+#    restart: always
+#    container_name: dacman_broker
+#    volumes:
+#      - dacman_data:/data
+#    ports:
+#      - "6378:6379"
 
   source:
     image: aaelbashandy/dacman-source:0.1
     restart: always
     container_name: dacman_data_source
-    links:
-      - broker:host
     volumes:
       - dacman_data:/data
-    entrypoint: python3 dacman_stream.py redis_host ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
-    depends_on:
-      - broker
+    entrypoint: python3 dacman_stream.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
+#    depends_on:
+#      - broker
 
   worker:
     image: aaelbashandy/dacman-worker:0.1
@@ -30,9 +28,9 @@ services:
       replicas: 2
     volumes:
       - dacman_data:/data
-    entrypoint: python3 stream_worker.py redis_host ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_RESULT_DIR}
-    depends_on:
-      - broker
+    entrypoint: python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_RESULT_DIR}
+#    depends_on:
+#      - broker
 
 volumes:
   dacman_data:
