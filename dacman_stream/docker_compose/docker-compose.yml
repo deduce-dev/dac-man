@@ -12,11 +12,11 @@ services:
 
   source:
     image: aaelbashandy/dacman-source:0.1
-    restart: always
+    restart: "no"
     container_name: dacman_data_source
     volumes:
       - dacman_data:/data
-    entrypoint: python3 dacman_stream.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
+    entrypoint: python3 dacman_stream.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
 #    depends_on:
 #      - broker
 
@@ -24,12 +24,15 @@ services:
     image: aaelbashandy/dacman-worker:0.1
     restart: always
     container_name: dacman_worker
-    deploy:
-      replicas: 2
+    links:
+      - "source:source"
+    #deploy:
+    #  replicas: 2 # only for swarm
     volumes:
       - dacman_data:/data
-    entrypoint: python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_RESULT_DIR}
-#    depends_on:
+    entrypoint: bash -c "while ping -c1 source &>/dev/null do sleep 1; done; python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULT_DIR}"
+    depends_on:
+      - source
 #      - broker
 
 volumes:

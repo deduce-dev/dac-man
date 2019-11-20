@@ -42,6 +42,7 @@ RUN pip3 install --upgrade pip
 USER ${USER}
 
 RUN pip3 install --user scipy scikit-learn redis==2.10.6 numpy h5py
+#RUN pip3 install scipy scikit-learn redis==2.10.6 numpy h5py
 
 #ENTRYPOINT ["python3", "dacman_stream.py"]
 #CMD ["blot.lbl.gov", "6381", "0", "task_queue:f5b4873137a332836e384ecbc8c9a4a876d267f2", "/data_root/"]

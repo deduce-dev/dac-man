@@ -5,7 +5,7 @@ import math
 from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 
 ###########################################################
 # Global variables that hold latency & throughput arrays
@@ -120,6 +120,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     #### Plotting Event-time latencies time series
     ########################################################
 
+    event_l_t_start = time.time()
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
 
@@ -142,6 +143,7 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 event_latencies_time_list_arr,
                 event_time_latencies_arr[arr_index],
                 s=1)
+
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
             ax_curr.grid()
@@ -166,11 +168,19 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    event_l_t_end = time.time()
+
+    event_l_t_time = event_l_t_end - event_l_t_start
+
+    print("event_l_t_time:", event_l_t_time)
 
     ########################################################
     #### Plotting Event-time latencies bar chart
     ########################################################
-
+    #### This is sooo slow when we have close to 10^6 points
+    '''
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
 
@@ -218,6 +228,11 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    event_l_j_end = time.time()
+    print("event_l_j_time:", event_l_j_end - event_l_t_end)
+    '''
 
     ########################################################
     #### Plotting pure-processing-time latencies
@@ -267,6 +282,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    pure_p_l_end = time.time()
+    print("pure_p_l_end:", pure_p_l_end - event_l_t_end)
 
     ########################################################
     #### Plotting Processing-time-data-put latencies
@@ -316,6 +335,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    proc_l_tdp_end = time.time()
+    print("proc_l_tdp_end:", proc_l_tdp_end - pure_p_l_end)
 
     ########################################################
     #### Plotting Throughput Scatter
@@ -360,6 +383,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    throughput_s_end = time.time()
+    print("throughput_s_end:", throughput_s_end - proc_l_tdp_end)
 
     ########################################################
     #### Plotting Throughput Line
@@ -404,6 +431,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
         n_processes_arr[0])
 
     fig.savefig(os.path.join(output_dir, png_filename))
+    plt.clf()
+
+    throughput_l_end = time.time()
+    print("throughput_l_end:", throughput_l_end - throughput_s_end)
 
 
 def start_stats_calculation(data_send_start_path,
@@ -444,10 +475,6 @@ def start_stats_calculation(data_send_start_path,
     print("data_pull_end: " + str(len(data_pull_end)))
     print("job_end_processing: " + str(len(job_end_processing)))
     print("job_end_data_put: " + str(len(job_end_data_put)))
-    #print("data_pull_start: " + str(len(data_pull_start)) + ", " + str(data_pull_start['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
-    #print("data_pull_end: " + str(len(data_pull_end)) + ", " + str(data_pull_end['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
-    #print("job_end_processing: " + str(len(job_end_processing)) + ", " + str(job_end_processing['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
-    #print("job_end_data_put: " + str(len(job_end_data_put)) + ", " + str(job_end_data_put['task:6632bfe2-7fc2-43ac-9f30-0148a99f845e']))
 
     ###########################################################
     # Getting some initial stats for later calculation
@@ -529,23 +556,9 @@ def start_stats_calculation(data_send_start_path,
 
     print("Total Redis pull overhead time [Sum(redis_overhead_time)]: ", 
         np.sum(redis_overhead_time), file=output_filename)
-    #print("Redis pull overhead time: ", 
-    #    redis_overhead_time, file=output_filename)
 
     #### Calculating Event-time Latency time based
     #### [Avg(job_end_data_put - Data data_send_end end)]
-    '''
-    difference_count = 0
-    for i in range(len(job_end_data_put_sorted)):
-        task1_key, _ = data_send_start_sorted[i]
-        task2_key, _ = job_end_data_put_sorted[i]
-        if task1_key != task2_key:
-            print("Interesting!! task1_key: " + task1_key + ", task2_key: " + task2_key)
-            difference_count += 1
-    if len(job_end_data_put_sorted) == len(data_send_start_sorted):
-        print("Total Job Length: " + str(len(job_end_data_put_sorted)))
-    print("difference_count: " + str(difference_count))
-    '''
 
     time_based_latency_list = []
     for key, time in job_end_data_put_sorted:
@@ -563,23 +576,9 @@ def start_stats_calculation(data_send_start_path,
         diff_value = float(job_end_data_put[key]) - float(data_send_end[key])
         job_based_latency_list.append(diff_value)
 
-    # Remove this later
-    #u = 0
-    #for latency in job_based_latency_list:
-    #    print(latency)
-    #    u +=1
-    #    if u > 250:
-    #        break
-    #print("len(job_based_latency_list): " + str(len(job_based_latency_list)))
-    #with open('job_based_latency_list.csv', 'w', newline='') as f:
-    #    for latency in job_based_latency_list:
-    #        f.write(str(latency) + '\n')
-    # End
-
     #### Comparing the difference between the two event-time latencies
     #### (time based & job based) for verification
 
-    #difference_count = 0
     event_latencies_diff_list = []
     if len(time_based_latency_list) == len(job_based_latency_list):
         print("Total Job Length: " + str(len(job_based_latency_list)))
@@ -588,12 +587,10 @@ def start_stats_calculation(data_send_start_path,
         task2_time = job_based_latency_list[i]
         if not math.isclose(task1_time, task2_time, rel_tol=1e-09):
             event_latencies_diff_list.append(abs(task1_time - task2_time))
-            #difference_count += 1
 
     if event_latencies_diff_list:
         print("max diff between jobs-sent-first & jobs-finished-first: "
             + str(max(event_latencies_diff_list)), file=output_filename)
-        #print("difference_count: " + str(difference_count))
 
     #### Already sorted: To be fixed -- event_latencies_time_list_arr[0]
     event_latency_time_min = min(event_latencies_time_list_arr)
@@ -721,53 +718,6 @@ def start_stats_calculation(data_send_start_path,
     n_nodes_arr.append(n_nodes)
     n_processes_arr.append(n_processes)
 
-    '''
-    #### Creates two subplots and unpacks the output array immediately
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10,10))
-
-    ax1.plot([i for i in range(1, len(latency_list)+1)], latency_list)
-    ax1.set(xlabel='job #', ylabel='Event-time latency (s)')
-
-    ax2.plot([i for i in range(1, len(processing_time_latency_list)+1)],
-        processing_time_latency_list)
-    ax2.set(xlabel='job #', ylabel='Processing-time latency (s)')
-    
-    ax1.grid()
-    ax2.grid()
-
-    ax1.set_ylim(bottom=0)
-    ax2.set_ylim(bottom=0)
-
-    fig.suptitle('%i jobs, data arrival rate: %.1f jobs/sec, %i nodes, %i processes'\
-         % (n_jobs, job_arrival_rate, n_nodes, n_processes))
-
-    png_filename = "latency_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
-        job_arrival_rate)
-
-    fig.savefig(os.path.join(output_dir, png_filename))
-    #plt.show()
-
-    #### Plotting Throughput
-
-    fig, ax1 = plt.subplots(1, 1, sharex=True)
-    ax1.plot(throughput_time_list, throughput_job_count_list)
-    ax1.set(xlabel='time (s)', ylabel='throughput (jobs/s)')
-
-    ax1.grid()
-
-    fig.suptitle('%i jobs, data arrival rate: %.1f jobs/sec, %i nodes, %i processes'\
-         % (n_jobs, job_arrival_rate, n_nodes, n_processes))
-
-    png_filename = "throughput_%i_%i_%i_%.1f.png" % (n_jobs, n_nodes, n_processes, 
-        job_arrival_rate)
-
-    fig.savefig(os.path.join(output_dir, png_filename))
-    #plt.show()
-
-    print("====================================================",
-        file=output_filename)
-    '''
-
     output_filename.close()
 
 
@@ -776,23 +726,23 @@ def main(argv):
     # Initiating
     ###########################################################
 
-    started_dir = os.path.abspath(sys.argv[1])
-    finished_dir = os.path.abspath(sys.argv[2])
+    sources_dir = os.path.abspath(sys.argv[1])
+    workers_dir = os.path.abspath(sys.argv[2])
     output_dir = os.path.abspath(sys.argv[3])
 
     recursive_bool = bool(int(sys.argv[4]))
 
     if recursive_bool:
-        for started_entry, finished_entry in zip(scandir_directory(started_dir),
+        for sources_entry, workers_entry in zip(scandir_directory(started_dir),
                         scandir_directory(finished_dir)):
             if started_entry.name == finished_entry.name:
-                data_send_start_path = os.path.join(started_entry, 'data_send_start.csv')
-                data_send_end_path = os.path.join(started_entry, 'data_send_end.csv')
+                data_send_start_path = os.path.join(sources_entry, 'data_send_start.csv')
+                data_send_end_path = os.path.join(sources_entry, 'data_send_end.csv')
 
-                data_pull_start_dir = os.path.join(finished_entry, "data_pull_start")
-                data_pull_end_dir = os.path.join(finished_entry, "data_pull_end")
-                job_end_processing_dir = os.path.join(finished_entry, "job_end_processing")
-                job_end_data_put_dir = os.path.join(finished_entry, "job_end_data_put")
+                data_pull_start_dir = os.path.join(workers_entry, "data_pull_start")
+                data_pull_end_dir = os.path.join(workers_entry, "data_pull_end")
+                job_end_processing_dir = os.path.join(workers_entry, "job_end_processing")
+                job_end_data_put_dir = os.path.join(workers_entry, "job_end_data_put")
 
                 start_stats_calculation(data_send_start_path,
                                         data_send_end_path,
@@ -802,15 +752,15 @@ def main(argv):
                                         job_end_data_put_dir,
                                         output_dir)
 
-        plot_latencies(2, 2, 15, 10, output_dir)
+        #plot_latencies(2, 2, 15, 10, output_dir)
     else:
-        data_send_start_path = os.path.join(started_dir, 'data_send_start.csv')
-        data_send_end_path = os.path.join(started_dir, 'data_send_end.csv')
+        data_send_start_path = os.path.join(sources_dir, 'data_send_start.csv')
+        data_send_end_path = os.path.join(sources_dir, 'data_send_end.csv')
 
-        data_pull_start_dir = os.path.join(finished_dir, "data_pull_start")
-        data_pull_end_dir = os.path.join(finished_dir, "data_pull_end")
-        job_end_processing_dir = os.path.join(finished_dir, "job_end_processing")
-        job_end_data_put_dir = os.path.join(finished_dir, "job_end_data_put")
+        data_pull_start_dir = os.path.join(workers_dir, "data_pull_start")
+        data_pull_end_dir = os.path.join(workers_dir, "data_pull_end")
+        job_end_processing_dir = os.path.join(workers_dir, "job_end_processing")
+        job_end_data_put_dir = os.path.join(workers_dir, "job_end_data_put")
 
         start_stats_calculation(data_send_start_path,
                                 data_send_end_path,
@@ -827,6 +777,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 4 or len(sys.argv) == 5:
         main(sys.argv[1:])
     else:
-        print("Usage: python dacman_stats_script.py <started_dir> <finished_dir> <output_dir> <recursive-boolean (optional)>")
+        print("Usage: python dacman_stats_script.py <sources_dir> <workers_dir> <output_dir> <recursive-boolean (optional)>")
         exit()
 

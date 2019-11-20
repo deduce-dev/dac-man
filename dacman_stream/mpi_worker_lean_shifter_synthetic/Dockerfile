@@ -45,12 +45,11 @@ RUN pip3 install --upgrade pip
 
 USER ${USER}
 
-RUN pip3 install --user -U setuptools
-RUN pip3 install --user mpi4py
-RUN pip3 install --user scipy
-RUN pip3 install --user scikit-learn
-RUN pip3 install --user redis==2.10.6
-RUN pip3 install --user numpy
+#RUN pip3 install --user -U setuptools
+#RUN pip3 install --user mpi4py scipy scikit-learn redis==2.10.6 numpy
+RUN pip3 install --user scipy scikit-learn redis==2.10.6 numpy
+
+#RUN pip3 install scipy scikit-learn redis==2.10.6 numpy
 
 ENV PYTHONPATH=${HOME}/.local/lib/python3.6/site-packages:$PYTHONPATH
 
