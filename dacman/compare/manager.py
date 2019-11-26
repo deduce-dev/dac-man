@@ -30,12 +30,14 @@ class DataDiffer(object):
             if rank == 0:
                 results = self.executor_map[self.executor].master(self.comparisons,
                                                                   self.mpi_communicator)
-                self._print_results(results)
+                #self._print_results(results)
+                return results
             else:
                 self.executor_map[self.executor].workers(self.mpi_communicator, self.plugin)
         else:
             results = self.executor_map[self.executor].run(self.comparisons, self.plugin)
-            self._print_results(results)
+            #self._print_results(results)
+            return results
 
     def _print_results(self, results):
         if type(results) == list:
