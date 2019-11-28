@@ -35,9 +35,40 @@ def api_fits_change_summary():
 	data = json.load(json_data)
 	return json.jsonify(data)
 
+
+@app.route('/api/fits/plugin')
+def run_fits_change_analysis():
+	from pathlib import Path
+
+	path_base = Path.home() / 'lbl/deduce/test-data/fits/sdss_sample'
+
+	# TODO this should be read from the request instead
+	req_data = {
+		'path': {
+			'A': path_base / 'v5_6_5/6838/spCFrame-b1-00161868.fits',
+			'B': path_base / 'v5_7_0/6838/spCFrame-b1-00161868.fits',
+		},
+		'metrics': [
+			{
+				'name': 'array_difference',
+				'params': {
+					'extension': 1,
+				}
+			},
+		]
+	}
+
+	from dacman.plugins.fits import FITSUIPlugin
+
+	comparator = FITSUIPlugin(metrics=req_data['metrics'])
+	res = comparator.compare(req_data['path']['A'], req_data['path']['B'])
+
+	return json.jsonify(res)
+
+
 @app.route('/hello')
 def hello():
-    return 'Hello World!'
+	return 'Hello World!'
 
 if __name__ == '__main__':
-    app.run()
+	app.run()
