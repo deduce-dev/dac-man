@@ -154,6 +154,24 @@ class VisInfo extends React.Component {
 class ComparingFiles extends React.Component {
   constructor(props) {
     super(props);
+    this.handleSelectFile = this.handleSelectFile.bind(this)
+  }
+
+  handleSelectFile(e) {
+    const name = e.target.name;
+    const value = e.target.value;
+
+    var index = 0;
+    if (name == "file2") {
+      index = 2;
+    }
+
+    this.setState({
+      [name]: value
+    });
+
+    this.props.onSelectCompareFiles(index, value)
+    
   }
 
   render() {
@@ -163,14 +181,17 @@ class ComparingFiles extends React.Component {
         <div class="card column">
           <div class="card-title">Comparing Files</div>
           <div class="radio-group">
-            <input type="radio" />
-            <label>Comparing 2 Files</label>
             <input type="radio" checked="checked"/>
+            <label>Comparing 2 Files</label>
+            <input type="radio" />
             <label>Comparing Multiple Files/Directories</label>
           </div>
           <div class="input-group">
             <label>Compare Files</label>
-            <input type="text" value="*/*/spPlate*.fits"/>
+            <div class="multiform">
+              <input type="text" name="file1" defaultValue={this.props.compareFiles[0]} onChange={this.handleSelectFile}/>
+              <input type="text" name="file2" defaultValue={this.props.compareFiles[1]} onChange={this.handleSelectFile}/>
+            </div>
           </div>
         </div>
       );
@@ -184,65 +205,15 @@ class MainContent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      fileFormat: ""
+      fileFormat: "",
+      selectedHDUS: [],
+      compareFiles: ['v5_6_5/6838/spCFrame-b1-00161868.fits', 'v5_7_0/6838/spCFrame-b1-00161868.fits']
     };
     this.onSelectFileFormat = this.onSelectFileFormat.bind(this);
-  }
-
-
-  onSelectFileFormat(format) {
-    this.setState({ 
-      fileFormat : format
-    });
-  }
-
-  render() {
-    return (
-      <div class="maincontent flex-body">
-          <SideBar fileFormat={this.state.fileFormat} />
-          <MetaBuilder 
-            hdus={this.props.hdus} 
-            fileFormat={this.state.fileFormat} 
-            onSelectFileFormat={this.onSelectFileFormat}
-          /> 
-      </div>
-    );
-  }
-}
-
-class SideBar extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return (
-      <div class="sidebar flex-sidebar"> 
-        <div class="column sidebar_column">
-          <div class="return">
-            <Link to="/"><i className='material-icons' style={{fontSize: '18px', width: '30px', verticalAlign: 'middle'}}>arrow_back_ios</i>Return to Overview</Link>
-          </div>
-          <div class="comparators">
-            <div class="comparator-section-title">Custom Comparators</div>
-            <div class="comparator-name current_comparator arrow_box_right">{this.props.fileFormat} comparator</div>
-          </div>
-          
-          <button class="runbutton">
-          RUN COMPARISONS
-          </button>
-        </div>
-      </div>
-    );
-  }
-}
-
-class MetaBuilder extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedHDUS: []
-    };
     this.onHduSelectChange = this.onHduSelectChange.bind(this);
+    this.getHduIndex = this.getHduIndex.bind(this);
+    this.onSelectCompareFiles = this.onSelectCompareFiles.bind(this);
+
   }
 
   onHduSelectChange(index) {
@@ -261,7 +232,129 @@ class MetaBuilder extends React.Component {
   }
 
 
+  onSelectFileFormat(format) {
+    this.setState({ 
+      fileFormat : format
+    });
+  }
 
+
+  getHduIndex () {
+    return this.state.selectedHDUS[0];
+  }
+
+  onSelectCompareFiles(index, file) {
+    var files = this.state.compareFiles;
+    files.splice(index, 0, file);
+    this.setState({
+      compareFiles : files
+    });
+
+    console.log("on select compare files")
+    console.log(this.state.compareFiles)
+  }
+
+  render() {
+    return (
+      <div class="maincontent flex-body">
+          <SideBar 
+            fileFormat={this.state.fileFormat} 
+            compareFiles={this.state.compareFiles} 
+            getHduIndex={this.getHduIndex}
+          />
+          <MetaBuilder 
+            hdus={this.props.hdus} 
+            fileFormat={this.state.fileFormat} 
+            onSelectFileFormat={this.onSelectFileFormat}
+            onHduSelectChange={this.onHduSelectChange}
+            onSelectCompareFiles={this.onSelectCompareFiles}
+            selectedHDUS={this.state.selectedHDUS}
+            compareFiles={this.state.compareFiles} 
+          /> 
+      </div>
+    );
+  }
+}
+
+class SideBar extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onRunClick = this.onRunClick.bind(this);
+  }
+
+
+  onRunClick() {
+
+    var index = this.props.getHduIndex();
+    var file1 = this.props.compareFiles[0];
+    var file2 = this.props.compareFiles[1];
+
+    const reqdata = {
+      'path': {
+        'A': file1,
+        'B': file2,
+      },
+      'metrics': [
+        {
+          'name': 'array_difference',
+          'params': {
+            'extension': index,
+          }
+        },
+      ]
+    }
+
+
+    fetch('/api/fits/plugin', {
+      method: 'POST', 
+      mode: 'cors', 
+      cache: 'no-cache', 
+      credentials: 'same-origin', 
+      headers: {
+        'Content-Type': 'application/json'
+       
+      },
+      redirect: 'follow', 
+      referrer: 'no-referrer', 
+      body: JSON.stringify(reqdata) 
+    })
+    .then(res => res.json())
+    .then((data) => {
+      console.log("data is")
+      console.log(data)
+    })
+    .catch(
+      console.log("failed")
+    )
+    
+  }
+
+  render() {
+    return (
+      <div class="sidebar flex-sidebar"> 
+        <div class="column sidebar_column">
+          <div class="return">
+            <Link to="/"><i className='material-icons' style={{fontSize: '18px', width: '30px', verticalAlign: 'middle'}}>arrow_back_ios</i>Return to Overview</Link>
+          </div>
+          <div class="comparators">
+            <div class="comparator-section-title">Custom Comparators</div>
+            <div class="comparator-name current_comparator arrow_box_right">{this.props.fileFormat} comparator</div>
+          </div>
+          
+          <button class="runbutton" onClick={this.onRunClick} >
+          RUN COMPARISONS
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
+class MetaBuilder extends React.Component {
+  constructor(props) {
+    super(props);
+
+  }
 
   render() {
     return (
@@ -269,15 +362,19 @@ class MetaBuilder extends React.Component {
         <FileType onSelectFileFormat={this.props.onSelectFileFormat}/>
         <DataModelInfo 
           hdus={this.props.hdus} 
-          selectedHDUS={this.state.selectedHDUS} 
-          onHduSelectChange={this.onHduSelectChange} 
+          selectedHDUS={this.props.selectedHDUS} 
+          onHduSelectChange={this.props.onHduSelectChange} 
           fileFormat={this.props.fileFormat}
         />
         <VisInfo 
           hdus={this.props.hdus} 
-          selectedHDUS={this.state.selectedHDUS}
+          selectedHDUS={this.props.selectedHDUS}
         />
-        <ComparingFiles selectedHDUS={this.state.selectedHDUS} />
+        <ComparingFiles 
+          selectedHDUS={this.props.selectedHDUS} 
+          onSelectCompareFiles={this.props.onSelectCompareFiles}
+          compareFiles={this.props.compareFiles} 
+        />
       </div>
     );
   }

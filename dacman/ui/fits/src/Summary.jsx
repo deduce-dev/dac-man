@@ -18,6 +18,9 @@ class ModifiedCharts extends React.Component {
         <div class="addplotlink">
           <Link to="/meta">+ Add Custom Plots/Analysis</Link>
         </div>
+        <div>
+          <img src='/base/delta.png' />
+        </div>
       </div>
     );
   }

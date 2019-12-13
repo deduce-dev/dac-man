@@ -178,6 +178,17 @@ td select {
   padding: .5em 0;
 }
 
+.multiform {
+  display: flex;
+  flex-direction: column;
+  flex: 2 1;
+
+}
+
+.multiform input {
+  margin-bottom: 5px;
+}
+
 .radio-group {
   padding: 10px 0;
 }
