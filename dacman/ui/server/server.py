@@ -1,5 +1,5 @@
 # server.py
-from flask import Flask, render_template, json
+from flask import Flask, render_template, json, send_from_directory
 from astropy.io import fits
 from dacman import Executor, DataDiffer
 import dacman
@@ -10,6 +10,10 @@ app = Flask(__name__, static_folder='../fits/build/static', template_folder='../
 @app.route('/')
 def index():
 	return render_template('index.html')
+
+@app.route('/base/<path:filename>')
+def base_static(filename):
+    return send_from_directory(app.root_path + '/', filename)
 
 @app.route('/api/fitsinfo')
 def api_fits_info():
@@ -36,11 +40,11 @@ def api_fits_change_summary():
 	return json.jsonify(data)
 
 
-@app.route('/api/fits/plugin')
+@app.route('/api/fits/plugin', methods = ['POST', 'GET'])
 def run_fits_change_analysis():
 	from pathlib import Path
 
-	path_base = Path.home() / 'lbl/deduce/test-data/fits/sdss_sample'
+	path_base = Path.home() / '/Users/sarahpoon/Documents/LBL/deduce/prototype/p6/dac-man/dacman/ui/exampledata/sdss_sample'
 
 	# TODO this should be read from the request instead
 	req_data = {
@@ -64,6 +68,7 @@ def run_fits_change_analysis():
 	res = comparator.compare(req_data['path']['A'], req_data['path']['B'])
 
 	return json.jsonify(res)
+
 
 
 @app.route('/hello')
