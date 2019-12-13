@@ -59,6 +59,11 @@ class HDUImageArray(ChangeMetricsBase):
     def array_to_image_data(self, arr, *args, cmap='inferno', **kwargs):
         # TODO separate the plotting logic from how to store the resulting figure
         from matplotlib import pyplot as plt
+
+        # set a non-interactive plotting backend
+        # this seems to be the cause of errors encountered on macOS
+        # in situations where this code was run in a thread different than main (e.g. in a Flask endpoint)
+        plt.switch_backend('agg')
         # TODO decide how to pass these images to the client
         # TODO related to this: decide where to convert this data to a format accessible by the clients
         # for simplicity, we could do it here, but it would make more sense to have intermediate client-specific steps instead
