@@ -18,9 +18,9 @@ from cache import Cache
 import pandas as pd
 import argparse
 import sys
-from datetime import datetime
 
 
+# Pushing data blocks to Cache; if window-size is matched, then create a task
 def send(cache, k, datablock, window_size):
     datablock_id = cache.put_datablock(datablock)
     cache.assign_datablock_to_window(k, datablock_id)
@@ -37,13 +37,15 @@ def get_window_key(row, key_name):
 
 def main(stream_transformer, stream_src, measurement, window_size, key_name):
     cache = Cache()
+    print("Streaming data...")
     for row in stream_transformer(stream_src):
         window_key = get_window_key(row, key_name)
-        print(window_key, row[measurement])
+        #print(window_key, row[measurement])
         send(cache, window_key, row[measurement], window_size)
 
 
 ###################
+# Data stream transformation
 def transform_fluxnet_stream(stream_src):
     df = pd.read_csv(stream_src, comment='#', sep=',', na_filter=False, dtype='str')
     #df['datetime'] = pd.to_datetime(df['TIMESTAMP_END'], format="%Y%m%d%H%M",errors='coerce')
@@ -91,6 +93,10 @@ def _lathuileClientParser(subparsers):
 
 
 ###################
+# Usage with Ameriflux data, for creating tasks with two datablocks
+# python client.py fluxnet data/fluxnet2015/FLX_AT-Neu_FLUXNET2015_FULLSET_HH_2002-2012_1-3.csv -s 2
+# python client.py lathuile data/la_thuile/AT-Neu.2002.synth.hourly.allvars.csv -s 2
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="",
                                      prog="dstream",
@@ -111,4 +117,3 @@ if __name__ == '__main__':
         fn = transform_lathuile_stream
 
     main(fn, args.filename, args.measurement, args.windowsize, args.keyname)
-    # python dstream.py fluxnet data/fluxnet2015/FLX_AT-Neu_FLUXNET2015_FULLSET_HH_2002-2012_1-3.csv -s 2
