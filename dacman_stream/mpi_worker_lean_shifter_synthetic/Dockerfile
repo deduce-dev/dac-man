@@ -14,7 +14,8 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends sudo apt-utils && \
     apt-get install -y --no-install-recommends openssh-server \
         python3-dev python3-numpy python3-pip python3-virtualenv python3-scipy redis-tools \
-        gcc gfortran libopenmpi-dev openmpi-bin openmpi-common openmpi-doc binutils iperf vim && \
+        gcc gfortran libopenmpi-dev openmpi-bin openmpi-common openmpi-doc binutils iperf \
+        vim iputils-ping && \
     apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 

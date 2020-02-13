@@ -112,9 +112,19 @@ def aggregate_list(input_list, to_n_elements):
 
     return agg_list
 
+
 def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     sorted_indices = [i[0] for i in sorted(enumerate(job_arrival_rate_arr),
                              key=lambda x:x[1], reverse=True)]
+
+    font = {
+        'size': 28,
+    }
+    label_size = 28
+    label_pad_y = 15
+    label_pad_x = 10
+    graph_ext = "pdf"
+    #graph_ext = "png"
 
     ########################################################
     #### Plotting Event-time latencies time series
@@ -144,11 +154,17 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 s=1)
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
-            ax_curr.grid()
+            #ax_curr.grid()
             #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'Event-time latency (s)', va='center', rotation='vertical')
+    #fig.text(0.5, 0.04, 'time (s)', ha='center')
+    #fig.text(0.04, 0.5, 'Event-time latency (s)', va='center', rotation='vertical')
+
+    ax.set_ylabel("Latency (s)", fontdict=font, labelpad=label_pad_y)
+    ax.set_xlabel("time (s)", fontdict=font, labelpad=label_pad_x)
+    ax.autoscale_view()
+    plt.tight_layout()
+    plt.tick_params(labelsize=label_size)
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -162,15 +178,15 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     #fig.suptitle(title)
 
-    png_filename = "event_latencies_scatter_%i_%i.png" % (n_nodes_arr[0],
-        n_processes_arr[0])
+    png_filename = "event_latencies_scatter_%i_%i.%s" % (n_nodes_arr[0],
+        n_processes_arr[0], graph_ext)
 
-    fig.savefig(os.path.join(output_dir, png_filename))
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
 
     ########################################################
     #### Plotting Event-time latencies bar chart
     ########################################################
-
+    '''
     fig, ax = plt.subplots(dim1, dim2, sharex=True,
         figsize=(figsize1,figsize2))
 
@@ -217,8 +233,8 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
     png_filename = "event_latencies_bar_%i_%i.png" % (n_nodes_arr[0],
         n_processes_arr[0])
 
-    fig.savefig(os.path.join(output_dir, png_filename))
-
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
+    '''
     ########################################################
     #### Plotting pure-processing-time latencies
     ########################################################
@@ -239,17 +255,30 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
             if type(ax) == "numpy.ndarray":
                 ax_curr = ax[i, j]
 
+            #ax_curr.scatter(
+            #    pure_process_latencies_time_list_arr,
+            #    pure_process_time_latencies_arr[arr_index],
+            #    s=1)
+
+            # Just changed this on Dec 12 2019
             ax_curr.scatter(
-                pure_process_latencies_time_list_arr,
+                event_latencies_time_list_arr,
                 pure_process_time_latencies_arr[arr_index],
                 s=1)
+
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
-            ax_curr.grid()
+            #ax_curr.grid()
             #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'Pure-processing-time latency (s)', va='center', rotation='vertical')
+    #fig.text(0.5, 0.04, 'time (s)', ha='center')
+    #fig.text(0.04, 0.5, 'Pure-processing-time latency (s)', va='center', rotation='vertical')
+
+    ax.set_ylabel("Runtime (s)", fontdict=font, labelpad=label_pad_y)
+    ax.set_xlabel("time (s)", fontdict=font, labelpad=label_pad_x)
+    ax.autoscale_view()
+    plt.tight_layout()
+    plt.tick_params(labelsize=label_size)
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -263,10 +292,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     #fig.suptitle(title)
 
-    png_filename = "pure_processing_latencies_%i_%i.png" % (n_nodes_arr[0],
-        n_processes_arr[0])
+    png_filename = "runtime_%i_%i.%s" % (n_nodes_arr[0],
+        n_processes_arr[0], graph_ext)
 
-    fig.savefig(os.path.join(output_dir, png_filename))
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
 
     ########################################################
     #### Plotting Processing-time-data-put latencies
@@ -294,11 +323,16 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 s=1)
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
-            ax_curr.grid()
+            #ax_curr.grid()
             #ax_curr.set_xticklabels([])
 
-    fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'Processing-time-data-put latency (s)', va='center', rotation='vertical')
+    #fig.text(0.5, 0.04, 'time (s)', ha='center')
+    #fig.text(0.04, 0.5, 'Processing-time-data-put latency (s)', va='center', rotation='vertical')
+
+    ax.set_ylabel("Processing-time-data-put latency (s)", fontdict=font, labelpad=label_pad_y)
+    ax.set_xlabel("time (s)", fontdict=font, labelpad=label_pad_x)
+    plt.tight_layout()
+    plt.tick_params(labelsize=label_size)
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -312,10 +346,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
 
     #fig.suptitle(title)
 
-    png_filename = "processing_data_put_latencies_%i_%i.png" % (n_nodes_arr[0],
-        n_processes_arr[0])
+    png_filename = "processing_data_put_latencies_%i_%i.%s" % (n_nodes_arr[0],
+        n_processes_arr[0], graph_ext)
 
-    fig.savefig(os.path.join(output_dir, png_filename))
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
 
     ########################################################
     #### Plotting Throughput Scatter
@@ -340,10 +374,15 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 throughput_job_count_list_arr[arr_index])
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
-            ax_curr.grid()
+            #ax_curr.grid()
 
-    fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
+    #fig.text(0.5, 0.04, 'time (s)', ha='center')
+    #fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
+
+    ax.set_ylabel("Throughput\n(tasks/s)", fontdict=font, labelpad=label_pad_y)
+    ax.set_xlabel("time (s)", fontdict=font, labelpad=label_pad_x)
+    plt.tight_layout()
+    plt.tick_params(labelsize=label_size)
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -356,10 +395,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
          
     #fig.suptitle(title)
 
-    png_filename = "throughputs_scatter_%i_%i.png" % (n_nodes_arr[0],
-        n_processes_arr[0])
+    png_filename = "throughputs_scatter_%i_%i.%s" % (n_nodes_arr[0],
+        n_processes_arr[0], graph_ext)
 
-    fig.savefig(os.path.join(output_dir, png_filename))
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
 
     ########################################################
     #### Plotting Throughput Line
@@ -384,10 +423,15 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
                 throughput_job_count_list_arr[arr_index])
             #ax_curr.set(title='DAR: %.1f jobs/sec' % (job_arrival_rate_arr[arr_index]))
             ax_curr.set_ylim(bottom=0)
-            ax_curr.grid()
+            #ax_curr.grid()
 
-    fig.text(0.5, 0.04, 'time (s)', ha='center')
-    fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
+    #fig.text(0.5, 0.04, 'time (s)', ha='center')
+    #fig.text(0.04, 0.5, 'throughput (Job/s)', va='center', rotation='vertical')
+
+    ax.set_ylabel("Throughput\n(tasks/s)", fontdict=font, labelpad=label_pad_y)
+    ax.set_xlabel("time (s)", fontdict=font, labelpad=label_pad_x)
+    plt.tight_layout()
+    plt.tick_params(labelsize=label_size)
 
     title = '%i nodes, %i processes' \
             % (n_nodes_arr[0], n_processes_arr[0])
@@ -400,10 +444,10 @@ def plot_latencies(dim1, dim2, figsize1, figsize2, output_dir):
          
     #fig.suptitle(title)
 
-    png_filename = "throughputs_line_%i_%i.png" % (n_nodes_arr[0],
-        n_processes_arr[0])
+    png_filename = "throughputs_line_%i_%i.%s" % (n_nodes_arr[0],
+        n_processes_arr[0], graph_ext)
 
-    fig.savefig(os.path.join(output_dir, png_filename))
+    fig.savefig(os.path.join(output_dir, png_filename), bbox_inches='tight')
 
 
 def start_stats_calculation(data_send_start_path,
@@ -819,7 +863,7 @@ def main(argv):
                                 job_end_processing_dir,
                                 job_end_data_put_dir,
                                 output_dir)
-        plot_latencies(1, 1, 8, 8, output_dir)
+        plot_latencies(1, 1, 9, 5, output_dir)
 
 
 if __name__ == "__main__":

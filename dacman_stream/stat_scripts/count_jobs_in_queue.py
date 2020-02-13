@@ -10,6 +10,14 @@ import settings as _settings
 
 r = None
 
+font = {
+    'size': 22,
+}
+label_size = 20
+label_pad_y = 15
+label_pad_x = 10
+graph_ext = "pdf"
+
 def write_to_csv(timestamps_sorted, output_dir_path):
 
     name = "job_count_sorted"
@@ -35,7 +43,7 @@ def plot_job_count(timestamps_sorted, output_dir_path):
 
     name = "job_count_plot"
     output_full_path = os.path.join(output_dir_path, 
-            '%s.png' % (name))
+            '%s.%s' % (name, graph_ext))
 
     plt.savefig(output_full_path)
 

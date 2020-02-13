@@ -4,6 +4,15 @@ import csv
 
 import matplotlib.pyplot as plt
 
+font = {
+    'size': 22,
+}
+label_size = 20
+label_pad_y = 15
+label_pad_x = 10
+#graph_ext = "png"
+graph_ext = "pdf"
+
 def find_marked_points(x_values, y_values, 
                 vals_to_find_x, vals_to_find_y):
     markers_on = []
@@ -50,7 +59,12 @@ def plot_from_csv(csv_files, output_dir_path):
         [1343.4419553279877], [0, 1500, 0])
     print(markers_on)
 
-    plt.plot(x_values, y_values, '--bD', markevery=markers_on)
+    plt.figure(figsize=(9,5))
+    mark_every = 50
+
+    #plt.plot(x_values, y_values, '--bD',  marker='^', markevery=markers_on, label="Workload 1")
+    plt.plot(x_values, y_values, ':bD',  marker='o', markevery=mark_every, label="Workload 1")
+    #plt.scatter(x_values, y_values, marker='^', label="Workload 1")
 
     ###############################################
     x_values = []
@@ -69,7 +83,9 @@ def plot_from_csv(csv_files, output_dir_path):
         [1350.5217807292938], [0, 2000, 0])
     print(markers_on)
     
-    plt.plot(x_values, y_values, '--gD', markevery=markers_on)
+    #plt.plot(x_values, y_values, '--gD',  marker='x', markevery=markers_on, label="Workload 2")
+    plt.plot(x_values, y_values, ':gD',  marker='x', markevery=mark_every, label="Workload 2")
+    #plt.scatter(x_values, y_values, marker='x', label="Workload 2")
 
     ###############################################
     x_values = []
@@ -88,23 +104,30 @@ def plot_from_csv(csv_files, output_dir_path):
         [1407.956473827362], [0, 2500, 0])
     print(markers_on)
     
-    plt.plot(x_values, y_values, '--rD', markevery=markers_on)
+    #plt.plot(x_values, y_values, '--rD', marker='+', markevery=markers_on, label="Workload 3")
+    plt.plot(x_values, y_values, ':rD', marker='^', markevery=mark_every, label="Workload 3")
+    #plt.plot(x_values, y_values, '--rD', , label="Workload 3")
 
-    plt.ylabel('# of Jobs in Queue')
-    plt.xlabel('time')
+    plt.tick_params(labelsize=label_size)
+    plt.ylabel('Number of tasks\nin Task Queue', fontdict=font, labelpad=label_pad_y)
+    plt.xlabel('time (s)', fontdict=font, labelpad=label_pad_x)
+    plt.tight_layout()
+    plt.legend(loc='best', fontsize=label_size)
+    plt.ylim(top=3000)
 
     #plt.show()
 
-    name = "job_count_plot"
+    #name = "task_count_plot"
+    name = "burst"
     output_full_path = os.path.join(output_dir_path, 
-            '%s.png' % (name))
+            '%s.%s' % (name, graph_ext))
 
-    plt.savefig(output_full_path)
+    plt.savefig(output_full_path, bbox_inches='tight')
 
 
 def s_main(args):
     #task_queue = "task_queue:f5b4873137a332836e384ecbc8c9a4a876d267f2"
-    csv_file = args['csv_file']
+    #csv_file = args['csv_file']
     output_dir = args['output_dir']
 
     csv_files = [
@@ -117,11 +140,21 @@ def s_main(args):
 
 
 if __name__ == "__main__":
+    '''
     if (len(sys.argv) < 3):
             print("Usage: python read_job_count.py <csv_file> <output_dir>")
     else:
         args = {
             'csv_file': sys.argv[1],
             'output_dir': sys.argv[2]
+        }
+        s_main(args)
+    '''
+
+    if (len(sys.argv) < 2):
+        print("Usage: python read_job_count.py <output_dir>")
+    else:
+        args = {
+            'output_dir': sys.argv[1]
         }
         s_main(args)

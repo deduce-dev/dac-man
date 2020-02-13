@@ -11,32 +11,31 @@ services:
 #      - "6378:6379"
 
   source:
-    image: aaelbashandy/dacman-source:0.1
+    image: aaelbashandy/dacman-source:0.12
     restart: "no"
     container_name: dacman_data_source
     volumes:
-      - dacman_data:/data
+      - dacman_data_scratch:/data
     entrypoint: python3 dacman_stream.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULT_DIR}
 #    depends_on:
 #      - broker
 
   worker:
-    image: aaelbashandy/dacman-worker:0.1
-    restart: always
-    container_name: dacman_worker
-    links:
-      - "source:source"
-    #deploy:
-    #  replicas: 2 # only for swarm
+    image: aaelbashandy/dacman-worker:0.11
+    restart: "no"
+    #container_name: dacman_worker
+    #links:
+    #  - "source:source"
     volumes:
-      - dacman_data:/data
-    entrypoint: bash -c "while ping -c1 source &>/dev/null do sleep 1; done; python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULT_DIR}"
-    depends_on:
-      - source
-#      - broker
+      - dacman_data_scratch:/data
+    entrypoint: python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULT_DIR}
+    #entrypoint: bash -c "while ping -c1 source &>/dev/null; do sleep 1; done; python3 stream_worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULT_DIR}"
+    #depends_on:
+    #  - source
+    #  - broker
 
 volumes:
-  dacman_data:
+  dacman_data_scratch:
     external: true
 
 # example of volume creating

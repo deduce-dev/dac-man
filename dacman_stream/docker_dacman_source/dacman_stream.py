@@ -120,6 +120,9 @@ def two_frame_analysis_publisher(
             log_mat_pos1 = dx1[:frame_len]
             matrix_temp = log_mat_pos1.flatten()
 
+            # Trying pipeline
+            pipe = r.pipeline()
+
             while time.time() < t_end and \
                 (max_job_num == -1 or docker_loop_count < max_job_num):
                 if ii == n_frames-1:
@@ -134,8 +137,11 @@ def two_frame_analysis_publisher(
 
                 try:
                     #time.sleep(0.5)
-                    publish_tasks(r, queue_hash, job_list_hash, matrix_temp, matrix2)
+                    #publish_tasks(r, queue_hash, job_list_hash, matrix_temp, matrix2)
+                    publish_tasks(pipe, queue_hash, job_list_hash, matrix_temp, matrix2)
                     docker_loop_count += 1
+                    if docker_loop_count % 20 == 0:
+                        pipe.execute()
                 except:
                     print("Unexpected error:", sys.exc_info()[0])
                     raise
@@ -167,12 +173,12 @@ def diff_edf_a(r, dataset, streaming_time, max_job_num, data_fraction):
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
-    while r.llen(task_queue_hash_string) > 0:
-        time.sleep(2)
-        print("Number of Tasks in Queue:", r.llen(task_queue_hash_string))
+    #while r.llen(task_queue_hash_string) > 0:
+    #    time.sleep(2)
+    #    print("Number of Tasks in Queue:", r.llen(task_queue_hash_string))
 
     #### wait for all jobs to finish
-    time.sleep(5)
+    #time.sleep(5)
 
 
 def write_results(output_dir):
