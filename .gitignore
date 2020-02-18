@@ -1,6 +1,8 @@
 *.log
 *.pyc
 *.png
+*.pdf
+*.zip
 *.csv
 *.zip
 *.pdf

@@ -35,13 +35,16 @@ def get_window_key(row, key_name):
     return window_key
 
 
-def main(stream_transformer, stream_src, measurement, window_size, key_name):
+def main(stream_transformer, stream_src, measurement, window_size, key_name,
+            stats_dir):
     cache = Cache()
     print("Streaming data...")
     for row in stream_transformer(stream_src):
         window_key = get_window_key(row, key_name)
         #print(window_key, row[measurement])
         send(cache, window_key, row[measurement], window_size)
+
+    cache.write_stats(stats_dir)
 
 
 ###################
@@ -76,6 +79,7 @@ def _fluxnetClientParser(subparsers):
                                default='CO2_F_MDS', help='measurement')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
+    parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
 
 def _lathuileClientParser(subparsers):
@@ -90,6 +94,7 @@ def _lathuileClientParser(subparsers):
                                default='CO2', help='measurement')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
+    parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
 
 ###################
@@ -116,4 +121,4 @@ if __name__ == '__main__':
     else:
         fn = transform_lathuile_stream
 
-    main(fn, args.filename, args.measurement, args.windowsize, args.keyname)
+    main(fn, args.filename, args.measurement, args.windowsize, args.keyname, args.output_stats_dir)
