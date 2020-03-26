@@ -53,21 +53,66 @@ Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
 \ No newline at end of file
 ```
 
-### Using Dac-Man plug-ins to compare files
+## Using Dac-Man plug-ins to compare files
 
-Dac-Man built-in plug-ins allow to analyze changes in a more specialized way, depending on the file type.
-When files of a supported type are compared,
-Dac-Man will automatically choose the corresponding plug-in to perform the comparison.
+Dac-Man plug-ins allow to analyze changes between file contents in a more specialized way,
+depending on the file type.
+
+### Enabling built-in plug-ins
+
+Dac-Man comes with built-in plug-ins for CSV and HDF5 files.
 
 To enable a particular plug-in, its required additional dependencies must be installed.
 Follow [these steps](../install/dependencies/) to install dependencies for all of Dac-Man's built-in plug-ins.
 
-After installing the dependencies, run the following command to test Dac-Man file comparison
-with example directories containing files of the types supported by the built-in plug-ins:
+Once a plug-in has been enabled,
+it will automatically be used by Dac-Man when comparing files of the supported type.
+
+### Using the CSV plug-in
+
+As one of Dac-Man's built-in plug-ins, after enabling it by installing its dependencies,
+the CSV plug-in will be used automatically when comparing CSV files.
+
+The `examples/data/csv` directory contains the two example files `A.csv` and `B.csv`.
+
+To test the Dac-Man CSV plug-in with these two files,
+run this command from the `examples` directory:
+
+```sh
+dacman diff data/csv/A.csv data/csv/B.csv
+```
+
+### Using the HDF5 plug-in
+
+As one of Dac-Man's built-in plug-ins, after enabling it by installing its dependencies,
+the HDF5 plug-in will be used automatically when comparing HDF5 files.
+
+The `examples/data/hdf5` directory contains the two example files `A.h5` and `B.h5`.
+
+To test the Dac-Man HDF5 plug-in with these two files,
+run this command from the `examples` directory:
+
+```sh
+dacman diff data/hdf5/A.h5 data/hdf5/B.h5
+```
+
+### Using plug-ins when comparing entire directories
+
+Plug-ins are also supported when using Dac-Man to compare entire directories with the `--datachange` option.
+When Dac-Man detects a modification in a file of a supported type,
+it will automatically choose the corresponding plug-in to perform the comparison bet.
+
+The `examples/data/plugin_test` directory contains the two sub-directories `v0` and `v1`,
+containing multiple files of the types supported by the built-in plug-ins.
+
+To test the built-in plug-ins, after installing the dependencies,
+run this command from the `examples` directory:
 
 ```sh
 dacman diff data/plugin_test/v0 data/plugin_test/v1 --datachange
 ```
+
+### Additional information
 
 For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
 

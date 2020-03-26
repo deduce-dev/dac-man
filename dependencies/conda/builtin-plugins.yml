@@ -11,4 +11,4 @@ dependencies:
   - h5py
   - astropy
   - fabio
-
+  - xlrd

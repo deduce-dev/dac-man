@@ -3,7 +3,7 @@
 This example will illustrate how to create a Dac-Man plug-in from scratch to analyze changes in files of arbitrary type and structure.
 
 !!! example
-    A ready-to-use script for this example can be found under [examples/scripts/matrix_change_ana.py](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
+    A ready-to-use script for this example can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
 
 ## Overview
 
@@ -16,13 +16,160 @@ We want to compare two datasets, stored as directories `dataset-v1` and `dataset
 - For files that were modified, calculate a custom change metric quantifying, if possible,
   the amount of changes between the two matrices stored in the two files
 
-Dac-Man already provides all the functionality needed to perform directory-level comparison between the datasets.
+Dac-Man's API already provide all the functionality needed to perform directory-level comparison between the datasets.
 All the users have to implement is:
 
-- A specialized Adaptor class, converting data from the specific file format under study to a Dac-Man Record
+- A simple custom analysis script using Dac-Man's API
 - A specialized plug-in class, that will be used by Dac-Man to compare files that have been detected as modified
+- A specialized Adaptor class, converting data from the specific file format under study to a Dac-Man Record
 
-## Creating an Adaptor for a custom file format
+## Creating a custom analysis script
+
+We start from creating a Python file, e.g. `/home/user/matrix_change_ana.py`.
+
+The first line of the file should contain the `#!...` line needed to later use the file as an executable.
+Below it, we add the `import` statements for the modules that we'll use in the script:
+
+```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
+from dacman.compare import base
+from dacman.compare.adaptor import DacmanRecord
+
+import numpy
+import numpy.linalg
+```
+
+Dac-Man change analysis scripts should accept two arguments, the paths to the files that should be compared.
+We read these from the command-line arguments, and pass them to the `run_matrix_change_ana()` function:
+
+```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
+from dacman.compare import base
+from dacman.compare.adaptor import DacmanRecord
+
+import numpy
+import numpy.linalg
+
+
+def run_matrix_change_ana(*args):
+    ...
+
+
+if __name__ == '__main__':
+    cli_args = sys.argv[1:]
+    path_a, path_b = cli_args[0], cli_args[1]
+    run_matrix_change_ana(path_a, path_b)
+```
+
+The `run_matrix_change_ana()` function uses Dac-Man's API to perform the comparison between the input sources,
+which are passed to it as arguments:
+
+```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
+from dacman.compare import base
+from dacman.compare.adaptor import DacmanRecord
+
+import numpy
+import numpy.linalg
+
+
+... # custom plug-in code goes here
+
+
+def run_matrix_change_ana(path_a, path_b):
+    comparisons = [(path_a, path_b)]
+    differ = dacman.DataDiffer(comparisons, dacman.Executor.DEFAULT)
+    differ.use_plugin(...)
+    differ.start()
+
+
+if __name__ == '__main__':
+    cli_args = sys.argv[1:]
+    path_a, path_b = cli_args[0], cli_args[1]
+    run_matrix_change_ana(path_a, path_b)
+```
+
+The `use_plugin()` method of the `DataDiffer` object allows us to specify a specialized plug-in to perform the comparison.
+
+In the next part, we'll see how to implement everything needed for our custom change analysis using a custom Dac-Man plug-in.
+
+## Creating a specialized plug-in
+
+At the basis of a Dac-Man plug-in is the Comparator class,
+managing all the steps needed for comparing a single pair of files (one from each dataset) that have been modified.
+
+In the same file, above the `run_matrix_change_analysis()`, we start adding the code for our custom plug-in `MatrixTxtPlugin`.
+
+Dac-Man plug-ins should inherit from the `dacman.compare.base.Comparator` abstract base class,
+and implement the `description()`, `supports()`, and `compare()` methods (described here) as well as the `percent_change()` and `stats()` methods (described later in this document).
+
+The `compare()` method takes at least two arguments, the paths of the files being compared.
+The rest of the implementation is left free to the users to customize according to their specific needs.
+
+```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
+from dacman.compare import base
+from dacman.compare.adaptor import DacmanRecord
+
+import numpy
+import numpy.linalg
+
+
+class MatrixTxtPlugin(base.Comparator):
+
+    @staticmethod
+    def description():
+        return "A Dac-Man plug-in to compare matrices saved as text files"
+
+    @staticmethod
+    def supports():
+        return ['txt']
+
+    def compare(self, path_a, path_b, *args):
+        pass
+
+
+# rest of the script
+def run_matrix_change_ana(path_a, path_b):
+    ...
+
+```
+
+### Creating Dacman Records from sources
+
+The first step to implement the `compare()` function is to create Dac-Man records from the input sources.
+Since we use the same steps to create a record for both files, we group those steps to a separate helper method, `get_record()`:
+
+```py
+from dacman.compare.adaptor import DacmanRecord
+
+
+class MatrixTxtPlugin(base.Comparator):
+
+    def get_record(self, path):
+        return DacmanRecord(path)
+
+    def compare(self, path_a, path_b, *args):
+        rec_a = self.get_record(path_a)
+        rec_b = self.get_record(path_b)
+```
+
+At this point, however, the `DacmanRecord` objects are not yet capable of supporting our specific file format.
+We enable this by creating a specialized Adaptor class.
+
+### Creating an Adaptor for a custom file format
 
 The purpose of a Adaptor is to convert an arbitrary data source to a Dac-Man Record,
 which in turn exposes a common interface allowing the data to be compared in a structured way.
@@ -62,60 +209,15 @@ class MatrixTxtAdaptor(base.DacmanRecordAdaptor):
         return headers, data
 ```
 
-## Creating a specialized plug-in
+### Enabling support for custom file formats in Dac-Man Records
 
-At the basis of a Dac-Man plug-in is the Comparator class,
-implementing all the steps needed for comparing a single pair of files (one from each dataset) that have been modified.
+Now that our specialized `MatrixTxtAdaptor` class is complete,
+we use it to enable support for our custom file format to Dac-Man Records in our plug-in.
 
-Dac-Man plug-ins should inherit from the `dacman.compare.base.Comparator` abstract base class,
-and implement the `description()`, `supports()`, and `compare()` methods (described here) as well as the `percent_change()` and `stats()` methods (described later in this document).
+In the `get_record()` method of our `MatrixTxtPlugin` class,
+we pass all necessary information about the custom file format to the DacmanRecord object,
+such as which Adaptor to use and which file extensions are supported.
 
-The `compare()` method takes at least two arguments, the paths of the files being compared.
-The rest of the implementation is left free to the users to customize according to their specific needs.
-
-```py
-from dacman.compare import base
-import numpy
-
-
-class MatrixTxtPlugin(base.Comparator):
-
-    @staticmethod
-    def description():
-        return "A Dac-Man plug-in to compare matrices saved as text files"
-
-    @staticmethod
-    def supports():
-        return ['txt']
-
-    def compare(self, path_a, path_b, *args):
-        pass
-
-```
-
-### Creating Dacman Records from sources
-
-The first step to implement the `compare()` function is to create Dac-Man records from the input sources.
-Since we use the same steps to create a record for both files, we group those steps to a separate helper method, `get_record()`:
-
-```py
-from dacman.compare.adaptor import DacmanRecord
-
-
-class MatrixTxtPlugin(base.Comparator):
-
-    def get_record(self, path):
-        return DacmanRecord(path)
-
-    def compare(self, path_a, path_b, *args):
-        rec_a = self.get_record(path_a)
-        rec_b = self.get_record(path_b)
-```
-
-At this point, however, the `DacmanRecord` objects are not yet capable of supporting our specific file format.
-To enable it, we simply need to set the corresponding information,
-such as which Adaptor to use and which file extensions are supported,
-after creating the `DacmanRecord` object.
 After that, the `DacmanRecord` object will be able to transform the source correctly.
 
 ```py
@@ -164,7 +266,7 @@ import numpy.linalg
 
 class MatrixTxtPlugin(base.Comparator):
 
-    self.threshold = 0.001
+    threshold = 0.001
 
 ...
 
@@ -235,16 +337,64 @@ class MatrixTxtPlugin(base.Comparator):
         print(changes)
 ```
 
-### Complete plug-in
+### Integrating the plug-in in the custom change analysis
 
-The complete plug-in is thus:
+At this point, the only thing left to do is integrating our specialized plug-in into Dac-Man's processing pipeline.
+
+In the `run_matrix_change_ana()` function, we specify `MatrixTxtPlugin` as the plug-in to use in the `use_plugin()` method of the `DataDiffer` object:
 
 ```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
 from dacman.compare import base
 from dacman.compare.adaptor import DacmanRecord
 
 import numpy
 import numpy.linalg
+
+
+class MatrixTxtPlugin(base.Comparator):
+    ... # rest of the plug-in code
+
+
+def run_matrix_change_ana(path_a, path_b):
+    comparisons = [(path_a, path_b)]
+    differ = dacman.DataDiffer(comparisons, dacman.Executor.DEFAULT)
+    differ.use_plugin(MatrixTxtPlugin)
+    differ.start()
+
+
+if __name__ == '__main__':
+    cli_args = sys.argv[1:]
+    path_a, path_b = cli_args[0], cli_args[1]
+    run_matrix_change_ana(path_a, path_b)
+```
+
+## Complete change analysis script
+
+The complete code for this change analysis script is:
+
+```py
+#!/usr/bin/env python3
+import sys
+
+import dacman
+from dacman.compare import base
+from dacman.compare.adaptor import DacmanRecord
+
+import numpy
+import numpy.linalg
+
+
+class MatrixTxtAdaptor(base.DacmanRecordAdaptor):
+
+    def transform(self, data_path):
+        headers = []
+        data = numpy.loadtxt(data_path)
+
+        return headers, data
 
 
 class MatrixTxtPlugin(base.Comparator):
@@ -314,21 +464,7 @@ class MatrixTxtPlugin(base.Comparator):
 
     def stats(self, changes):
         print(changes)
-```
 
-## Creating a custom analysis script
-
-By adding a minimal `main` block and using Dac-Man's API,
-we can quickly add the necessary code to turn the plug-in into an executable script.
-The only thing to do to integrate our specialized plug-in into Dac-Man's processing pipeline
-is selecting `MatrixTxtPlugin` as the plug-in to use:
-
-```py
-#!/usr/bin/env python3
-import sys
-import dacman
-
-... # plug-in code goes here
 
 def run_matrix_change_ana(path_a, path_b):
     comparisons = [(path_a, path_b)]
@@ -343,19 +479,20 @@ if __name__ == '__main__':
     run_matrix_change_ana(path_a, path_b)
 ```
 
-Save the file as e.g. `/home/user/matrix_change_ana.py` and make it executable:
+## Running the change analysis
+
+First, make the `/home/user/matrix_change_ana.py` file executable by using e.g. the `chmod` command:
 
 ```sh
 chmod +x /home/user/matrix_change_ana.py
 ```
 
 !!! example
-    A ready-to-use script for this example can be found under [examples/scripts/matrix_change_ana.py](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
+    A ready-to-use script for this example can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
 
-## Running the change analysis
-
-To run the change analysis on two example datasets, navigate to the `example/data/matrix_txt` directory and run:
+Then, to run the change analysis on two version of an example dataset,
+navigate to the `example/data/matrix_txt` directory and run:
 
 ```sh
-dacman diff --datachange dataset-v1 dataset-v2 --plugin /home/user/matrix_change_ana.py
+dacman diff --datachange dataset-v1 dataset-v2 --script /home/user/matrix_change_ana.py
 ```

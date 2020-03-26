@@ -34,8 +34,8 @@ class _InternalFields:
     """
     Utility class to access commonly used table/dict fields as constants rather than bare strings.
     """
-    LINENO = '__lineno'
-    ROWIDX = '__rowidx'
+    LOC_ORIG_ROW = '_loc_orig_row'
+    LOC_ORIG_COL = '_loc_orig_col'
 
     ORIG = 'orig'
     CALC = 'calc'
@@ -166,11 +166,6 @@ class TableColumnChangeMetrics(ChangeMetricsBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._supports_numeric_delta = None
-
-    @property
-    def supports_numeric_delta(self):
-        return self._supports_numeric_delta
 
     def calculate(self):
 
@@ -201,7 +196,7 @@ class TableColumnChangeMetrics(ChangeMetricsBase):
 
         m['frac_changed'] = m['n_changed'] / n_total
 
-        if self.supports_numeric_delta:
+        if not (df['delta'].isnull().all()):
             m['delta_mean'] = df['delta'].mean()
             m['delta_std'] = df['delta'].std()
 
@@ -310,265 +305,261 @@ def get_lines_frame(path, comment_char=None):
     return lines
 
 
-# TODO move to util module
-def convert_dtypes(df, converters=None):
-    converters = converters or [pd.to_datetime, pd.to_numeric]
+def infer_dtypes(data, converters=None):
+    # the order here is relevant: strings representing floats can be read (erroneously) as datetimes,
+    # but the reverse is not true, so pd.to_numeric should come first
+    converters = converters or [pd.to_numeric, pd.to_datetime]
 
-    for colname in df:
-        col = df[colname]
+    if data.dtype == 'object':
+        for conv in converters:
+            try:
+                data = conv(data)
+            except (TypeError, ValueError):
+                pass
+            else:
+                break
+    
+    return data
 
-        if col.dtype == 'object':
 
-            for conv in converters:
-                try:
-                    col = conv(col)
-                except (TypeError, ValueError):
-                    pass
-                else:
-                    df.loc[:, colname] = col
-                    break
+class ColumnnProcessor:
+    """
+    Utility class to perform per-column processing and hold data in various formats
+    as needed to create the column-level metadata.
+    """
 
-    return df
+    def __init__(self, data_orig, name=None):
+        
+        self.data_orig = data_orig
+
+        self.data_calc = None
+
+        self.name = name
+        self.header = {}
+
+    def process_header(self, data, pos_mapper=None, pos='rel', **kwargs):
+
+        # pos: relative or absolute
+        # relative: count from start of subrange
+        # absolute: use _loc_orig_row
+        indexer = data.iloc
+        if pos.startswith('abs'):
+            indexer = data.loc
+
+        pos_mapper = pos_mapper or kwargs
+
+        to_drop = []
+
+        for key, pos in pos_mapper.items():
+            val = indexer[pos]
+            self.header[key] = val
+            to_drop.append(pos)
+
+        return data.drop(indexer[to_drop].index)
+
+    def process_rename(self, data, mapper):
+        self.name = self.header.get('name', self.name)
+
+        self.name = mapper.get(self.name, self.name)
+
+        if self.name:
+            data.name = self.name
+
+        return data
+
+    def process_dtype(self, data, dtype):
+        if dtype is True:
+            data = infer_dtypes(data)
+        else:
+            if dtype is None:
+                dtype = {}
+            data.astype(dtype.get(self.name, data.dtype))
+        return data
+
+    def get_values_frame(self, data_orig, data_calc, index=None):
+        df = pd.DataFrame({_F.ORIG: data_orig, _F.CALC: data_calc}, index=data_calc.index)
+        # print(f'{self.name}: dtypes={df.dtypes}')
+
+        # so here there are three cases for the index:
+        # - a data column
+        # - orig
+        # - none (reset)
+        #   - In this case, we don't particularly need to give it a name
+        # we can probably manage to express this by resetting the index in all three cases,
+        # and then setting the index appropriately
+        if isinstance(index, str) and index == 'orig':
+            df = df.reset_index().set_index(df.index.name, drop=False)
+        elif index is not None:
+            df = pd.merge(index, df, how='left', left_index=True, right_index=True).reset_index().set_index(index.name)
+        else:
+            # we need to be sure that we have the loc_orig_row as a column of this table
+            df = df.reset_index()
+
+        return df
 
 
 class CSVTableColumnsRecord(_BaseRecord):
+    """
+    Convert a CSV file into a table, and expose a record as Column in the usual way
+    """
 
-    def __init__(self, src,
+    def __init__(self,
+                 src,
                  comment_char=None,
-                 skip_lines=None,
-                 header_pos=None,
-                 process_func=None,
-                 column_renames=None, index='rowidx', dtype=None):
+                 drop_empty_cols=True,
+                 table_range=None,
+                 header=None,
+                 column_renames=None,
+                 index=None,
+                 dtype=None,
+                ):
         self.src = src
 
         self.comment_char = comment_char
+        self.drop_empty_cols = drop_empty_cols
+        self.table_range = table_range or {}
 
-        self.skip_lines = skip_lines
-        self.header_pos = header_pos
-
-        self.process_func = process_func
-
+        self.header = header or {}
         self.column_renames = column_renames or {}
-        self.index = index
         self.dtype = dtype
+        self.index = index
 
-        self._colnames_stages = {}
-
-        # super().__init__()
         self._mapping = {}
 
-    def get_lineno_uncommented(self):
+    @staticmethod
+    def get_lines_frame(path, comment_char=None):
+        """Read lines and associated metadata from a file"""
+        with Path(path).open() as f:
+            lines = pd.DataFrame({'content': list(f)})
+            lines['lineno'] = lines.index + 1
+
+        def is_comment(s):
+            if comment_char is None:
+                # get a series with the same index where all values are False
+                return s == np.nan
+            return (s
+                    .astype(str)
+                    .str.startswith(comment_char)
+                    )
+
+        lines['is_comment'] = is_comment(lines['content'])
+
+        return lines
+
+    def get_lineno_loadable(self):
         """
-        Return a sequence containing the line numbers (1-based) of uncommented lines in the source.
+        Return a sequence containing the line numbers (1-based) of lines in the source
+        that are loadable by the CSV parser.
 
         This is used to associate table index/rows with their position in the source.
         """
 
+        def is_skipped_by_csv_parser(s):
+            # TODO redo this with more robust values
+            # (and maybe invert the logic to "is_included" while we're at it)
+            return s.astype(str) == '\n'
+
+        # TODO all of this could probably be merged in a regex
+        def is_loadable(df):
+            return ~(df['is_comment'] | is_skipped_by_csv_parser(df['content']))
+
         lines = get_lines_frame(self.src, comment_char=self.comment_char)
 
-        return lines[~lines['is_comment']]['lineno'].to_list()
-
-    def store_colnames(self, cols, stage_key):
-        """
-        Save colnames at a particular stage of table processing.
-        """
-        self._colnames_stages[stage_key] = list(cols)
-
-    @property
-    def colnames_frame(self):
-        """
-        Return colnames stages as a dataframe for more convenient indexing.
-        """
-        return pd.DataFrame(self._colnames_stages)
-
-    def get_colname(self, colname, stage_from, stage_to):
-        return self.colnames_frame.set_index(stage_from)[stage_to][colname]
-
-    def _is_internal(self, colname):
-        """
-        Check whether a colname is one of the internal fields.
-        """
-        return colname in {_F.LINENO, _F.ROWIDX}
-
-    def get_colnames_from_row(self, row):
-        """
-        Return valid colnames from a table row, filtering out internal fields and invalid values.
-        """
-        colnames = []
-        for current_name, name_from_row in row.items():
-            # TODO are there cases where we want to use non-string colnames?
-            if isinstance(name_from_row, str) and not self._is_internal(name_from_row):
-                colname = name_from_row
-            else:
-                colname = current_name
-            colnames.append(colname)
-        
-        return colnames
-
-    def get_table_orig(self):
-        """
-        Return the contents of the CSV file as a dataframe in the `orig` format.
-
-        All valid (uncommented) lines are loaded as dataframe rows,
-        with all values treated as text and without any processing applied.
-        """
-        df = pd.read_csv(self.src, dtype=str, header=None, comment=self.comment_char)
-        df[_F.LINENO] = self.get_lineno_uncommented()
-        df[_F.ROWIDX] = df.index
-
-        df.columns.name = 'colidx'
-        # from now on we assume that orig has lineno as index, so don't edit here!
-        df = df.set_index(_F.LINENO, drop=False)
-
-        # filling NaNs with whitespacee should only be done when displaying,
-        # since otherwise it would make it harder or impossible to convert to numeric dtypes
-        # df = df.fillna('')
-
-        return df
-
-    def get_table_calc(self, table_orig):
-        """
-        Return the contents of the CSV file in the `calc` format,
-        i.e. the format that will be used in the change calculations.
-
-        All processing is applied here according to the Record's options.
-        """
-        # The operations done here are very similar to calling read_csv() on the `orig` frame,
-        # and an alternative strategy would be to convert `orig` to an in-memory string,
-        # and loading it to a typed data table with read_csv().
-        # But the information about the lineno in the original file would be lost.
-
-        df = table_orig.copy()
-
-        if self.skip_lines:
-            df = df[df[_F.ROWIDX].isin(self.skip_lines)]
-
-        self.store_colnames(df.columns, 'colidx')
-
-        if self.header_pos is not None:
-            header_row = df.iloc[self.header_pos]
-            colnames_from_header = self.get_colnames_from_row(header_row)
-
-            df.columns = colnames_from_header
-
-            df = df[df[_F.ROWIDX] != self.header_pos]
-
-        self.store_colnames(df.columns, 'name_header')
-
-        if self.column_renames:
-            df = df.rename(columns=self.column_renames)
-
-        self.store_colnames(df.columns, 'name')
-
-        # TODO also give self.src in input to do source-specific processing?
-        if self.process_func:
-            df = self.process_func(df)
-
-        index_col = None
-
-        if self.index == 'lineno':
-            # because we assume that orig is always indexed with lineno?
-            # but things could change in e.g. process_func
-            pass
-            # index_col = _F.LINENO
-            # df = df.set_index(index_col, drop=False)
-
-        # this should be the default
-        elif self.index == 'rowidx':
-            index_col = _F.ROWIDX
-            df = df.reset_index(drop=True).set_index(index_col, drop=False)
-        elif self.index is not None:
-            # if self.index is not one of the internal fields, drop it since it would give redundant results anyway
-            df = df.reset_index(drop=True).set_index(self.index, drop=True).sort_index()
-        else:
-            # maybe here we should raise a ValueError/KeyError instead?
-            df = df.reset_index(drop=True)
-
-        if self.dtype is True:
-            # df = df.infer_objects()
-            df = df.pipe(convert_dtypes)
-
-        return df
-
-    def load(self):
-        self._table_orig = self.get_table_orig()
-        self._table_calc = self.get_table_calc(self._table_orig)
-
-        self._mapping = self.get_mapping()
-
-    @property
-    def table_orig(self):
-        return self._table_orig
-
-    @property
-    def table_calc(self):
-        return self._table_calc
-
-    def get_colvalues_frame(self, colname):
-        """
-        Return a dataframe containing values for a table data column (after processing)
-        associated with the corresponding grid values (raw, i.e. before processing)
-        """
-        join_colname = _F.LINENO
-
-        # rename before merging, in case colname and colidx are the same
-        # otherwise both will be mangled when merging
-        col_calc = (self.table_calc[[colname, join_colname]]
-                    .rename(columns={colname: _F.CALC})
-                   )
-
-        colidx = self.get_colname(colname, 'name', 'colidx')
-        # TODO maybe we can also merge directly on a series, if it has the same index?
-        col_orig = (self.table_orig[[colidx]]
-                    .rename(columns={colidx: _F.ORIG})
-                   )
-
-        # this seems to be necessary if we always want to have a __lineno column,
-        # regardless of whether it's also the index or not,
-        # since when it's both colname and indexname df.merge() will complain of ambiguity
-        opts = dict(right_index=True)
-        if col_calc.index.name == join_colname:
-            opts['left_index'] = True
-        else:
-            opts['left_on'] = join_colname
-
-        merged = col_calc.merge(col_orig, **opts)
-
-        return (merged
-                [[_F.ORIG, _F.CALC, join_colname]]
+        return (lines
+                [is_loadable]
+                ['lineno']
+                .to_list()
                )
 
-    def key_getter(self, col_metadata):
-        return col_metadata['name']
+    def get_table_orig(self, index_col=_F.LOC_ORIG_ROW):
+        load_opts = dict(dtype=object, header=None, comment=self.comment_char)
 
-    def get_metadata(self, colname):
+        table_range = {'row_start': 1, 'row_end': None}
+        table_range.update(self.table_range)
+
+        row_idx_start = table_range['row_start'] - 1
+        row_idx_end = None
+
+        try:
+            row_idx_end = table_range['row_end'] - 1
+        except TypeError:
+            pass
+
+        load_opts['skiprows'] = range(0, row_idx_start)
+
+        if row_idx_end is not None:
+            # TODO check for off-by-1 errors
+            load_opts['nrows'] = row_idx_end - row_idx_start
+
+        df = pd.read_csv(self.src, **load_opts)
+
+        lineno = self.get_lineno_loadable()[row_idx_start:row_idx_end]
+
+        return (df
+                .assign(**{_F.LOC_ORIG_ROW: lineno})
+                .set_index(index_col, drop=True)
+               )
+
+    def get_metadata(self, col_processor, index=None):
         md = {}
 
-        md['name'] = colname
-        md['name_header'] = self.get_colname(colname, 'name', 'name_header')
-        md['colidx'] = self.get_colname(colname, 'name', 'colidx')
+        md['colidx'] = col_processor.colidx
+        md['name'] = col_processor.name
+        md['header'] = col_processor.header
 
-        colvalues = self.get_colvalues_frame(colname)
-
-        md['dtype'] = colvalues['calc'].dtype
-
-        md['values_frame'] = colvalues
+        md['values_frame'] = col_processor.get_values_frame(col_processor.data_orig,
+                                                            col_processor.data_calc,
+                                                            index=index)
 
         return md
 
+    @staticmethod
+    def key_getter(metadata):
+        return metadata['name']
+
+    # TODO a more detailed name for this could be "get_column_metadata_mapping"
     def get_mapping(self):
+
+        df = self.get_table_orig()
+
+        if self.drop_empty_cols:
+            df = df.dropna(axis='columns', how='all')
+
+        processors = []
+        index = None
+
+        for col in df:
+            proc = ColumnnProcessor(df[col], name=col)
+            proc.colidx = col
+
+            proc.data_calc = (proc.data_orig
+                              .pipe(proc.process_header, **self.header)
+                              .pipe(proc.process_rename, self.column_renames)
+                              .pipe(proc.process_dtype, dtype=self.dtype)
+                             )
+
+            if proc.name:
+                processors.append(proc)
+
+                proc.is_index = (proc.name == self.index)
+                if proc.is_index:
+                    index = proc.data_calc
 
         mapping = {}
 
-        for colname in [c for c in self.table_calc if not self._is_internal(c)]:
-            col_md = self.get_metadata(colname)
-
-            mapping[self.key_getter(col_md)] = col_md
+        for proc in processors:
+            md = self.get_metadata(proc, index=index)
+            mapping[self.key_getter(md)] = md
 
         return mapping
 
+    def load(self):
+        self._mapping = self.get_mapping()
+        # this is just for display/reference, and it's not used for actual calculations
+        # self.table_calc = pd.DataFrame({name: md['values_frame']['calc'] for name, md in self._mapping.items()})
+
     def get_empty(self):
-        return {'values_frame': pd.DataFrame([], columns=[_F.ORIG, _F.CALC, _F.LINENO])}
+        return {'values_frame': pd.DataFrame([], columns=[_F.ORIG, _F.CALC, _F.LOC_ORIG_ROW])}
 
 
 class TableValuesRecord(_BaseRecord):
@@ -609,35 +600,33 @@ class TableColumnValuesChangeMetrics:
         
         return cls(values_a, values_b, col_metrics=col_metrics)
 
-
     def __init__(self, values_a, values_b, col_metrics=None):
         self.values_a = values_a
         self.values_b = values_b
         self.col_metrics = col_metrics
 
         self._table = None
+        self._supports_numeric_delta = None
+
+    @property
+    def supports_numeric_delta(self):
+        return self._supports_numeric_delta
 
     def get_table(self):
+        values_frames = {'a': self.values_a, 'b': self.values_b}
 
-        def rename_values_frame(df, key):
-            map_names = {
-                _F.CALC: f'{key}_calc',
-                _F.ORIG: f'{key}_orig',
-                _F.LINENO: f'{key}_lineno'
-            }
+        concat_opts = {
+            'axis': 'columns',
+            'join': 'outer',
+            'sort': False,
+        }
 
-            return df.rename(columns=map_names)
+        df = pd.concat(values_frames, **concat_opts)
 
-        a = self.values_a.pipe(rename_values_frame, 'a')
-        b = self.values_b.pipe(rename_values_frame, 'b')
-
-        # outer join: union of the two column's indices
-        df = (pd.concat([a, b], axis='columns', join='outer', sort=True)
-              # convert again lineno to int dtype after NaNs have been introduced with the outer join
-              .astype({'a_lineno': 'Int64', 'b_lineno': 'Int64'})
-             )
-        
-        return df
+        # TODO factor out this dtype assignment?
+        return (df
+                .astype({('a', _F.LOC_ORIG_ROW): 'Int64', ('b', _F.LOC_ORIG_ROW): 'Int64'})
+               )
 
     @property
     def table(self):
@@ -655,12 +644,11 @@ class TableColumnValuesChangeMetrics:
 
     def calc_change_metrics_base(self, df):
 
-        df.loc[:, 'is_equal'] = df['a_calc'] == df['b_calc']
-        df.loc[:, 'is_null_a'] = df['a_calc'].isna()
-        df.loc[:, 'is_null_b'] = df['b_calc'].isna()
+        df.loc[:, 'is_equal'] = df[('a', _F.CALC)] == df[('b', _F.CALC)]
+        df.loc[:, 'is_null_a'] = df[('a', _F.CALC)].isna()
+        df.loc[:, 'is_null_b'] = df[('b', _F.CALC)].isna()
         df.loc[:, 'is_null_both'] = df['is_null_a'] & df['is_null_b']
         df.loc[:, 'is_null_any'] = df['is_null_a'] | df['is_null_b']
-
         return df
 
     def calc_delta(self, df):
@@ -671,9 +659,7 @@ class TableColumnValuesChangeMetrics:
         # TODO since we need to know whether we can do numeric calculations or not in several places,
         # we could store this information as an attribute/property
         try:
-            # strictly speaking, this is not the delta, since delta is usually b - a
-            # so we might consider changing the name
-            delta = df['a_calc'] - df['b_calc']
+            delta = df[('b', _F.CALC)] - df[('a', _F.CALC)]
         except TypeError:
             self._supports_numeric_delta = False
             delta = np.nan
@@ -685,20 +671,21 @@ class TableColumnValuesChangeMetrics:
         return df
 
     def is_value_modified(self, df):
-        # TODO if we factor this out, it can be customized separately
+        epsilon = 1e-6
+
+        if self.supports_numeric_delta:
+            return ~df['is_equal'] & (df['delta'].abs() > epsilon)
         return ~df['is_equal']
 
     def assign_change_status(self, df):
         # TODO additional logic here would be e.g. implementing per-field or per-dtype thresholds
         # TODO make this a categorical
         status = pd.Series(_S.unset, index=df.index)
-
         status[df['is_null_a'] & (~df['is_null_b'])] = _S.added
         status[(~df['is_null_a']) & df['is_null_b']] = _S.deleted
 
-        status[(~df['is_equal']) & (~df['is_null_any'])] = _S.modified
+        status[(~df['is_null_any']) & self.is_value_modified(df)] = _S.modified
         status[status == _S.unset] = _S.unchanged
-
         df.loc[:, 'status'] = status
 
         return df
@@ -709,19 +696,26 @@ class TableColumnValuesChangeMetrics:
         for status in [_S.unchanged, _S.added, _S.deleted, _S.modified]:
             m_status = {}
             values_with_status = self._table[lambda d: d['status'] == status]
+            has_with_status = len(values_with_status) > 0
+
+            if not has_with_status:
+                # this "continue" means that change statuses with no values
+                # are not added to the metrics at all (as opposed to having `{count: 0}` or similar)
+                # it could possibly be exposed as an option
+                # depening on what are the requirements for the schema/structure of the output
+                continue
 
             f_aggregated = self.map_status_function_aggregated[status]
+
             m_status.update(f_aggregated(values_with_status))
 
             f_per_value = self.map_status_function_per_value[status]
 
             if f_per_value is not None:
-                if len(values_with_status) > 0:
+                per_value_metrics = []
+                if has_with_status:
                     per_value_metrics = values_with_status.apply(f_per_value, axis=1).to_list()
-                else:
-                    per_value_metrics = []
                 m_status['values'] = per_value_metrics
-
             m[status] = m_status
 
         return m
@@ -747,54 +741,37 @@ class TableColumnValuesChangeMetrics:
     def get_stats_default(self, values):
         return {'count': len(values)}
 
-    def get_stats(self, values, status):
-        stats = {}
-
-        stats['count'] = values.sum()
-
-        if status in {_S.added, _S.deleted}:
-            stats['count']
-
-    def get_colname(self):
-        d = {}
-        d['colidx'] = self.col_metrics.get_values('colidx')
-        d['colname'] = self.col_metrics.get_values('name_header')
-        return d
-
     def get_per_value_added(self, value_properties):
         return {
-            'value': value_properties['b_orig'],
-            'loc': {'lineno': value_properties['b_lineno'], **self.get_colname()}
+            'value': value_properties[('b', _F.ORIG)],
+            'loc': {'row': value_properties[('b', _F.LOC_ORIG_ROW)]}
         }
 
     def get_per_value_deleted(self, value_properties):
         return {
-            'value': value_properties['a_orig'],
-            'loc': {'lineno': value_properties['a_lineno'], **self.get_colname()}
+            'value': value_properties[('a', _F.ORIG)],
+            'loc': {'row': value_properties[('a', _F.LOC_ORIG_ROW)]}
         }
 
     def get_per_value_modified(self, value_properties):
         vp = value_properties
         m = {}
 
-        m['a'] = {
-            'original': vp['a_orig'],
-            'calculated_as': vp['a_calc'],
-            'loc': {
-                'line': vp['a_lineno'],
+        def get_m_for_side(d, side):
+            return {
+                'original': d[(side, _F.ORIG)],
+                'calculated_as': d[(side, _F.CALC)],
+                'loc': {
+                    'row': d[(side, _F.LOC_ORIG_ROW)]
+                }
             }
-        }
-
-        m['b'] = {
-            'original': vp['b_orig'],
-            'calculated_as': vp['b_calc'],
-            'loc': {
-                'lineno': vp['b_lineno'],
-                **self.get_colname(),
-            }
-        }
-
-        m['delta'] = vp['delta']
+        m['a'] = get_m_for_side(vp, 'a')
+        m['b'] = get_m_for_side(vp, 'b')
+        # the key must be ('delta', '') instead of only 'delta'
+        # otherwise strange and horrible errors (segmentation faults from numpy/pandas) will occur
+        # this could be a pandas bug, so it would be good to investigate this in more detail at some point
+        if self.supports_numeric_delta:
+            m['delta'] = vp[('delta', '')]
 
         return m
 
@@ -821,14 +798,8 @@ class CSVPlugin(base.Comparator):
         for key in keys_union:
             yield key, (a.get(key), b.get(key))
 
+    record_opts = {}
     comment_char = '#'
-    calc_options = {
-        # 'header_pos': 0,
-        # 'index': 'measurement_id',
-        # 'index': '',
-        # 'dtype': True,
-        # 'column_renames': {'date': 'measurement_date'}
-    }
 
     def get_file_metadata(self, src):
         """
@@ -869,8 +840,9 @@ class CSVPlugin(base.Comparator):
         """
         Return the Record object used to fetch, process and expose for comparison table columns.
         """
-        rec = CSVTableColumnsRecord(*args, comment_char=self.comment_char, **self.calc_options, **kwargs)
+        rec = CSVTableColumnsRecord(*args, comment_char=self.comment_char, **self.record_opts, **kwargs)
         rec.load()
+
         return rec
 
     def get_change_metrics_column(self, *args, **kwargs):
@@ -894,19 +866,21 @@ class CSVPlugin(base.Comparator):
         rec_a = self.get_record_columns(src_a)
         rec_b = self.get_record_columns(src_b)
 
+        # for each comparison pair of columns from the two tables
         for comp_key, (col_md_a, col_md_b) in self.gen_comparison_pairs(rec_a, rec_b):
+
+            # first, calculate the change metrics for the column as a whole
             metr_single_col = self.get_change_metrics_column(comp_key, col_md_a, col_md_b)
             metr_single_col.calculate()
 
-            # series_a, series_b = metr_single_col.get_values('series', orient=tuple)
-            # metr_values = self.get_change_metrics_column_values(series_a, series_b)
+            # then, calculate the change metrics for the column values
             metr_values = self.get_change_metrics_column_values(metr_single_col)
-
             metr_values_data = metr_values.calculate()
-            metr_table['values_by_column'][comp_key] = metr_values_data
 
+            # finally, add info about change in values to the column change metrics
             metr_single_col.calculate_from_value_metrics(metr_values.table)
 
+            metr_table['values_by_column'][comp_key] = metr_values_data
             metr_table['columns'][comp_key] = dict(metr_single_col)
 
         return metr_table
@@ -946,8 +920,12 @@ class CSVPlugin(base.Comparator):
 
         return df
 
-    def stats(self, changes, detail_level=1):
+    detail_level = 1
+
+    def stats(self, changes, detail_level=None):
         from .util import to_json
+
+        detail_level = detail_level or self.detail_level
 
         df_table = self.get_stats_table(changes['table_data'])
 

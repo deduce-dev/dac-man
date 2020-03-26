@@ -6,9 +6,52 @@ by creating a minimal extension of the built-in CSV plug-in.
 
 A complete runnable version of the entire script is available at the end of this section,
 and in the [`examples/csv`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,
-together with the example data (shown immediately below) as two separate CSV files.
+together with the example data shown below as two separate CSV files.
 
-## Test data
+## Creating the `main` block of the change analysis script
+
+We start from creating the skeleton of the analysis script in a Python file, e.g. `/home/user/my_csv_ana.py`.
+The first line starting with `#!...` is necessary to make the script executable.
+
+Dac-Man analysis scripts must accept two command-line arguments,
+which are the paths to the files that will be compared.
+
+```py
+#!/usr/bin/env python3
+
+import sys
+
+if __name__ == '__main__':
+    cli_args = sys.argv[1:]
+    print(f'cli_args={cli_args}')
+    file_a, file_b = cli_args[0], cli_args[1]
+```
+
+## Implementing the change analysis with Dac-Man's API
+
+Then, we create a Python function, having the two files as arguments,
+implementing the custom change analysis using Dac-Man's API.
+This will allow us to integrate our customized comparator class
+while reusing much of the functionality provided by Dac-Man.
+
+```py
+import sys
+
+import dacman
+
+def run_my_change_analysis(file_a, file_b):
+    comparisons = [(file_a, file_b)]
+    differ = dacman.DataDiffer(comparisons, dacman.Executor.DEFAULT)
+
+
+if __name__ == '__main__':
+    cli_args = sys.argv[1:]
+    print(f'cli_args={cli_args}')
+    file_a, file_b = cli_args[0], cli_args[1]
+    run_my_change_analysis(file_a, file_b)
+```
+
+## Creating a specialized comparator class
 
 In this example, we perform an analysis of the changes between the files `A.csv` and `B.csv`:
 
@@ -43,14 +86,10 @@ Even though the tabular data itself is very similar, there are several differenc
 - The values appearing under the field `date` in `A` appear under `day` in `B`
 - The values for `date`/`day` use different conventions to represents date values (with/without leading zeros)
 
-## Creating a specialized comparator class
-
 In the following, we'll build an extension of the CSV plug-in tailored to the structure of this source data,
 and how to integrate it in a custom analysis script.
 
 We start from creating the comparator subclass implementing our customizations by extending the `CSVPlugin` class:
-
-We start from creating the comparator class implementing our customizations by extending the `CSVPlugin` class:
 
 ```py
 from dacman.plugins.csv import CSVPlugin
@@ -116,7 +155,7 @@ class MyCSVPlugin(CSVPlugin):
 ```
 
 !!! detail
-    The order of the mapping (i.e. turning `day` into `date`, or viceversa) is not relevant, as the original names are in any case stored and compared as column metadata.
+    The order of the mapping (i.e. turning `day` into `date`, or the other way around) is not relevant, as the original names are in any case stored and compared as column metadata.
 
 ### Using value-specific data types instead of text
 
@@ -144,48 +183,7 @@ class MyCSVPlugin(CSVPlugin):
     }
 ```
 
-## Creating a runnable change analysis script
-
-### Creating the `main` block
-
-We start from creating the skeleton of the analysis script in a Python file, e.g. `/home/user/my_csv_ana.py`.
-Dac-Man analysis scripts must accept two command-line arguments,
-which are the paths to the files that will be compared
-
-```py
-import sys
-
-if __name__ == '__main__':
-    cli_args = sys.argv[1:]
-    print(f'cli_args={cli_args}')
-    file_a, file_b = cli_args[0], cli_args[1]
-```
-
-### Implementing the change analysis with Dac-Man's API
-
-Then, we create a Python function, having the two files as arguments,
-implementing the custom change analysis using Dac-Man's API.
-This will allow us to integrate our customized comparator class
-while reusing much of the functionality provided by Dac-Man.
-
-```py
-import sys
-
-import dacman
-
-def run_my_change_analysis(file_a, file_b):
-    comparisons = [(file_a, file_b)]
-    differ = dacman.DataDiffer(comparisons, dacman.Executor.DEFAULT)
-
-
-if __name__ == '__main__':
-    cli_args = sys.argv[1:]
-    print(f'cli_args={cli_args}')
-    file_a, file_b = cli_args[0], cli_args[1]
-    run_my_change_analysis(file_a, file_b)
-```
-
-### Integrating our custom comparator in the change analysis
+## Integrating our custom comparator in the change analysis
 
 The next step is to add the code for our custom comparator class `MyCSVPlugin`
 and set it as the plug-in to use for the comparison:
@@ -221,10 +219,9 @@ if __name__ == '__main__':
     run_my_change_analysis(file_a, file_b)
 ```
 
-### Making the change analysis script executable
+## Running the custom change analysis
 
-Finally, we make the script executable by adding the "shebang" line at the top,
-and using the `chmod` command to add executable permissions:
+The complete code for this custom analysis script is:
 
 ```py
 #!/usr/bin/env python3
@@ -259,18 +256,18 @@ if __name__ == '__main__':
     run_my_change_analysis(file_a, file_b)
 ```
 
+To test this change analysis script with Dac-Man,
+add executable permissions to the `my_csv_ana.py` Python file using e.g. the `chmod` command:
+
 ```sh
 chmod +x /home/user/my_csv_ana.py
 ```
 
-## Testing the custom change analysis
-
-To test this change analysis with Dac-Man,
-navigate to the `examples/csv` directories and run:
+Then, navigate to the `examples/csv` directories and run:
 
 ```sh
 dacman diff A.csv B.csv --script /home/user/my_csv_ana.py
 ```
 
 !!! tip
-    A runnable copy of this file is already available as [`examples/csv/my_csv_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/my_csv_ana.py)
+    A complete runnable copy of this file is already available as [`examples/csv/my_csv_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/my_csv_ana.py)
