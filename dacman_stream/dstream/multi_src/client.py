@@ -18,10 +18,12 @@ from cache import Cache
 import pandas as pd
 import argparse
 import sys
+import os
+import socket
 
 
 # Pushing data blocks to Cache; if window-size is matched, then create a task
-def send(cache, k, datablock, window_size):
+def send_windowed_srcs(cache, k, datablock, window_size):
     datablock_id = cache.put_datablock(datablock)
     cache.assign_datablock_to_window(k, datablock_id)
     n_datablocks = cache.get_current_window_size(k)
@@ -30,19 +32,52 @@ def send(cache, k, datablock, window_size):
         cache.create_task(*datablock_ids)
 
 
+def send_independent_srcs(cache, datablockA, datablockB):
+    datablockA_id = cache.put_datablock(datablockA)
+    datablockB_id = cache.put_datablock(datablockB)
+    cache.create_task(*[datablockA_id, datablockB_id])
+
+
 def get_window_key(row, key_name):
     window_key = row[key_name]
     return window_key
 
 
 def main(stream_transformer, stream_src, measurement, window_size, key_name,
-            stats_dir):
+            stats_dir, is_independent=True):
     cache = Cache()
     print("Streaming data...")
-    for row in stream_transformer(stream_src):
-        window_key = get_window_key(row, key_name)
-        #print(window_key, row[measurement])
-        send(cache, window_key, row[measurement], window_size)
+    stream_gen = stream_transformer(stream_src)
+
+    r = cache.get_redis_instance()
+    pipe = r.pipeline()
+    loop_count = 0
+    
+    if is_independent:
+        row1 = next(stream_gen)
+        while True:
+            try:
+                window_key = get_window_key(row1, key_name)
+                window_key = "%s_%s_%s" % (str(window_key), socket.gethostname(), os.getpid())
+                row2 = next(stream_gen)
+                send_independent_srcs(cache, row1[measurement], row2[measurement])
+                #send_windowed_srcs(cache, window_key, row1[measurement], window_size)
+                #send_windowed_srcs(cache, window_key, row2[measurement], window_size)
+                row1 = row2
+                loop_count += 1
+                if loop_count % 20 == 0:
+                    pipe.execute()
+            except StopIteration:
+                break
+
+        #for row1 in stream_gen:
+        #    row2 = next(stream_gen)
+        #    send_independent_srcs(cache, row1[measurement], row2[measurement])
+    else:
+        for row in stream_gen:
+            window_key = get_window_key(row, key_name)
+            #print(window_key, row[measurement])
+            send_windowed_srcs(cache, window_key, row[measurement], window_size)
 
     cache.write_stats(stats_dir)
 
@@ -67,6 +102,16 @@ def transform_lathuile_stream(stream_src):
 
 
 ###################
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def _fluxnetClientParser(subparsers):
     parser_worker = subparsers.add_parser('fluxnet',
                                           formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -80,6 +125,9 @@ def _fluxnetClientParser(subparsers):
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
+    parser_worker.add_argument('-i', '--independent', 
+        type=str2bool, nargs='?', const=True, default=False,
+        help='independent source or not')
 
 
 def _lathuileClientParser(subparsers):
@@ -95,6 +143,9 @@ def _lathuileClientParser(subparsers):
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
+    parser_worker.add_argument('-i', '--independent', 
+        type=str2bool, nargs='?', const=True, default=False,
+        help='independent source or not')
 
 
 ###################
@@ -121,4 +172,5 @@ if __name__ == '__main__':
     else:
         fn = transform_lathuile_stream
 
-    main(fn, args.filename, args.measurement, args.windowsize, args.keyname, args.output_stats_dir)
+    main(fn, args.filename, args.measurement, args.windowsize, args.keyname,
+        args.output_stats_dir, is_independent=args.independent)

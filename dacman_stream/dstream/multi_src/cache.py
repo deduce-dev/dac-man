@@ -35,6 +35,9 @@ class Cache(object):
         )
         return r
 
+    def get_redis_instance(self):
+        return self._redis
+
     def put_datablock(self, datablock):
         #datahash = blake2b(digest_size=20)
         #datahash.update(datablock.encode('utf-8'))

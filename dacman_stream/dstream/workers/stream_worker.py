@@ -63,8 +63,11 @@ def func_deserializer_file(file):
 
 
 def calc_diff(dataA, dataB):
-    #return np.mean([float(dataA), float(dataB)])
     return float(dataA) - float(dataB)
+
+
+def calc_avg(dataA, dataB):
+    return (float(dataA) + float(dataB))/2.0
 
 
 def dataid_to_datablock(r, data_id1, data_id2):
@@ -269,8 +272,8 @@ def s_main(args):
     is_mpi = False
 
     #custom_analyzer = func_deserializer_file(func_file)
-    #custom_analyzer = calc_avg
-    custom_analyzer = calc_diff
+    custom_analyzer = calc_avg
+    #custom_analyzer = calc_diff
 
     try:
         r = get_redis_instance(host, port)
