@@ -1,5 +1,6 @@
 import argparse
 
+from experiment import Experiment, AggregateMethod
 
 
 
@@ -8,7 +9,7 @@ if __name__ == '__main__':
         description="",
         prog="dstream",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
-        )
+    )
 
     
     main()

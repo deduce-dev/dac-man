@@ -1,31 +1,160 @@
-
+import os
+import csv
+import numpy as np
 import settings as _settings
 
 class StatGenerator(object):
     def __init__(self):
-        self._sources_dir_name = "sources"
-        self._workers_dir_name = "workers"
+        self._sources_dir_name = _settings.SOURCE_DIR
+        self._workers_dir_name = _settings.WORKER_DIR
+        self._data_task_send_start = _settings.CSV_SOURCE_DICTS_DIRS[0]
+        self._data_task_send_end = _settings.CSV_SOURCE_DICTS_DIRS[1]
+        self._data_pull_start = _settings.CSV_WORKER_DICTS_DIRS[0]
+        self._data_pull_end = _settings.CSV_WORKER_DICTS_DIRS[1]
+        self._job_end_processing = _settings.CSV_WORKER_DICTS_DIRS[2]
+        self._job_end_data_put = _settings.CSV_WORKER_DICTS_DIRS[3]
+
+        #self.apps = {}
+        #self.apps_results = {}
 
         self._setup_names = []
-        self._norm_throughput_live_vals = []
-        self._norm_throughput_buffered_vals = []
-        self._avg_throughput_vals = []
-        self._max_throughput_vals = []
-        self._std_throughput_vals = []
+        self.xticks_labels = []
 
-        self._avg_event_time_latency_vals = []
-        self._max_event_time_latency_vals = []
-        self._std_event_time_latency_vals = []
+    '''
+    def set_apps(self, apps):
+        '''
+        #Set app names and their paths
+        '''
+        if type(apps) is not dict:
+            raise ValueError("A dict must be entered in the format:"
+                "{'app-name': 'path/to/experiment/files'}")
+        self.apps = 
+    '''
 
-        # this calculates the time from where workers started to pull tasks
-        # job_data_put_end - data_pull_start
-        self._total_exp_time_vals = []
 
-        # this calculates the time from where workers started to pull tasks
-        # job_data_put_end - data_task_send_end
-        self._runtime_vals = []
+    #def get_apps_results(self):
+        '''
+        Return results
+        '''
+    #    return self.apps_results
 
-        self._pure_processing_time_vals = []
+    def get_xticks_labels(self):
+        '''
+        Return results
+        '''
+        return self.xticks_labels
+
+    def process(self, experiment_paths):
+        '''
+        Main orchestrating function
+        '''
+        stats = []
+        for exp_p in experiment_paths:
+            exp_stats = {exp_p: []}
+            for exp_num in os.scandir(exp_p):
+                if entry.is_dir(follow_symlinks=False):
+                    sources_dir = os.path.join(entry, self._sources_dir_name)
+                    workers_dir = os.path.join(entry, self._workers_dir_name)
+
+                    print("sources_dir:", sources_dir)
+                    print("workers_dir:", workers_dir)
+
+                    data_task_send_start_dir = os.path.join(sources_dir, self._data_task_send_start)
+                    data_task_send_end_dir = os.path.join(sources_dir, self._data_task_send_end)
+
+                    data_pull_start_dir = os.path.join(workers_dir, self._data_pull_start)
+                    data_pull_end_dir = os.path.join(workers_dir, self._data_pull_end)
+                    job_end_processing_dir = os.path.join(workers_dir, self._job_end_processing)
+                    job_end_data_put_dir = os.path.join(workers_dir, self._job_end_data_put)
+
+                    exp_stats[exp_p].append(
+                        self.start_stats_calculation(
+                            data_task_send_start_dir,
+                            data_task_send_end_dir,
+                            data_pull_start_dir,
+                            data_pull_end_dir,
+                            job_end_processing_dir,
+                            job_end_data_put_dir
+                        )
+                    )
+                else:
+                    raise ValueError("Expected a directory to traverse")
+
+            stats.append(exp_stats)
+
+        return stats
+
+
+        '''
+        if not self.apps_results:
+            raise AttributeError("App(s) results are already populated")
+
+        for app, app_exp_dir in self.apps.items():
+            if entry.is_dir(follow_symlinks=False):
+                setup_names.append(entry.name)
+                self.apps_results[app] = {
+                    entry.name: {
+                        "normalized_throughput": [],
+                        "avg_throughput": [],
+                        "std_throughput": [],
+                        "max_throughput": [],
+                        "avg_event_time_latency": [],
+                        "std_event_time_latency": [],
+                        "max_event_time_latency": []
+                    }
+                }
+        
+        if self._setup_names and setup_names:
+            arrs_not_equal_bool = len(setup_names) != len(self._setup_names)
+            for setup_n in setup_names:
+                if setup_n not in self._setup_names or arrs_not_equal_bool:
+                    raise RuntimeError("Experiment setup configurations are inconsistent")
+        elif setup_names:
+            setup_names = sorted(setup_names,
+                key=lambda v: self.worker_num_str_to_int(v))
+            self._setup_names = setup_names
+
+            if not self.xticks_labels:
+                #self.xticks_labels = ['_'.join(x.split('_')[2:]) for x in setup_names]
+                self.xticks_labels = [x.split('_')[3] for x in setup_names]
+
+        # Go through all experiment repetition. For example:
+        # s_2_w_1/[1,2,3]
+        for setup_n in setup_names:
+            print("setup_name:", setup_n)
+            current_dir = os.path.join(experiment_dir, setup_n)
+
+            for entry in os.scandir(current_dir):
+                if entry.is_dir(follow_symlinks=False):
+                    sources_dir = os.path.join(entry, self._sources_dir_name)
+                    workers_dir = os.path.join(entry, self._workers_dir_name)
+
+                    print("sources_dir:", sources_dir)
+                    print("workers_dir:", workers_dir)
+
+                    data_task_send_start_dir = os.path.join(sources_dir, self._data_task_send_start)
+                    data_task_send_end_dir = os.path.join(sources_dir, self._data_task_send_end)
+
+                    data_pull_start_dir = os.path.join(workers_dir, self._data_pull_start)
+                    data_pull_end_dir = os.path.join(workers_dir, self._data_pull_end)
+                    job_end_processing_dir = os.path.join(workers_dir, self._job_end_processing)
+                    job_end_data_put_dir = os.path.join(workers_dir, self._job_end_data_put)
+
+                    current_results = self.start_stats_calculation(
+                        data_task_send_start_dir,
+                        data_task_send_end_dir,
+                        data_pull_start_dir,
+                        data_pull_end_dir,
+                        job_end_processing_dir,
+                        job_end_data_put_dir
+                    )
+
+                    for key, value in stats.items():
+                        #self.apps_results[app][setup_n][key].append(value)
+                else:
+                    raise ValueError("Expected a directory to traverse")
+        '''
+
 
     def scandir_csv(self, path):
         '''
@@ -36,6 +165,7 @@ class StatGenerator(object):
                 continue
             else:
                 yield entry
+
 
     def csv_to_dict(self, csvfile):
         '''
@@ -48,22 +178,25 @@ class StatGenerator(object):
 
         return mydict
 
+
     def update_multiple_csvs_to_dict(self, path):
         '''
         Convert multiple csv files into one dict
         '''
         dict_obj = {}
-        for entry in scandir_csv(path):
+        for entry in self.scandir_csv(path):
             #### Checking if the file has the right extention
             if os.path.splitext(entry.name)[1] not in ['.csv']:
                 continue
-            dict_obj.update(csv_to_dict(entry))
+            dict_obj.update(self.csv_to_dict(entry))
 
         return dict_obj
+
 
     def worker_num_str_to_int(self, setup_dir_name):
         _, _, _, worker_num = setup_dir_name.split('_')
         return int(worker_num)
+
 
     def start_stats_calculation(self,
                                 data_task_send_start_dir,
@@ -73,16 +206,15 @@ class StatGenerator(object):
                                 job_end_processing_dir,
                                 job_end_data_put_dir):
         '''
-        The main processing that does the stat calculation & the 
-        plotting.
+        The main processing that does the stat calculation.
         '''
 
         ###########################################################
         # Reading data_send_start & data_send_end for tasks 
         ###########################################################
 
-        data_task_send_start = update_multiple_csvs_to_dict(data_task_send_start_dir)
-        data_task_send_end = update_multiple_csvs_to_dict(data_task_send_end_dir)
+        data_task_send_start = self.update_multiple_csvs_to_dict(data_task_send_start_dir)
+        data_task_send_end = self.update_multiple_csvs_to_dict(data_task_send_end_dir)
 
         print("data_task_send_start: " + str(len(data_task_send_start)))
         print("data_task_send_end: " + str(len(data_task_send_end)))
@@ -91,10 +223,10 @@ class StatGenerator(object):
         # Reading data_pull_start, data_pull_end & job_end_data_put
         ###########################################################
 
-        data_pull_start = update_multiple_csvs_to_dict(data_pull_start_dir)
-        data_pull_end = update_multiple_csvs_to_dict(data_pull_end_dir)
-        job_end_processing = update_multiple_csvs_to_dict(job_end_processing_dir)
-        job_end_data_put = update_multiple_csvs_to_dict(job_end_data_put_dir)
+        data_pull_start = self.update_multiple_csvs_to_dict(data_pull_start_dir)
+        data_pull_end = self.update_multiple_csvs_to_dict(data_pull_end_dir)
+        job_end_processing = self.update_multiple_csvs_to_dict(job_end_processing_dir)
+        job_end_data_put = self.update_multiple_csvs_to_dict(job_end_data_put_dir)
 
         print("data_pull_start: " + str(len(data_pull_start)))
         print("data_pull_end: " + str(len(data_pull_end)))
@@ -144,11 +276,8 @@ class StatGenerator(object):
             throughput_time_list.append(k)
             throughput_job_count_list.append(v)
 
-        norm_throughput_live = len(job_end_data_put_sorted_pair) / \
+        norm_throughput = len(job_end_data_put_sorted_pair) / \
             (job_end_data_put_sorted_pair[-1][1] - float(data_pull_start[job_end_data_put_sorted_pair[0][0]]))
-
-        norm_throughput_buffered = len(job_end_data_put_sorted_pair) / \
-            (job_end_data_put_sorted_pair[-1][1] - job_end_data_put_sorted_pair[0][1])
 
         #### Calculating Event time latency
 
@@ -157,24 +286,12 @@ class StatGenerator(object):
             diff_value = float(job_end_data_put[key]) - float(data_task_send_end[key])
             event_time_latency_list.append(diff_value)
 
-        print("latency: min =", min(event_time_latency_list), ", max =", max(event_time_latency_list))
-
-        #### Calculating Pure Processing-time latency = 
-        #### Job processing time [Avg(Job end processing - Job start)]
-
-        pure_processing_time_latency_list = []
-        for key, time in job_end_data_put_sorted_pair:
-            diff_value = float(job_end_processing[key]) - float(data_pull_end[key])
-            pure_processing_time_latency_list.append(diff_value)
-
-        norm_throughput_live_vals.append(norm_throughput_live)
-        norm_throughput_buffered_vals.append(norm_throughput_buffered)
-        avg_throughput_vals.append(np.mean(throughput_job_count_list))
-        std_throughput_vals.append(np.std(throughput_job_count_list))
-        max_throughput_vals.append(max(throughput_job_count_list))
-        avg_event_time_latency_vals.append(np.mean(event_time_latency_list))
-        std_event_time_latency_vals.append(np.std(event_time_latency_list))
-        max_event_time_latency_vals.append(max(event_time_latency_list))
-        total_exp_time_vals.append(max(job_end_data_put_sorted) - min(data_pull_start_sorted))
-        runtime_vals.append(max(job_end_data_put_sorted) - min(data_task_send_end_sorted))
-        pure_processing_time_vals.append(np.mean(pure_processing_time_latency_list))
+        return {
+            "normalized_throughput": norm_throughput,
+            "avg_throughput": np.mean(throughput_job_count_list),
+            "std_throughput": np.std(throughput_job_count_list),
+            "max_throughput": max(throughput_job_count_list),
+            "avg_event_time_latency": np.mean(event_time_latency_list),
+            "std_event_time_latency": np.std(event_time_latency_list),
+            "max_event_time_latency": max(event_time_latency_list)
+        }
