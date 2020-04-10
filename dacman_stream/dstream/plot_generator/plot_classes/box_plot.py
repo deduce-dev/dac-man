@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import settings as _settings
 
 class BoxPlot(object):
-    def __init__(self, local_val_arr, cluster_val_arr, xticks_labels,
+    def __init__(self, xticks_labels=None,
                  output_dir=_settings.PLOT_DIR, plot_filename = None,
                  xlabel="Number of Workers",
                  ylabel="Throughput\n(tasks/s)",
@@ -11,12 +11,9 @@ class BoxPlot(object):
                  fig_size1=9, fig_size2=5,
                  graph_ext="pdf", width=0.25, c1='b', c2='r',
                  ylim_top=None):
-        if not local_val_arr or not cluster_val_arr:
-            raise AttributeError("Arrays must be populated to be used in Box-plots")
 
-        self._local_val_arr = local_val_arr
-        self._cluster_val_arr = cluster_val_arr
         self._xticks_labels = xticks_labels
+        self._output_dir = output_dir
 
         self._n = len(self._local_val_arr)
 
@@ -42,20 +39,21 @@ class BoxPlot(object):
         self._ylim_top = ylim_top
     
 
-    def plot(self):
+    def plot(self, var_arr1, var_arr2):
         ind = np.arange(self._n)    # the x locations for the groups
 
         fig, ax = plt.subplots(figsize=(self._fig_size1, self._fig_size2))
 
-        p1 = ax.boxplot(self._local_val_arr, positions=ind, patch_artist=True, widths=self._width,
+        p1 = ax.boxplot(var_arr1, positions=ind, patch_artist=True, widths=self._width,
                 boxprops=dict(facecolor=self._c1, color=self._c1))
-        p2 = ax.boxplot(self._cluster_val_arr, positions=(ind+width), patch_artist=True, widths=self._width,
+        p2 = ax.boxplot(var_arr2, positions=(ind+self._width), patch_artist=True, widths=self._width,
                 boxprops=dict(facecolor=self._c2, color=self._c2))
 
         ax.set_xticks(ind + width / 2)
 
-        ax.set_xticklabels(self._xticks_labels)
-        ax.tick_params(labelsize=label_size)
+        if self._xticks_labels:
+            ax.set_xticklabels(self._xticks_labels)
+            ax.tick_params(labelsize=self._label_size)
 
         ax.set_ylabel(self._ylabel, fontdict=self._font, labelpad=self._label_pad_y)
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
@@ -69,5 +67,8 @@ class BoxPlot(object):
 
         plt.tight_layout()
 
+        if not os.path.exists(self._output_dir):
+            os.makedirs(self._output_dir)
+
         graph_filename = self._plot_filename + "." + graph_ext
-        plt.savefig(os.path.join(output_dir, graph_filename))
+        plt.savefig(os.path.join(self._output_dir, graph_filename))
