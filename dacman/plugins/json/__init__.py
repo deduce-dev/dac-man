@@ -71,7 +71,9 @@ class JSONPlugin(base.Comparator):
     def _collect_unique_key_stats(
             self, filename: str, data: dict, key_stats: dict):
 
-        key_stats[0][filename] += 1
+        top_level = key_stats.setdefault(0, {})
+        top_level[filename] = top_level.get(filename, 0) + 1
+
         if type(data) is not dict:
             return
 
@@ -159,6 +161,51 @@ class JSONPlugin(base.Comparator):
         self._pretty_print_diff(diff_output)
         _handler.setFormatter(_std_formatter)
 
+    def _gen_level0stats(self):
+        comparison_text = 'more'
+        if float(self._percent_change) < 0:
+            comparison_text = 'less'
+
+        level0_detail = (
+            '\n'
+            'Level 0 detail:\n'
+            f'\t{self.a_filename} has {self._percent_change:04.2f}% '
+            f'{comparison_text} keys than {self.b_filename}'
+            '\n')
+        return level0_detail
+
+    def _gen_level1stats(self):
+        n_shared_keys = self.key_stats.get('n_shared_keys')
+        level1_detail = (
+            '\n'
+            'Level 1 detail:\n'
+            f'\tTotal number of keys in {self.a_filename}: '
+            f'{self.a_total_keys}\n'
+            f'\tTotal number of keys in {self.b_filename}: '
+            f'{self.b_total_keys}\n'
+            '\tTotal number of overlapping keys in both files: '
+            f'{n_shared_keys}'
+            '\n')
+        return level1_detail
+
+    def _gen_level2stats(self):
+        level2_details = []
+        level2_header = '\nLevel 2 detail:'
+        for json_level, details in self.key_stats.items():
+            if not type(json_level) is int:
+                # We have handled the aggregated stats in level 1
+                continue
+
+            level2_details.append(f'JSON level {json_level} has')
+            for k, v in details.items():
+                if k == 'intersection':
+                    level2_details.append(
+                        f'\t{v} keys shared between files')
+                    continue
+                level2_details.append((
+                    f'\t{v} unique keys for {k}'))
+        return f'{level2_header}\n\t' + '\n\t'.join(level2_details)
+
     def percent_change(self):
         try:
             self.a_total_keys = (
@@ -171,7 +218,6 @@ class JSONPlugin(base.Comparator):
             self._percent_change = (diff / self.a_total_keys) * 100
         except Exception:
             return
-
         return self._percent_change
 
     def stats(self, changes, detail_level=2):
@@ -180,52 +226,13 @@ class JSONPlugin(base.Comparator):
 
         outputs = []
         if detail_level >= 0:
-            comparison_text = 'more'
-            if float(self._percent_change) < 0:
-                comparison_text = 'less'
-
-            level0_detail = (
-                '\n'
-                'Level 0 detail:\n'
-                f'\t{self.a_filename} has {self._percent_change:04.2f}% '
-                f'{comparison_text} keys than {self.b_filename}'
-                '\n')
-            outputs.append(level0_detail)
+            outputs.append(self._gen_level0stats())
 
         if detail_level >= 1:
-            n_shared_keys = self.key_stats.get('n_shared_keys')
-            level1_detail = (
-                '\n'
-                'Level 1 detail:\n'
-                f'\tTotal number of keys in {self.a_filename}: '
-                f'{self.a_total_keys}\n'
-                f'\tTotal number of keys in {self.b_filename}: '
-                f'{self.b_total_keys}\n'
-                '\tTotal number of overlapping keys in both files: '
-                f'{n_shared_keys}'
-                '\n')
-            outputs.append(level1_detail)
+            outputs.append(self._gen_level1stats())
 
         if detail_level >= 2:
-            level2_details = []
-            level2_header = '\nLevel 2 detail:'
-            for json_level, details in self.key_stats.items():
-                if not type(json_level) is int:
-                    # We have handled the aggregated stats in level 1
-                    continue
-                if not level2_details:
-                    outputs.append(level2_header)
-
-                level2_details.append(f'JSON level {json_level} has')
-                for k, v in details.items():
-                    if k == 'intersection':
-                        level2_details.append(
-                            f'\t{v} keys shared between files')
-                        continue
-                    level2_details.append((
-                        f'\t{v} unique keys for {k}'))
-
-            outputs.append('\t' + '\n\t'.join(level2_details))
+            outputs.append(self._gen_level2stats())
 
         _handler.setFormatter(_pprint_formatter)
         for output in outputs:
