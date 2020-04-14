@@ -74,11 +74,11 @@ class JSONPlugin(base.Comparator):
 
     def _collect_unique_key_stats(
             self, filename: str, data: dict, key_stats: dict):
-            key_counts = self._count_keys(data)
-            key_stats[f'n_{filename}_keys'] += (1 + sum(key_counts.values()))
-            for level, count in key_counts.items():
-                key_stats.setdefault(level+1, {})[filename] = count
-            key_stats[level][self.a_filename] += 1
+        key_counts = self._count_keys(data)
+        key_stats[f'n_{filename}_keys'] += (1 + sum(key_counts.values()))
+        for level, count in key_counts.items():
+            key_stats.setdefault(level+1, {})[filename] = count
+        key_stats[level][self.a_filename] += 1
 
     def _compare_dict(
             self, a_data: json, b_data: json, level: int = 0) -> (dict, dict):
