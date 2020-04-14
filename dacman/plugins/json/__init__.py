@@ -152,7 +152,7 @@ class JSONPlugin(base.Comparator):
         )
 
         _log.info(disclaimer)
-        # self._pretty_print_diff(diff_output)
+        self._pretty_print_diff(diff_output)
         _handler.setFormatter(_std_formatter)
 
     def percent_change(self):
