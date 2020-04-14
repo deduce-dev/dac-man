@@ -23,7 +23,7 @@ class JSONPlugin(base.Comparator):
 
     @staticmethod
     def description():
-        return self.__doc__
+        return JSONPlugin.__doc__
 
     @staticmethod
     def supports():
@@ -55,15 +55,11 @@ class JSONPlugin(base.Comparator):
                 self._pretty_print_diff(
                     v, prefix=current_prefix, indent=new_indent)
                 _log.info(f'{current_prefix}{space}}}')
-
             else:
                 _log.info(f'{current_prefix}{space}{k}: {v}')
 
     def _count_keys(self, data: json, level: int = 0) -> dict:
         key_counts = {level: 0}
-        if type(data) is not dict:
-            return key_counts
-
         for k, v in data.items():
             if type(v) is dict:
                 _key_counts = self._count_keys(v, level+1)
@@ -74,11 +70,16 @@ class JSONPlugin(base.Comparator):
 
     def _collect_unique_key_stats(
             self, filename: str, data: dict, key_stats: dict):
+
+        key_stats[0][filename] += 1
+        if type(data) is not dict:
+            return
+
         key_counts = self._count_keys(data)
         key_stats[f'n_{filename}_keys'] += (1 + sum(key_counts.values()))
         for level, count in key_counts.items():
-            key_stats.setdefault(level+1, {})[filename] = count
-        key_stats[level][self.a_filename] += 1
+            level_stats = key_stats.setdefault(level+1, {})
+            level_stats[filename] = level_stats.get(filename, 0) + count
 
     def _compare_dict(
             self, a_data: json, b_data: json, level: int = 0) -> (dict, dict):
@@ -91,16 +92,17 @@ class JSONPlugin(base.Comparator):
             f'n_{self.a_filename}_keys': 0,
             f'n_{self.b_filename}_keys': 0,
             'n_shared_keys': 0,
-            level: {self.a_filename: 0, self.b_filename: 0, 'intersection': 0}
-        }
+            level: {self.a_filename: 0, self.b_filename: 0, 'intersection': 0}}
 
         for k in a_key_set.difference(b_key_set):
             return_val[f'{self.pos_marker}{k}'] = a_data.get(k)
-            self._collect_unique_key_stats(self.a_filename, a_data.get(k), key_stats)
+            self._collect_unique_key_stats(
+                self.a_filename, a_data.get(k), key_stats)
 
         for k in b_key_set.difference(a_key_set):
             return_val[f'{self.neg_marker}{k}'] = b_data.get(k)
-            self._collect_unique_key_stats(self.b_filename, b_data.get(k), key_stats)
+            self._collect_unique_key_stats(
+                self.b_filename, b_data.get(k), key_stats)
 
         for k in a_key_set.intersection(b_key_set):
             key_stats['n_shared_keys'] += 1
@@ -109,7 +111,8 @@ class JSONPlugin(base.Comparator):
             key_stats[level]['intersection'] += 1
 
             if all(type(v) is dict for v in (a_values, b_values)):
-                output, _key_stats = self._compare_dict(a_values, b_values, level+1)
+                output, _key_stats = self._compare_dict(
+                    a_values, b_values, level+1)
                 if output:
                     return_val[k] = output
                 for k, v in _key_stats.items():
@@ -118,7 +121,8 @@ class JSONPlugin(base.Comparator):
                         continue
                     for file_type, count in v.items():
                         level_stats = key_stats.setdefault(level+1, {})
-                        level_stats[file_type] = level_stats.get(file_type, 0) + count
+                        level_stats[file_type] = level_stats.get(
+                            file_type, 0) + count
 
             elif a_values != b_values:
                 return_val[f'{self.pos_marker}{k}'] = a_values
