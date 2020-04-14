@@ -172,7 +172,7 @@ def tput_2_apps_2_modes_live_w_1_64(experiment_dir):
         exp_local.process()
         exp_cori.process()
 
-        apps_var_avg_values = [
+        apps_var_raw_values = [
             exp_local.get_agg_results(var, method=AggregateMethod.RAW),
             exp_cori.get_agg_results(var, method=AggregateMethod.RAW)
         ]
@@ -182,7 +182,7 @@ def tput_2_apps_2_modes_live_w_1_64(experiment_dir):
                            ylabel="Throughput\n(tasks/s)")
 
         box_plot.plot(
-            apps_var_avg_values,
+            apps_var_raw_values,
             xtick_labels,
             legends=["Local", "Remote"]
         )
@@ -200,8 +200,12 @@ def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
     var = "normalized_throughput"
     std_var = "std_throughput"
     for i in range(len(apps)):
-        exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=True)
+        if apps[i] == "als":
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+            is_local=False, is_buffered=True)
+        else:
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+            is_local=False, is_buffered=True, scaling_style="strong_scaling")
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -215,9 +219,9 @@ def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
                            ylabel="Throughput\n(tasks/s)")
 
         bar_plot.plot(
-            exp_cori.get_agg_results(var),
+            [exp_cori.get_agg_results(var)],
             xtick_labels,
-            std_arrs=exp_cori.get_agg_results(std_var))
+            std_arrs=[exp_cori.get_agg_results(std_var)])
 
 
 def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
@@ -259,6 +263,7 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
     workers = [64]
 
     #TODO read job count files
+    pass
 
 
 def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
@@ -270,7 +275,8 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
 
     xtick_labels = data_sizes
 
-    var = "normalized_throughput"
+    apps_var_raw_values = []
+    var = "all_throughput"
     for i in range(len(data_sizes)):
         exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
         is_local=False, is_buffered=False)
@@ -278,22 +284,24 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
             # and workers were running for that experiment
-            exp_local.add_setup(sources[j], workers[j])
             exp_cori.add_setup(sources[j], workers[j])
 
-        exp_local.process()
         exp_cori.process()
 
-        box_plot = BoxPlot(plot_filename="tput_%s_cori_live_w_640_payload_2_10_mb" % apps[i],
-                           xlabel="Data-sizes (MB)",
-                           ylabel="Throughput\n(tasks/s)")
+        res = exp_cori.get_agg_results(var, AggregateMethod.RAW)
+        apps_var_raw_values.append(res[0])
 
-        box_plot.plot(
-            [exp_local.get_agg_results(var),
-            exp_cori.get_agg_results(var)],
-            xtick_labels,
-            legends=["ImageAnalysis"]
-        )
+    #print(len(apps_var_raw_values[0]))
+
+    box_plot = BoxPlot(plot_filename="tput_%s_cori_live_w_640_payload_2_10_mb" % apps[0],
+                       xlabel="Data-sizes (MB)",
+                       ylabel="Throughput\n(tasks/s)")
+                       #, ylim_top=20)
+
+    box_plot.plot(
+        [apps_var_raw_values],
+        xtick_labels
+    )
 
 
 def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
@@ -305,7 +313,8 @@ def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
 
     xtick_labels = data_sizes
 
-    var = "avg_event_time_latency"
+    apps_var_raw_values = []
+    var = "all_event_time_latency"
     for i in range(len(data_sizes)):
         exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
         is_local=False, is_buffered=False)
@@ -313,26 +322,34 @@ def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
             # and workers were running for that experiment
-            exp_local.add_setup(sources[j], workers[j])
             exp_cori.add_setup(sources[j], workers[j])
 
-        exp_local.process()
         exp_cori.process()
 
-        box_plot = BoxPlot(plot_filename="latency_%s_cori_live_w_640_payload_2_10_mb" % apps[i],
-                           xlabel="Data-sizes (MB)",
-                           ylabel="Throughput\n(tasks/s)")
+        res = exp_cori.get_agg_results(var, AggregateMethod.RAW)
+        apps_var_raw_values.append(res[0])
 
-        box_plot.plot(
-            [exp_local.get_agg_results(var),
-            exp_cori.get_agg_results(var)],
-            xtick_labels,
-            legends=["ImageAnalysis"]
-        )
+        box_plot = BoxPlot(plot_filename="latency_%s_cori_live_w_640_payload_2_10_mb" % apps[0],
+                           xlabel="Data-sizes (MB)",
+                           ylabel="Latency (s)")
+
+    box_plot.plot(
+        [apps_var_raw_values],
+        xtick_labels
+    )
 
 
 def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
     # Figure 13
+    apps = ["als", "flux_msip"]
+    data_sizes = ["10mb", "105b"]
+    sources = [1, 2]
+    workers = [64]
+
+    xtick_labels = ["ImageAnalysis", "MovingAverage"]
+
+    var = "normalized_throughput"
+    std_var = "std_throughput"
     pass
 
 

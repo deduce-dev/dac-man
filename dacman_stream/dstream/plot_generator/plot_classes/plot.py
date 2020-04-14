@@ -11,7 +11,7 @@ class Plot(object):
                  label_pad_x=10, label_pad_y=15,
                  fig_size1=9, fig_size2=5,
                  graph_ext="pdf", width=0.25,
-                 color_list=["blue", "red", "darkorange", "olive"],
+                 color_list=["blue", "red", "darkorange", "olive", "saddlebrown"],
                  ylim_bottom=None, ylim_top=None, is_log_scale=False):
 
         self._output_dir = output_dir

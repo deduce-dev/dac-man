@@ -213,5 +213,6 @@ class TaskStatGenerator(object):
             "all_throughput": throughput_job_count_list,
             "avg_event_time_latency": np.mean(event_time_latency_list),
             "std_event_time_latency": np.std(event_time_latency_list),
-            "max_event_time_latency": max(event_time_latency_list)
+            "max_event_time_latency": max(event_time_latency_list),
+            "all_event_time_latency": event_time_latency_list
         }
