@@ -5,8 +5,8 @@ import settings as _settings
 from plot_classes.plot import Plot
 
 
-class BoxPlot(Plot):
-    def plot(self, value_arrs, xtick_labels, legends=None):
+class LinePlot(Plot):
+    def plot(self, value_arrs, xtick_labels, fmt, legends=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
         assert n_groups <= 4, "So far up to 4 bars is supported"
@@ -15,11 +15,14 @@ class BoxPlot(Plot):
 
         fig, ax = plt.subplots(figsize=(self._fig_size1, self._fig_size2))
 
-        box_handles = []
+        line_handles = []
         for i in range(n_groups):
-            p = ax.boxplot(value_arrs[i], positions=(ind+i*self._width), patch_artist=True, widths=self._width,
-                boxprops=dict(facecolor=self._c_list[i], color=self._c_list[i]))
-            box_handles.append(p["boxes"][0])
+            if fmt:
+                p = ax.plot(ind, value_arrs[i], fmt, color=self._c_list[i])
+                line_handles.append(p[0])
+            else:
+                p = ax.plot(ind, value_arrs[i], color=self._c_list[i])
+                line_handles.append(p[0])
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
 
@@ -29,12 +32,12 @@ class BoxPlot(Plot):
         ax.set_ylabel(self._ylabel, fontdict=self._font, labelpad=self._label_pad_y)
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
 
+        if self._is_log_scale:
+            ax.set_yscale('log')
+
         if legends:
-            ax.legend(box_handles, legends, ncol=n_groups, loc="upper left", fontsize=self._label_size)
+            ax.legend(line_handles, legends, ncol=n_groups, loc="upper left", fontsize=self._label_size)
 
-        ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
-
-        ax.autoscale_view()
         plt.tight_layout()
 
         if not os.path.exists(self._output_dir):

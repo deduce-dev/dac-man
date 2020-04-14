@@ -3,18 +3,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import settings as _settings
-from stat_generator import StatGenerator
+from task_stat_generator import TaskStatGenerator
+
 
 class AggregateMethod(object):
     MEAN = 0
     STD = 1
     MIN = 2
     MAX = 3
+    RAW = 4
 
 
 class Experiment(object):
     def __init__(self, app, data_size, experiment_path,
-                 is_local=False, is_buffered=False, is_pipeline=False):
+                 is_local=False, is_buffered=False,
+                 is_pipeline=False, scaling_style=""):
         self.app = app
         self.data_size = data_size
         self.experiment_path = experiment_path
@@ -33,6 +36,8 @@ class Experiment(object):
             self.pipeline_setup = "pipeline"
         else:
             self.pipeline_setup = "non_pipeline"
+
+        self.scaling_style = scaling_style
 
         self._setups = []
         self._experiment_paths = []
@@ -54,18 +59,30 @@ class Experiment(object):
         '''
         agg_results = []
 
+        def get_variable_vals(exp_results):
+            variable_outputs = []
+            for exp_res in exp_results:
+                variable_outputs.append(exp_res[variable])
+            return variable_outputs
+
         if method == AggregateMethod.MEAN:
-            for res in self.results:
-                agg_results.append(np.mean(res[variable]))
+            for exp_results in self.results:
+                agg_results.append(np.mean(get_variable_vals(exp_results)))
         elif method == AggregateMethod.STD:
-            for res in self.results:
-                agg_results.append(np.std(res[variable]))
+            for exp_results in self.results:
+                agg_results.append(np.std(get_variable_vals(exp_results)))
         elif method == AggregateMethod.MIN:
-            for res in self.results:
-                agg_results.append(min(res[variable]))
+            for exp_results in self.results:
+                agg_results.append(min(get_variable_vals(exp_results)))
         elif method == AggregateMethod.MAX:
-            for res in self.results:
-                agg_results.append(max(res[variable]))
+            for exp_results in self.results:
+                agg_results.append(max(get_variable_vals(exp_results)))
+        elif method == AggregateMethod.RAW:
+            for exp_results in self.results:
+                variable_outputs = []
+                for exp_res in exp_results:
+                    variable_outputs = variable_outputs + exp_res[variable]
+                agg_results.append(variable_outputs)
 
         return agg_results
 
@@ -78,14 +95,17 @@ class Experiment(object):
             self._experiment_paths.append(
                 os.path.join(
                     self.experiment_path,
+                    self.app,
                     self.mode,
-                    self.self.data_setup,
+                    self.data_setup,
                     self.data_size,
                     self.pipeline_setup,
+                    self.scaling_style,
                     setup_n
                 )
             )
 
-        stat_gen = StatGenerator()
-        self.results = stat_gen.process(self._experiment_paths)
+        task_stat_gen = TaskStatGenerator()
+        self.results = task_stat_gen.process(self._experiment_paths)
+        assert len(self.results) == len(self._experiment_paths), "Results size is wrong"
 

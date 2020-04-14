@@ -1,9 +1,12 @@
 import os
 import csv
+import math
 import numpy as np
 import settings as _settings
 
-class StatGenerator(object):
+from collections import defaultdict
+
+class TaskStatGenerator(object):
     def __init__(self):
         self._sources_dir_name = _settings.SOURCE_DIR
         self._workers_dir_name = _settings.WORKER_DIR
@@ -14,29 +17,9 @@ class StatGenerator(object):
         self._job_end_processing = _settings.CSV_WORKER_DICTS_DIRS[2]
         self._job_end_data_put = _settings.CSV_WORKER_DICTS_DIRS[3]
 
-        #self.apps = {}
-        #self.apps_results = {}
-
         self._setup_names = []
         self.xticks_labels = []
 
-    '''
-    def set_apps(self, apps):
-        '''
-        #Set app names and their paths
-        '''
-        if type(apps) is not dict:
-            raise ValueError("A dict must be entered in the format:"
-                "{'app-name': 'path/to/experiment/files'}")
-        self.apps = 
-    '''
-
-
-    #def get_apps_results(self):
-        '''
-        Return results
-        '''
-    #    return self.apps_results
 
     def get_xticks_labels(self):
         '''
@@ -50,11 +33,13 @@ class StatGenerator(object):
         '''
         stats = []
         for exp_p in experiment_paths:
-            exp_stats = {exp_p: []}
-            for exp_num in os.scandir(exp_p):
+            exp_stats = []
+            for entry in os.scandir(exp_p):
                 if entry.is_dir(follow_symlinks=False):
                     sources_dir = os.path.join(entry, self._sources_dir_name)
                     workers_dir = os.path.join(entry, self._workers_dir_name)
+
+                    print("*******************************************************************")
 
                     print("sources_dir:", sources_dir)
                     print("workers_dir:", workers_dir)
@@ -67,7 +52,7 @@ class StatGenerator(object):
                     job_end_processing_dir = os.path.join(workers_dir, self._job_end_processing)
                     job_end_data_put_dir = os.path.join(workers_dir, self._job_end_data_put)
 
-                    exp_stats[exp_p].append(
+                    exp_stats.append(
                         self.start_stats_calculation(
                             data_task_send_start_dir,
                             data_task_send_end_dir,
@@ -83,77 +68,6 @@ class StatGenerator(object):
             stats.append(exp_stats)
 
         return stats
-
-
-        '''
-        if not self.apps_results:
-            raise AttributeError("App(s) results are already populated")
-
-        for app, app_exp_dir in self.apps.items():
-            if entry.is_dir(follow_symlinks=False):
-                setup_names.append(entry.name)
-                self.apps_results[app] = {
-                    entry.name: {
-                        "normalized_throughput": [],
-                        "avg_throughput": [],
-                        "std_throughput": [],
-                        "max_throughput": [],
-                        "avg_event_time_latency": [],
-                        "std_event_time_latency": [],
-                        "max_event_time_latency": []
-                    }
-                }
-        
-        if self._setup_names and setup_names:
-            arrs_not_equal_bool = len(setup_names) != len(self._setup_names)
-            for setup_n in setup_names:
-                if setup_n not in self._setup_names or arrs_not_equal_bool:
-                    raise RuntimeError("Experiment setup configurations are inconsistent")
-        elif setup_names:
-            setup_names = sorted(setup_names,
-                key=lambda v: self.worker_num_str_to_int(v))
-            self._setup_names = setup_names
-
-            if not self.xticks_labels:
-                #self.xticks_labels = ['_'.join(x.split('_')[2:]) for x in setup_names]
-                self.xticks_labels = [x.split('_')[3] for x in setup_names]
-
-        # Go through all experiment repetition. For example:
-        # s_2_w_1/[1,2,3]
-        for setup_n in setup_names:
-            print("setup_name:", setup_n)
-            current_dir = os.path.join(experiment_dir, setup_n)
-
-            for entry in os.scandir(current_dir):
-                if entry.is_dir(follow_symlinks=False):
-                    sources_dir = os.path.join(entry, self._sources_dir_name)
-                    workers_dir = os.path.join(entry, self._workers_dir_name)
-
-                    print("sources_dir:", sources_dir)
-                    print("workers_dir:", workers_dir)
-
-                    data_task_send_start_dir = os.path.join(sources_dir, self._data_task_send_start)
-                    data_task_send_end_dir = os.path.join(sources_dir, self._data_task_send_end)
-
-                    data_pull_start_dir = os.path.join(workers_dir, self._data_pull_start)
-                    data_pull_end_dir = os.path.join(workers_dir, self._data_pull_end)
-                    job_end_processing_dir = os.path.join(workers_dir, self._job_end_processing)
-                    job_end_data_put_dir = os.path.join(workers_dir, self._job_end_data_put)
-
-                    current_results = self.start_stats_calculation(
-                        data_task_send_start_dir,
-                        data_task_send_end_dir,
-                        data_pull_start_dir,
-                        data_pull_end_dir,
-                        job_end_processing_dir,
-                        job_end_data_put_dir
-                    )
-
-                    for key, value in stats.items():
-                        #self.apps_results[app][setup_n][key].append(value)
-                else:
-                    raise ValueError("Expected a directory to traverse")
-        '''
 
 
     def scandir_csv(self, path):
@@ -279,6 +193,11 @@ class StatGenerator(object):
         norm_throughput = len(job_end_data_put_sorted_pair) / \
             (job_end_data_put_sorted_pair[-1][1] - float(data_pull_start[job_end_data_put_sorted_pair[0][0]]))
 
+        print("len(job_end_data_put_sorted_pair):", len(job_end_data_put_sorted_pair))
+        print("job_end_data_put_sorted_pair[-1][1]:", job_end_data_put_sorted_pair[-1][1])
+        print("float(data_pull_start[job_end_data_put_sorted_pair[0][0]]):", float(data_pull_start[job_end_data_put_sorted_pair[0][0]]))
+        print("output:", (job_end_data_put_sorted_pair[-1][1] - float(data_pull_start[job_end_data_put_sorted_pair[0][0]])))
+
         #### Calculating Event time latency
 
         event_time_latency_list = []
@@ -291,6 +210,7 @@ class StatGenerator(object):
             "avg_throughput": np.mean(throughput_job_count_list),
             "std_throughput": np.std(throughput_job_count_list),
             "max_throughput": max(throughput_job_count_list),
+            "all_throughput": throughput_job_count_list,
             "avg_event_time_latency": np.mean(event_time_latency_list),
             "std_event_time_latency": np.std(event_time_latency_list),
             "max_event_time_latency": max(event_time_latency_list)

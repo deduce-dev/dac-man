@@ -1,4 +1,6 @@
-PLOT_DIR = "/app/plots"
+#PLOT_DIR = "/project/plots"
+PLOT_DIR = "/home/absho/workspace/lbnl/deduce/playground/sc20_reproducibility/stats"
+EXPERIMENT_DIR = "/project/exp"
 SOURCE_DIR = "sources"
 WORKER_DIR = "workers"
 CSV_SOURCE_DICTS_DIRS = ["data_task_send_start", "data_task_send_end"]
