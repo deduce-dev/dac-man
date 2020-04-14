@@ -61,6 +61,9 @@ class JSONPlugin(base.Comparator):
 
     def _count_keys(self, data: json, level: int = 0) -> dict:
         key_counts = {level: 0}
+        if type(data) is not dict:
+            return key_counts
+
         for k, v in data.items():
             if type(v) is dict:
                 _key_counts = self._count_keys(v, level+1)
@@ -153,19 +156,24 @@ class JSONPlugin(base.Comparator):
         _handler.setFormatter(_std_formatter)
 
     def percent_change(self):
-        self.a_total_keys = (
-            self.key_stats.get(f'n_{self.a_filename}_keys')
-            + self.key_stats.get('n_shared_keys'))
-        self.b_total_keys = (
-            self.key_stats.get(f'n_{self.b_filename}_keys')
-            + self.key_stats.get('n_shared_keys'))
-        diff = (self.a_total_keys - self.b_total_keys)
-        self._percent_change = (diff / self.a_total_keys) * 100
+        try:
+            self.a_total_keys = (
+                self.key_stats.get(f'n_{self.a_filename}_keys')
+                + self.key_stats.get('n_shared_keys'))
+            self.b_total_keys = (
+                self.key_stats.get(f'n_{self.b_filename}_keys')
+                + self.key_stats.get('n_shared_keys'))
+            diff = (self.a_total_keys - self.b_total_keys)
+            self._percent_change = (diff / self.a_total_keys) * 100
+        except Exception:
+            return
 
         return self._percent_change
 
     def stats(self, changes, detail_level=2):
-        self.percent_change()
+        if not self.percent_change():
+            return
+
         outputs = []
         if detail_level >= 0:
             comparison_text = 'more'
