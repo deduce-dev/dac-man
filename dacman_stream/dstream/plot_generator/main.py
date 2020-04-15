@@ -1,24 +1,66 @@
+import os
 import sys
 import argparse
 from experiment import Experiment, AggregateMethod
+from redis_stat_generator import RedisStatGenerator
 from plot_classes.line_plot import LinePlot
 from plot_classes.bar_plot import BarPlot
 from plot_classes.box_plot import BoxPlot
 import settings as _settings
 
+
 def tput_redis_benchmark_bar_set_get(experiment_dir):
     # Figure 4
     pass
 
+def tput_redis_benchmark_clients_line_set_get(experiment_dir):
+    # Figure 5
+    data_sizes = ['1 KB', '50 KB', '100 KB', '500 KB', '1 MB']
 
-def tput_redis_benchmark_line_set(experiment_dir):
-    # Figure 5 A
-    pass
+    redis_stat_gen = RedisStatGenerator()
 
+    clients_redis_res, all_xtick_labels = redis_stat_gen.compare_clients_num(
+        os.path.join(
+            experiment_dir,
+            "redis_benchmark_results",
+            "n_1000"
+        )
+    )
 
-def tput_redis_benchmark_line_get(experiment_dir):
-    # Figure 5 B
-    pass
+    clients_set_vals = []
+    clients_get_vals = []
+    for cli_num, cli_dict in clients_redis_res:
+        cli_set_val_list = []
+        cli_get_val_list = []
+        for i, v in enumerate(all_xtick_labels):
+            if v in data_sizes:
+                cli_set_val_list.append(cli_dict['SET'][i])
+                cli_get_val_list.append(cli_dict['GET'][i])
+        clients_set_vals.append(cli_set_val_list)
+        clients_get_vals.append(cli_get_val_list)
+
+    
+    line_plot = LinePlot(
+        plot_filename="redis_benchmark_clients_datasize_set",
+        xlabel="Data-sizes",
+        ylabel="Throughput\n(requests/s)"
+    )
+
+    line_plot.plot(
+        clients_set_vals,
+        data_sizes,
+        "--o", rotation="vertical")
+
+    line_plot = LinePlot(
+        plot_filename="redis_benchmark_clients_datasize_get",
+        xlabel="Data-sizes",
+        ylabel="Throughput\n(requests/s)"
+    )
+
+    line_plot.plot(
+        clients_get_vals,
+        data_sizes,
+        "--o", rotation="vertical")
 
 
 def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
@@ -434,8 +476,7 @@ def main(args):
     elif figure_num == 4:
         tput_redis_benchmark_bar_set_get(experiment_dir)
     elif figure_num == 5:
-        tput_redis_benchmark_line_set(experiment_dir)
-        tput_redis_benchmark_line_get(experiment_dir)
+        tput_redis_benchmark_clients_line_set_get(experiment_dir)
     elif figure_num == 6:
         tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
     elif figure_num == 7:

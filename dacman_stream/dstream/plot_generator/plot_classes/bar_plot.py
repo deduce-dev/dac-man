@@ -10,7 +10,7 @@ class BarPlot(Plot):
              std_arrs=None, display_val=False, ncol=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= 4, "So far up to 4 bars is supported"
+        assert n_groups <= len(self._c_list), "So far up to 4 bars is supported"
 
         ind = np.arange(self._n)    # the x locations for the groups
 

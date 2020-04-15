@@ -6,10 +6,11 @@ from plot_classes.plot import Plot
 
 
 class LinePlot(Plot):
-    def plot(self, value_arrs, xtick_labels, fmt, legends=None):
+    def plot(self, value_arrs, xtick_labels, fmt,
+        rotation="horizontal", legends=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= 4, "So far up to 4 bars is supported"
+        assert n_groups <= len(self._c_list), "So far up to 4 bars is supported"
 
         ind = np.arange(self._n)    # the x locations for the groups
 
@@ -26,7 +27,7 @@ class LinePlot(Plot):
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
 
-        ax.set_xticklabels(xtick_labels)
+        ax.set_xticklabels(xtick_labels, rotation=rotation)
         ax.tick_params(labelsize=self._label_size)
 
         ax.set_ylabel(self._ylabel, fontdict=self._font, labelpad=self._label_pad_y)
