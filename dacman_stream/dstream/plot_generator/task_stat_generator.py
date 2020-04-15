@@ -197,6 +197,7 @@ class TaskStatGenerator(object):
         print("job_end_data_put_sorted_pair[-1][1]:", job_end_data_put_sorted_pair[-1][1])
         print("float(data_pull_start[job_end_data_put_sorted_pair[0][0]]):", float(data_pull_start[job_end_data_put_sorted_pair[0][0]]))
         print("output:", (job_end_data_put_sorted_pair[-1][1] - float(data_pull_start[job_end_data_put_sorted_pair[0][0]])))
+        print("tput:", norm_throughput)
 
         #### Calculating Event time latency
 

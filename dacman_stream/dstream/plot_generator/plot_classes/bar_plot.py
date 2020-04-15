@@ -6,7 +6,8 @@ from plot_classes.plot import Plot
 
 
 class BarPlot(Plot):
-    def plot(self, value_arrs, xtick_labels, legends=None, std_arrs=None):
+    def plot(self, value_arrs, xtick_labels, legends=None,
+             std_arrs=None, display_val=False, ncol=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
         assert n_groups <= 4, "So far up to 4 bars is supported"
@@ -27,6 +28,11 @@ class BarPlot(Plot):
                         color=self._c_list[i], log=self._is_log_scale)
                 bar_handles.append(p[0])
 
+            if display_val:
+                for j, v in enumerate(value_arrs[i]):
+                    ax.text(ind[j] + i*self._width, v, "%.1f" % v, fontdict=self._inner_txt_size,
+                        horizontalalignment='center', verticalalignment='bottom')
+
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
 
         ax.set_xticklabels(xtick_labels)
@@ -36,7 +42,14 @@ class BarPlot(Plot):
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
 
         if legends:
-            ax.legend(bar_handles, legends, ncol=n_groups, loc="upper left", fontsize=self._label_size)
+            if ncol:
+                ax.legend(bar_handles, legends, ncol=ncol, loc=self._legend_loc, fontsize=self._legend_size)
+            else:
+                ax.legend(bar_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._legend_size)
+
+        ax.relim()
+        ax.autoscale_view()
+        ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
 
         plt.tight_layout()
 

@@ -11,7 +11,8 @@ class AggregateMethod(object):
     STD = 1
     MIN = 2
     MAX = 3
-    RAW = 4
+    RAW_VAL = 4
+    RAW_LIST = 5
 
 
 class Experiment(object):
@@ -63,6 +64,7 @@ class Experiment(object):
             variable_outputs = []
             for exp_res in exp_results:
                 variable_outputs.append(exp_res[variable])
+            print(variable_outputs)
             return variable_outputs
 
         if method == AggregateMethod.MEAN:
@@ -77,7 +79,10 @@ class Experiment(object):
         elif method == AggregateMethod.MAX:
             for exp_results in self.results:
                 agg_results.append(max(get_variable_vals(exp_results)))
-        elif method == AggregateMethod.RAW:
+        elif method == AggregateMethod.RAW_VAL:
+            for exp_results in self.results:
+                agg_results.append(get_variable_vals(exp_results))
+        elif method == AggregateMethod.RAW_LIST:
             for exp_results in self.results:
                 variable_outputs = []
                 for exp_res in exp_results:
@@ -108,4 +113,3 @@ class Experiment(object):
         task_stat_gen = TaskStatGenerator()
         self.results = task_stat_gen.process(self._experiment_paths)
         assert len(self.results) == len(self._experiment_paths), "Results size is wrong"
-

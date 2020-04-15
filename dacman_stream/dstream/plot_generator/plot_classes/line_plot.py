@@ -35,8 +35,10 @@ class LinePlot(Plot):
         if self._is_log_scale:
             ax.set_yscale('log')
 
+        ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
+
         if legends:
-            ax.legend(line_handles, legends, ncol=n_groups, loc="upper left", fontsize=self._label_size)
+            ax.legend(line_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._inner_txt_size)
 
         plt.tight_layout()
 

@@ -30,11 +30,11 @@ class BoxPlot(Plot):
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
 
         if legends:
-            ax.legend(box_handles, legends, ncol=n_groups, loc="upper left", fontsize=self._label_size)
-
-        ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
+            ax.legend(box_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._legend_size)
 
         ax.autoscale_view()
+        ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
+
         plt.tight_layout()
 
         if not os.path.exists(self._output_dir):
