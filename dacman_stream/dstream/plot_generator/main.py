@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import numpy as np
 from experiment import Experiment, AggregateMethod
 from redis_stat_generator import RedisStatGenerator
 from plot_classes.line_plot import LinePlot
@@ -11,15 +12,69 @@ import settings as _settings
 
 def tput_redis_benchmark_bar_set_get(experiment_dir):
     # Figure 4
-    pass
+    client_num = [64]
+    data_sizes = ['1 KB', '50 KB', '100 KB', '1 MB', '10 MB']
+
+    redis_stat_gen = RedisStatGenerator()
+
+    avg_clients_cmds, std_clients_cmds, all_xtick_labels = redis_stat_gen.compare_clients_num(
+        os.path.join(
+            experiment_dir,
+            "redis_benchmark_results",
+            "n_1000"
+        )
+    )
+
+    client_num_str = "c_%d" % client_num[0]
+
+    clients_avg_set_vals = []
+    clients_avg_get_vals = []
+    clients_std_set_vals = []
+    clients_std_get_vals = []
+    for i in range(len(avg_clients_cmds)):
+        avg_cli_num, avg_cli_dict = avg_clients_cmds[i]
+        std_cli_num, std_cli_dict = std_clients_cmds[i]
+        if avg_cli_num != client_num_str:
+            continue
+
+        cli_avg_set_val_list = []
+        cli_avg_get_val_list = []
+        cli_std_set_val_list = []
+        cli_std_get_val_list = []
+        for j, v in enumerate(all_xtick_labels):
+            if v in data_sizes:
+                cli_avg_set_val_list.append(avg_cli_dict['SET'][j])
+                cli_avg_get_val_list.append(avg_cli_dict['GET'][j])
+                cli_std_set_val_list.append(std_cli_dict['SET'][j])
+                cli_std_get_val_list.append(std_cli_dict['GET'][j])
+        clients_avg_set_vals.append(cli_avg_set_val_list)
+        clients_avg_get_vals.append(cli_avg_get_val_list)
+        clients_std_set_vals.append(cli_std_set_val_list)
+        clients_std_get_vals.append(cli_std_get_val_list)
+    
+    bar_plot = BarPlot(plot_filename="redis_benchmark_tput_bar_c_64_datasize_set_get",
+                       xlabel="Data-sizes",
+                       ylabel="Throughput\n(requests/s)",
+                       legend_loc="best", ylim_top=35000)
+
+    bar_plot.plot(
+        [clients_avg_set_vals[0],
+        clients_avg_get_vals[0]],
+        data_sizes,
+        rotation="vertical",
+        legends=['SET', 'GET'],
+        std_arrs=[clients_std_set_vals[0]
+        ,clients_std_get_vals[0]])
+
 
 def tput_redis_benchmark_clients_line_set_get(experiment_dir):
     # Figure 5
+    client_num = [1, 64, 128, 256, 512]
     data_sizes = ['1 KB', '50 KB', '100 KB', '500 KB', '1 MB']
 
     redis_stat_gen = RedisStatGenerator()
 
-    clients_redis_res, all_xtick_labels = redis_stat_gen.compare_clients_num(
+    clients_redis_res, _, all_xtick_labels = redis_stat_gen.compare_clients_num(
         os.path.join(
             experiment_dir,
             "redis_benchmark_results",
@@ -39,28 +94,35 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
         clients_set_vals.append(cli_set_val_list)
         clients_get_vals.append(cli_get_val_list)
 
+    client_num_str = [str(n) for n in client_num]
     
     line_plot = LinePlot(
-        plot_filename="redis_benchmark_clients_datasize_set",
+        plot_filename="redis_benchmark_tput_line_clients_datasize_set",
         xlabel="Data-sizes",
-        ylabel="Throughput\n(requests/s)"
+        ylabel="Throughput\n(requests/s)",
+        legend_loc="best"
     )
 
     line_plot.plot(
         clients_set_vals,
-        data_sizes,
-        "--o", rotation="vertical")
+        data_sizes, "--o",
+        legends=client_num_str,
+        rotation="vertical",
+        ncol=3)
 
     line_plot = LinePlot(
-        plot_filename="redis_benchmark_clients_datasize_get",
+        plot_filename="redis_benchmark_tput_line_clients_datasize_get",
         xlabel="Data-sizes",
-        ylabel="Throughput\n(requests/s)"
+        ylabel="Throughput\n(requests/s)",
+        legend_loc="best"
     )
 
     line_plot.plot(
         clients_get_vals,
-        data_sizes,
-        "--o", rotation="vertical")
+        data_sizes, "--o",
+        legends=client_num_str,
+        rotation="vertical",
+        ncol=3)
 
 
 def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):

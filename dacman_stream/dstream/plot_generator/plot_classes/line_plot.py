@@ -7,10 +7,10 @@ from plot_classes.plot import Plot
 
 class LinePlot(Plot):
     def plot(self, value_arrs, xtick_labels, fmt,
-        rotation="horizontal", legends=None):
+        rotation="horizontal", ncol=None, legends=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= len(self._c_list), "So far up to 4 bars is supported"
+        assert n_groups <= len(self._c_list), "So far up to %d bars is supported" % len(self._c_list)
 
         ind = np.arange(self._n)    # the x locations for the groups
 
@@ -25,7 +25,7 @@ class LinePlot(Plot):
                 p = ax.plot(ind, value_arrs[i], color=self._c_list[i])
                 line_handles.append(p[0])
 
-        ax.set_xticks(ind + ((n_groups-1) * self._width/2))
+        ax.set_xticks(ind)
 
         ax.set_xticklabels(xtick_labels, rotation=rotation)
         ax.tick_params(labelsize=self._label_size)
@@ -39,8 +39,12 @@ class LinePlot(Plot):
         ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
 
         if legends:
-            ax.legend(line_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._inner_txt_size)
+            if ncol:
+                ax.legend(line_handles, legends, ncol=ncol, loc=self._legend_loc, fontsize=self._inner_txt_size['size'])
+            else:
+                ax.legend(line_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._inner_txt_size['size'])
 
+        ax.autoscale_view()
         plt.tight_layout()
 
         if not os.path.exists(self._output_dir):

@@ -6,11 +6,11 @@ from plot_classes.plot import Plot
 
 
 class BarPlot(Plot):
-    def plot(self, value_arrs, xtick_labels, legends=None,
-             std_arrs=None, display_val=False, ncol=None):
+    def plot(self, value_arrs, xtick_labels, rotation="horizontal",
+             legends=None, std_arrs=None, display_val=False, ncol=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= len(self._c_list), "So far up to 4 bars is supported"
+        assert n_groups <= len(self._c_list), "So far up to %d bars is supported" % len(self._c_list)
 
         ind = np.arange(self._n)    # the x locations for the groups
 
@@ -35,7 +35,7 @@ class BarPlot(Plot):
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
 
-        ax.set_xticklabels(xtick_labels)
+        ax.set_xticklabels(xtick_labels, rotation=rotation)
         ax.tick_params(labelsize=self._label_size)
 
         ax.set_ylabel(self._ylabel, fontdict=self._font, labelpad=self._label_pad_y)

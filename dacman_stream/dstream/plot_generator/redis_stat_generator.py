@@ -156,4 +156,4 @@ class RedisStatGenerator(object):
         avg_clients_cmds, std_clients_cmds, clients_labels = \
             self.get_sorted_clients(avg_clients_dict, std_clients_dict)
 
-        return avg_clients_cmds, ticks_labels
+        return avg_clients_cmds, std_clients_cmds, ticks_labels

@@ -9,7 +9,7 @@ class BoxPlot(Plot):
     def plot(self, value_arrs, xtick_labels, legends=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= len(self._c_list), "So far up to 4 bars is supported"
+        assert n_groups <= len(self._c_list), "So far up to %d bars is supported" % len(self._c_list)
 
         ind = np.arange(self._n)    # the x locations for the groups
 
