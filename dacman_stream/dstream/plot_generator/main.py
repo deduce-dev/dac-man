@@ -63,6 +63,7 @@ def tput_redis_benchmark_bar_set_get(experiment_dir):
         clients_avg_get_vals[0]],
         data_sizes,
         rotation="vertical",
+        yticks_step=10000,
         legends=['SET', 'GET'],
         std_arrs=[clients_std_set_vals[0]
         ,clients_std_get_vals[0]])
@@ -407,9 +408,10 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
             all_count_values.append(count_values)
 
     line_plot = LinePlot(plot_filename="tput_1_app_cori_buffered_w_64_throttling",
-                   xlabel="Number of Workers",
-                   ylabel="Throughput\n(tasks/s)",
+                   xlabel="Time (s)",
+                   ylabel="Number of tasks\nin queue",
                    ylim_bottom=0, ylim_top=3000,
+                   label_size=22, inner_txt_size=19,
                    color_list=['b', 'g', 'r'])
 
     line_plot.plot_time_data(
@@ -418,9 +420,9 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
         [':o', ':x', ':^'],
         markevery=50,
         legends=["Workload 1", "Workload 2", "Workload 3"],
-        ncol=1)
+        ncol=1,
+        xticks_step=200)
     
-
 
 def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
     # Figure 11

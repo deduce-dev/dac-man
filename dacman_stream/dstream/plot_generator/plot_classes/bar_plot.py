@@ -7,7 +7,8 @@ from plot_classes.plot import Plot
 
 class BarPlot(Plot):
     def plot(self, value_arrs, xtick_labels, rotation="horizontal",
-             legends=None, std_arrs=None, display_val=False, ncol=None):
+             legends=None, std_arrs=None, display_val=False, ncol=None,
+             xticks_step=None, yticks_step=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
         assert n_groups <= len(self._c_list), "So far up to %d colors is supported" % len(self._c_list)
@@ -37,6 +38,12 @@ class BarPlot(Plot):
 
         ax.set_xticklabels(xtick_labels, rotation=rotation)
         ax.tick_params(labelsize=self._label_size)
+
+        if xticks_step:
+            ax.set_xticks(range(0, int(ax.get_xticks()[-1]), xticks_step))
+
+        if yticks_step:
+            ax.set_yticks(range(0, int(ax.get_yticks()[-1]), yticks_step))
 
         ax.set_ylabel(self._ylabel, fontdict=self._font, labelpad=self._label_pad_y)
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
