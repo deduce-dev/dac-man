@@ -5,6 +5,11 @@ import {
   HashRouter as Router,
   Link
 } from "react-router-dom";
+import { Box, makeStyles } from '@material-ui/core';
+import {
+  getSummary
+} from "./api";
+import { Workbench } from "./Layout";
 
 
 class ModifiedCharts extends React.Component {
@@ -186,15 +191,164 @@ class TopSummary extends React.Component {
 }
 
 
+function getColor (key) {
+    let fallback = "#E9E7E6";
+
+    var color = "";
+
+    switch(key) {
+      case "modified":
+        color = "#86B3E5";
+        break;
+      case "added":
+        color = "#A6EA8A";
+        break;
+      case "deleted":
+        color = "#E06681";
+        break;
+      case "unchanged":
+        color = "#676767";
+        break;
+      default:
+        color = fallback;
+    }
+
+    return color;
+}
+
+
+function getPieChartBaseOptions () {
+  var options = {
+      chart: {
+        type: 'pie',
+        height: 200,
+        width: 200
+      },
+      credits: {
+        enabled: false
+      },
+      tooltip: { enabled: false },
+      title: {
+        text: '',
+        align: 'center',
+        verticalAlign: 'middle',
+        y: 9
+      },
+      plotOptions: {
+        pie: {
+          innerSize: '80%',
+          dataLabels: {
+              enabled: false,
+          }
+        }
+      },
+      series: [{
+        data: [],
+        enableMouseTracking: false
+      }]
+  };
+  return options;
+}
+
+
+function getPieChartOptions (data, key) {
+  let opts = getPieChartBaseOptions();
+
+  let count = data[key];
+  let total = data['total'];
+  let title = `${key}<br><span class="dchartnum">${count}</span>`;
+  let color = getColor(key);
+
+  opts.series[0].data = [
+    {
+      name: key,
+      y: count,
+      color: color,
+    },
+    {
+      name: "other",
+      y: total - count,
+      color: getColor()
+    }
+  ];
+  opts.title = {
+    text: title
+  }
+
+  return opts;
+  
+}
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    display: "flex"
+  },
+}));
+
+function PieSummary (countsData) {
+  console.log(countsData);
+  // let summaryData = getSummary();
+  // console.log(summaryData);
+  // at this point consider if this shouldn't rather be a map...
+  // let countsData = summaryData.find(item => item.type === "counts").data;
+  
+  const classes = useStyles();
+
+  return (
+    // <div class="topsummary card">
+    <Box className={classes.root}>
+      <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "added")} />
+      <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "deleted")} />
+      <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "modified")} />
+      <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "unchanged")} />
+    </Box>
+  );
+}
+
+
+function ExternalPlot({url}) {
+
+  return (
+    <div>
+      <img src={url}/>
+    </div>
+  )
+}
+
+
+function getComponent(type) {
+  switch(type) {
+    case "counts":
+      return PieSummary;
+    case "heatmap":
+      return ExternalPlot;
+      // TODO add fallback component (just show pretty-printed JSON?)
+  }
+}
+
+
+function getWorkbenchItem(datum) {
+  const getFallbackTitle = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  return {
+    title: datum.title || getFallbackTitle(datum.type),
+    component: getComponent(datum.type),
+    props: datum.data,
+  }
+}
+
+
+function getWorkbenchItems() {
+  const data = getSummary();
+  return data.map(dataItem => getWorkbenchItem(dataItem));
+}
+
+
 class Summary extends React.Component {
 
   render() {
     return (
       <div className="Summary">
-   
-        <TopSummary />
-        <ModifiedCharts />
-
+        <Workbench items={getWorkbenchItems()} />
       </div>
     );
   }
