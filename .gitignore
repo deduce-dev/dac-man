@@ -22,6 +22,9 @@ MANIFEST
 env/
 venv/
 
+# UI
+node_modules/
+
 # various OS artifacts
 .AppleDouble
 .DS_Store
