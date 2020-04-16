@@ -9,7 +9,7 @@ class BoxPlot(Plot):
     def plot(self, value_arrs, xtick_labels, legends=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
-        assert n_groups <= len(self._c_list), "So far up to %d bars is supported" % len(self._c_list)
+        assert n_groups <= len(self._c_list), "So far up to %d colors is supported" % len(self._c_list)
 
         ind = np.arange(self._n)    # the x locations for the groups
 
@@ -17,7 +17,8 @@ class BoxPlot(Plot):
 
         box_handles = []
         for i in range(n_groups):
-            p = ax.boxplot(value_arrs[i], positions=(ind+i*self._width), patch_artist=True, widths=self._width,
+            p = ax.boxplot(value_arrs[i], positions=(ind+i*self._width),
+                patch_artist=True, widths=self._width, medianprops = dict(color='black'),
                 boxprops=dict(facecolor=self._c_list[i], color=self._c_list[i]))
             box_handles.append(p["boxes"][0])
 
@@ -30,7 +31,8 @@ class BoxPlot(Plot):
         ax.set_xlabel(self._xlabel, fontdict=self._font, labelpad=self._label_pad_x)
 
         if legends:
-            ax.legend(box_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._legend_size)
+            ax.legend(box_handles, legends, ncol=n_groups, loc=self._legend_loc,
+                fontsize=self._legend_size)
 
         ax.autoscale_view()
         ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)

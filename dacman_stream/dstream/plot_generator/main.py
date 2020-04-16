@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import csv
 import numpy as np
 from experiment import Experiment, AggregateMethod
 from redis_stat_generator import RedisStatGenerator
@@ -95,32 +96,41 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
         clients_get_vals.append(cli_get_val_list)
 
     client_num_str = [str(n) for n in client_num]
-    
+    ind = [redis_stat_gen.payload_size_to_int(ds) for ds in data_sizes]
+
+    xtick_labels = [str(int(ds/1000)) for ds in ind]
+
     line_plot = LinePlot(
         plot_filename="redis_benchmark_tput_line_clients_datasize_set",
-        xlabel="Data-sizes",
+        xlabel="Data-sizes (KB)",
         ylabel="Throughput\n(requests/s)",
-        legend_loc="best"
+        legend_loc="best",
+        label_size=25
     )
 
     line_plot.plot(
         clients_set_vals,
-        data_sizes, "--o",
+        xtick_labels, "--o",
+        ind=ind,
         legends=client_num_str,
+        legend_title="Number of Clients",
         rotation="vertical",
         ncol=3)
 
     line_plot = LinePlot(
         plot_filename="redis_benchmark_tput_line_clients_datasize_get",
-        xlabel="Data-sizes",
+        xlabel="Data-sizes (KB)",
         ylabel="Throughput\n(requests/s)",
-        legend_loc="best"
+        legend_loc="best",
+        label_size=25
     )
 
     line_plot.plot(
         clients_get_vals,
-        data_sizes, "--o",
+        xtick_labels, "--o",
+        ind=ind,
         legends=client_num_str,
+        legend_title="Number of Clients",
         rotation="vertical",
         ncol=3)
 
@@ -372,13 +382,44 @@ def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
 
 def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
     # Figure 10 B
-    apps = ["als"]
-    data_sizes = ["10mb"]
-    sources = [1]
-    workers = [64]
 
-    #TODO read job count files
-    pass
+    queue_data_dir = os.path.join(
+        experiment_dir,
+        "throttling_data"
+    )
+
+    all_time_values = []
+    all_count_values = []
+    for entry in os.scandir(queue_data_dir):
+        if entry.is_dir(follow_symlinks=False):
+            csv_file = next(os.scandir(entry))
+            time_values = []
+            count_values = []
+            with open(csv_file, 'r') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                for row in csv_reader:
+                    time_values.append(float(row[0]))
+                    count_values.append(int(row[1]))
+            first_timestamp = min(time_values)
+            time_values = [s-first_timestamp for s in time_values]
+
+            all_time_values.append(time_values)
+            all_count_values.append(count_values)
+
+    line_plot = LinePlot(plot_filename="tput_1_app_cori_buffered_w_64_throttling",
+                   xlabel="Number of Workers",
+                   ylabel="Throughput\n(tasks/s)",
+                   ylim_bottom=0, ylim_top=3000,
+                   color_list=['b', 'g', 'r'])
+
+    line_plot.plot_time_data(
+        all_time_values,
+        all_count_values,
+        [':o', ':x', ':^'],
+        markevery=50,
+        legends=["Workload 1", "Workload 2", "Workload 3"],
+        ncol=1)
+    
 
 
 def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
@@ -549,7 +590,7 @@ def main(args):
     elif figure_num == 9:
         tput_3_apps_cori_buffered_w_64_640(experiment_dir)
     elif figure_num == 10:
-        tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
+        #tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
         tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
     elif figure_num == 11:
         tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)

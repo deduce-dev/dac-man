@@ -21,11 +21,23 @@ class TaskStatGenerator(object):
         self.xticks_labels = []
 
 
+    def scandir_csv(self, path):
+        '''
+        Recursively yield DirEntry objects for given directory.
+        '''
+        for entry in os.scandir(path):
+            if entry.is_dir(follow_symlinks=False):
+                continue
+            else:
+                yield entry
+
+
     def get_xticks_labels(self):
         '''
         Return results
         '''
         return self.xticks_labels
+
 
     def process(self, experiment_paths):
         '''
@@ -68,17 +80,6 @@ class TaskStatGenerator(object):
             stats.append(exp_stats)
 
         return stats
-
-
-    def scandir_csv(self, path):
-        '''
-        Recursively yield DirEntry objects for given directory.
-        '''
-        for entry in os.scandir(path):
-            if entry.is_dir(follow_symlinks=False):
-                continue
-            else:
-                yield entry
 
 
     def csv_to_dict(self, csvfile):
