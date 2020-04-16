@@ -1,8 +1,7 @@
 import React from 'react';
-import MainMetaBuilder from './MainMetaBuilder.jsx';
-import Summary from './Summary.jsx'
+import TextField from '@material-ui/core/TextField';
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Switch,
   Route,
   Link,
@@ -12,25 +11,52 @@ import {
 import logo from './logo.svg';
 import deducelogo from './deducelogo.png';
 import './App.css';
+import Button from '@material-ui/core/Button'
+import AppBar from '@material-ui/core/AppBar'
+import Toolbar from '@material-ui/core/Toolbar'
+import Typography from '@material-ui/core/Typography'
+import { makeStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper'
+
+import {
+  MainLayout,
+  Sidebar,
+} from './Layout'
+
+import {
+  getActiveComparisons
+} from './api'
+
+import MainMetaBuilder from './MainMetaBuilder';
+import Summary from './Summary'
+import Compare from './Compare'
 
 
-class HeaderBar extends React.Component {
-  render() {
-    return (
-      <div class="header">
-        <div class="flex-container logo">
-          <div><img src={deducelogo} alt=""/></div>
-          <div class="logo-text">Deduce</div>
-        </div>
-        <div class="flex-right rightnav">About</div>
-        <div class="rightnav">Documentation</div>
-      </div>
-    );
-  }
+function ShowMain() {
+  return (
+    <MainLayout>
+      <Sidebar cardContentItems={getActiveComparisons()}/>
+    </MainLayout>
+  )
 }
 
+function ShowCompare() {
+  return (
+    <MainLayout>
+      <Compare />
+      <Sidebar cardContentItems={getActiveComparisons()}/>
+    </MainLayout>
+  )
+}
 
-
+function ShowSummary() {
+  return (
+    <MainLayout>
+      <Summary />
+      <Sidebar cardContentItems={getActiveComparisons()}/>
+    </MainLayout>
+  )
+}
 
 class App extends React.Component {
 
@@ -38,14 +64,12 @@ class App extends React.Component {
     return (
       <Router>
         <div className="App">
-          <HeaderBar />
-           <Switch>
-            <Route path="/meta">
-              <MainMetaBuilder />
-            </Route>
-            <Route path="/">
-              <Summary />
-            </Route>
+          <Switch>
+            <Route exact path="/" component={ShowMain} />
+            {/* TODO "/meta" will not work as-is */}
+            <Route path="/meta" component={MainMetaBuilder} />
+            <Route path="/compare" component={ShowCompare} />
+            <Route path="/summary" component={ShowSummary} />
           </Switch>
         </div>
       </Router>
