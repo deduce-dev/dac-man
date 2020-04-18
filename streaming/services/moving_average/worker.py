@@ -247,6 +247,4 @@ if __name__ == '__main__':
         'output_dir': sys.argv[5]
     }
 
-    args['func_file'] = str(_config.CUSTOM_ANALYZER_FILE)
-
     s_main(args)

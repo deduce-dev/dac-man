@@ -33,23 +33,13 @@ def main(stream_transformer, stream_src, measurement, window_size, key_name,
     print("Streaming data...")
     stream_gen = stream_transformer(stream_src)
 
-    r = cache.get_redis_instance()
-    pipe = r.pipeline()
-    pipe = cache.set_redis_instance(pipe)
-    loop_count = 0
-    
     if is_independent:
         row1 = next(stream_gen)
         while True:
             try:
-                window_key = get_window_key(row1, key_name)
-                window_key = "%s_%s_%s" % (str(window_key), socket.gethostname(), os.getpid())
                 row2 = next(stream_gen)
                 send_independent_srcs(cache, row1[measurement], row2[measurement])
                 row1 = row2
-                loop_count += 1
-                if loop_count % 20 == 0:
-                    pipe.execute()
             except StopIteration:
                 break
     else:

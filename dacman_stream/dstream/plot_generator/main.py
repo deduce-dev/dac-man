@@ -524,14 +524,16 @@ def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
 def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
     # Figure 13
     apps = ["als", "flux_msip"]
-    data_sizes = ["10mb", "105b"]
+    data_sizes = ["1kb", "105b"]
     sources = [1, 2]
     workers = [64]
 
     xtick_labels = ["ImageAnalysis", "MovingAverage"]
 
-    avg_tput_vals = []
-    std_tput_vals = []
+    avg_tput_default_vals = []
+    avg_tput_pipeline_vals = []
+    std_tput_default_vals = []
+    std_tput_pipeline_vals = []
 
     var = "normalized_throughput"
     for i in range(len(apps)):
@@ -549,55 +551,20 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
         exp_cori_default.process()
         exp_cori_pipeline.process()
 
-        avg_tput_vals.append(exp_cori_default.get_agg_results(var))
-        std_tput_vals.append(exp_cori_pipeline.get_agg_results(var, AggregateMethod.STD))
+        avg_tput_default_vals.append(exp_cori_default.get_agg_results(var)[0])
+        avg_tput_pipeline_vals.append(exp_cori_pipeline.get_agg_results(var)[0])
+        std_tput_default_vals.append(exp_cori_default.get_agg_results(var, AggregateMethod.STD)[0])
+        std_tput_pipeline_vals.append(exp_cori_pipeline.get_agg_results(var, AggregateMethod.STD)[0])
  
     bar_plot = BarPlot(plot_filename="tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline",
                        xlabel="Applications",
-                       ylabel="Throughput\n(tasks/s)", ylim_top=ylim_top)
+                       ylabel="Throughput\n(tasks/s)")
 
-    print(avg_tput_vals)
-    print(std_tput_vals)
     bar_plot.plot(
-        avg_tput_vals,
+        [avg_tput_default_vals, avg_tput_pipeline_vals],
         xtick_labels,
-        legends=["default", "pipeline"],
-        std_arrs=std_tput_vals)
-
-
-
-# example
-def test(experiment_dir):
-    # example
-    apps = ["als"]
-    data_sizes = ["10mb"]
-    sources = [1]
-    workers = [64]
-
-    xtick_labels = [str(w) for w in workers]
-
-    var = "normalized_throughput"
-    std_var = "std_throughput"
-    for i in range(len(apps)):
-        exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=False, is_pipeline=True)
-
-        for j in range(len(workers)):
-            # Adding Setup convention telling how many sources
-            # and workers were running for that experiment
-            exp_cori.add_setup(sources[i], workers[j])
-
-        exp_cori.process()
-
-        bar_plot = BarPlot(plot_filename="test",
-                           xlabel="Applications",
-                           ylabel="Throughput\n(tasks/s)")
-
-        bar_plot.plot(
-            [exp_cori.get_agg_results(var)],
-            xtick_labels,
-            legends=["ALS"],
-            std_arrs=exp_cori.get_agg_results(std_var, method=AggregateMethod.STD))
+        legends=["non-pipeline", "pipeline"],
+        std_arrs=[std_tput_default_vals, std_tput_pipeline_vals], display_val=True)
 
 
 def main(args):

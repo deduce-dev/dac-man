@@ -13,6 +13,8 @@ services:
     restart: "no"
     links:
       - "broker:broker"
+    volumes:
+      - result_dir:/data
     entrypoint: python3 source.py broker ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}
     depends_on:
       - broker
@@ -22,6 +24,18 @@ services:
     restart: "no"
     links:
       - "broker:broker"
+    volumes:
+      - result_dir:/data
     entrypoint: python3 worker.py broker ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}
     depends_on:
       - broker
+
+
+# volume creating
+volumes:
+  result_dir:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind' # this is important if you want to bind a volume to a specific path
+      device: ${SHARED_HOST_DIR}
