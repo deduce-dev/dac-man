@@ -31,7 +31,11 @@ class BarPlot(Plot):
 
             if display_val:
                 for j, v in enumerate(value_arrs[i]):
-                    ax.text(ind[j] + i*self._width, v, "%.1f" % v, fontdict=self._inner_txt_size,
+                    if v < 0.1:
+                        ax.text(ind[j] + i*self._width, v, "%.1e" % v, fontdict=self._inner_txt_size,
+                        horizontalalignment='center', verticalalignment='bottom')
+                    else:
+                        ax.text(ind[j] + i*self._width, v, "%.1f" % v, fontdict=self._inner_txt_size,
                         horizontalalignment='center', verticalalignment='bottom')
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))

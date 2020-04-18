@@ -6,6 +6,7 @@
 *.csv
 *.zip
 *.pdf
+*.h5
 .AppleDouble
 .DS_Store
 _build

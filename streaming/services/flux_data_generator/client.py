@@ -1,19 +1,3 @@
-# def put(self, k, datablock, window_size=1):
-#     datahash = blake2b(digest_size=20)
-#     datahash.update(datablock)
-#     datablock_id = "%s:%s" % (_settings.DATABLOCK_PREFIX, datahash.hexdigest())
-#
-#     self._redis.set(datablock_id, datablock.tostring())
-#
-#     datablock_ids = self._redis.get(k)
-#     datablock_ids.append(datablock_id)
-#
-#     # if enough data blocks are available, then time to set up a task
-#     if len(datablock_ids) == window_size:
-#         task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
-#         self._redis.rpush(self._task_list, task_uuid)
-#         self._redis.lpush(self._task_q, (task_uuid, *datablock_ids, "custom"))
-
 from cache import Cache
 import pandas as pd
 import argparse
@@ -44,8 +28,8 @@ def get_window_key(row, key_name):
 
 
 def main(stream_transformer, stream_src, measurement, window_size, key_name,
-            stats_dir, is_independent=True):
-    cache = Cache()
+            stats_dir, is_independent=True, host=None, port=None):
+    cache = Cache(host, port)
     print("Streaming data...")
     stream_gen = stream_transformer(stream_src)
 
@@ -62,22 +46,15 @@ def main(stream_transformer, stream_src, measurement, window_size, key_name,
                 window_key = "%s_%s_%s" % (str(window_key), socket.gethostname(), os.getpid())
                 row2 = next(stream_gen)
                 send_independent_srcs(cache, row1[measurement], row2[measurement])
-                #send_windowed_srcs(cache, window_key, row1[measurement], window_size)
-                #send_windowed_srcs(cache, window_key, row2[measurement], window_size)
                 row1 = row2
                 loop_count += 1
                 if loop_count % 20 == 0:
                     pipe.execute()
             except StopIteration:
                 break
-
-        #for row1 in stream_gen:
-        #    row2 = next(stream_gen)
-        #    send_independent_srcs(cache, row1[measurement], row2[measurement])
     else:
         for row in stream_gen:
             window_key = get_window_key(row, key_name)
-            #print(window_key, row[measurement])
             send_windowed_srcs(cache, window_key, row[measurement], window_size)
 
     cache.write_stats(stats_dir)
@@ -87,7 +64,6 @@ def main(stream_transformer, stream_src, measurement, window_size, key_name,
 # Data stream transformation
 def transform_fluxnet_stream(stream_src):
     df = pd.read_csv(stream_src, comment='#', sep=',', na_filter=False, dtype='str')
-    #df['datetime'] = pd.to_datetime(df['TIMESTAMP_END'], format="%Y%m%d%H%M",errors='coerce')
     df['datetime'] = df['TIMESTAMP_END']
     for index, row in df.iterrows():
         yield row
@@ -123,6 +99,8 @@ def _fluxnetClientParser(subparsers):
     parser_worker.add_argument('-m', '--measurement',
                                choices=['CO2_F_MDS', 'WD', 'TA_F'], type=str,
                                default='CO2_F_MDS', help='measurement')
+    parser_worker.add_argument('-r', '--redis_host', type=str, required=True, help='Redis host')
+    parser_worker.add_argument('-p', '--redis_port', type=str, required=True, help='Redis port')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
@@ -141,6 +119,8 @@ def _lathuileClientParser(subparsers):
     parser_worker.add_argument('-m', '--measurement',
                                choices=['CO2', 'WD', 'Ta_f'], type=str,
                                default='CO2', help='measurement')
+    parser_worker.add_argument('-r', '--redis_host', type=str, required=True, help='Redis host')
+    parser_worker.add_argument('-p', '--redis_port', type=str, required=True, help='Redis port')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
     parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
@@ -174,4 +154,5 @@ if __name__ == '__main__':
         fn = transform_lathuile_stream
 
     main(fn, args.filename, args.measurement, args.windowsize, args.keyname,
-        args.output_stats_dir, is_independent=args.independent)
+        args.output_stats_dir, is_independent=args.independent, host=args.redis_host,
+        port=args.redis_port)

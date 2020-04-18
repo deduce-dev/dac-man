@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  broker:
+    image: redis:5.0.1
+    restart: "always"
+    ports:
+      - "6379"
+    entrypoint: redis-server --save "" --appendonly no
+
+  source:
+    image: aaelbashandy/image_data_generator:0.1
+    restart: "no"
+    links:
+      - "broker:broker"
+    entrypoint: python3 source.py broker ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}
+    depends_on:
+      - broker
+
+  worker:
+    image: aaelbashandy/image-analysis:0.1
+    restart: "no"
+    links:
+      - "broker:broker"
+    entrypoint: python3 worker.py broker ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}
+    depends_on:
+      - broker

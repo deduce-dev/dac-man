@@ -223,19 +223,11 @@ def s_main(args):
     wait_time = args['wait_time']
     output_dir = args['output_dir']
 
-    func_file = args['func_file']
-    executor = args['executor']
-
-    is_mpi = executor.isdigit() and int(executor) == 1
-
-    is_mpi = False
-
-    custom_analyzer = calc_avg
-    #custom_analyzer = calc_diff
+    custom_analyzer = calc_diff
 
     try:
         r = get_redis_instance(host, port)
-        diff_tasks(r, redis_queue_id, custom_analyzer, wait_time, output_dir, is_mpi)
+        diff_tasks(r, redis_queue_id, custom_analyzer, wait_time, output_dir)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
@@ -254,8 +246,5 @@ if __name__ == '__main__':
         'wait_time': int(sys.argv[4]),
         'output_dir': sys.argv[5]
     }
-
-    args['func_file'] = str(_config.CUSTOM_ANALYZER_FILE)
-    args['executor'] = str(_config.EXECUTOR)
 
     s_main(args)

@@ -154,9 +154,9 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
     var2 = "avg_event_time_latency"
     for i in range(len(apps)):
         exp_local_live = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=True, is_buffered=False)
+            is_local=True, is_buffered=False)
         exp_local_buffered = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=True, is_buffered=True)
+            is_local=True, is_buffered=True)
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -215,9 +215,13 @@ def tput_3_apps_2_modes_buffered_w_1_64(experiment_dir):
     var2 = "avg_event_time_latency"
     for i in range(len(apps)):
         exp_local = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=True, is_buffered=False)
-        exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=False)
+            is_local=True, is_buffered=True)
+        if apps[i] == "flux_msip" or apps[i] == "flux_mscp":
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+               is_local=False, is_buffered=True, scaling_style="strong_scaling")
+        else:
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+                is_local=False, is_buffered=True)
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -238,10 +242,13 @@ def tput_3_apps_2_modes_buffered_w_1_64(experiment_dir):
             exp_cori.get_agg_results(var2, method=AggregateMethod.RAW_VAL)
         ]
 
+        ylim_top=None
+        if apps[i] == "flux_mscp":
+            ylim_top = 11000
         box_plot = BoxPlot(plot_filename="tput_%s_2_modes_buffered_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Throughput\n(tasks/s)",
-                           legend_size=20, legend_loc="best")
+                           legend_size=20, legend_loc="best", ylim_top=ylim_top)
 
         box_plot.plot(
             apps_tput_avg_values,
@@ -274,9 +281,9 @@ def tput_2_apps_2_modes_live_w_1_64(experiment_dir):
     var2 = "avg_event_time_latency"
     for i in range(len(apps)):
         exp_local = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=True, is_buffered=False)
+            is_local=True, is_buffered=False)
         exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=False)
+            is_local=False, is_buffered=False)
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -334,10 +341,10 @@ def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
     for i in range(len(apps)):
         if apps[i] == "als":
             exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-            is_local=False, is_buffered=True)
+                is_local=False, is_buffered=True)
         else:
             exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-            is_local=False, is_buffered=True, scaling_style="strong_scaling")
+                is_local=False, is_buffered=True, scaling_style="strong_scaling")
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -373,7 +380,7 @@ def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
     var = "normalized_throughput"
     for i in range(len(apps)):
         exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=True, scaling_style="weak_scaling")
+            is_local=False, is_buffered=True, scaling_style="weak_scaling")
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -430,7 +437,8 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
         all_count_values,
         [':o', ':x', ':^'],
         markevery=50,
-        legends=["Workload 1", "Workload 2", "Workload 3"],
+        legends=["1500", "2000", "2500"],
+        legend_title="Backpressure",
         ncol=1,
         xticks_step=200)
     
@@ -449,7 +457,7 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
     var = "normalized_throughput"
     for i in range(len(data_sizes)):
         exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=False)
+            is_local=False, is_buffered=False)
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -487,7 +495,7 @@ def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
     var = "avg_event_time_latency"
     for i in range(len(data_sizes)):
         exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
-        is_local=False, is_buffered=False)
+            is_local=False, is_buffered=False)
 
         for j in range(len(workers)):
             # Adding Setup convention telling how many sources
@@ -557,6 +565,41 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
         std_arrs=std_tput_vals)
 
 
+
+# example
+def test(experiment_dir):
+    # example
+    apps = ["als"]
+    data_sizes = ["10mb"]
+    sources = [1]
+    workers = [64]
+
+    xtick_labels = [str(w) for w in workers]
+
+    var = "normalized_throughput"
+    std_var = "std_throughput"
+    for i in range(len(apps)):
+        exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+        is_local=False, is_buffered=False, is_pipeline=True)
+
+        for j in range(len(workers)):
+            # Adding Setup convention telling how many sources
+            # and workers were running for that experiment
+            exp_cori.add_setup(sources[i], workers[j])
+
+        exp_cori.process()
+
+        bar_plot = BarPlot(plot_filename="test",
+                           xlabel="Applications",
+                           ylabel="Throughput\n(tasks/s)")
+
+        bar_plot.plot(
+            [exp_cori.get_agg_results(var)],
+            xtick_labels,
+            legends=["ALS"],
+            std_arrs=exp_cori.get_agg_results(std_var, method=AggregateMethod.STD))
+
+
 def main(args):
     experiment_dir = args.experiment_dir
     figure_num = args.figure_num
@@ -594,6 +637,8 @@ def main(args):
         latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
     elif figure_num == 13:
         tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
+    elif figure_num == 111:
+        test(experiment_dir)
     elif figure_num < 4:
         raise ValueError("Figure %d cannot be generated" % figure_num)
     else:

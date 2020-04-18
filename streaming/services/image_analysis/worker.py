@@ -50,7 +50,6 @@ def func_deserializer(ser_analyzer):
 
     return func
 
-
 def func_deserializer_file(file):
     '''
     Deserialize analyzer function from a file
@@ -62,19 +61,14 @@ def func_deserializer_file(file):
     return func
 
 
-def calc_diff(dataA, dataB):
-    return float(dataA) - float(dataB)
-
-
-def calc_avg(dataA, dataB):
-    return (float(dataA) + float(dataB))/2.0
-
-
 def dataid_to_datablock(r, data_id1, data_id2):
     '''
     Retrieves DataBlocks from given Data IDs
     '''
     data1, data2 = r.mget([data_id1, data_id2])
+
+    data1 = np.fromstring(data1, dtype='<f4')
+    data2 = np.fromstring(data2, dtype='<f4')
 
     return data1, data2
 
@@ -94,16 +88,15 @@ def process_task(r, task, custom_analyzer):
     data_pull_end[task_uuid] = time.time()
 
     try:
-        avg_result = custom_analyzer(data1, data2)
+        rms_log, t_test_t, t_test_p = custom_analyzer(data1, data2)
         job_end_processing[task_uuid] = time.time()
-        r.set(task_uuid, (avg_result))
+        r.set(task_uuid, (rms_log, t_test_t, t_test_p))
         job_end_data_put[task_uuid] = time.time()
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
     return 1
-
 
 def write_to_csv(output_dir_path):
     if not os.path.exists(output_dir_path):
@@ -189,6 +182,7 @@ def diff_tasks(r, redis_queue_id, custom_analyzer, wait_time, output_dir, is_mpi
 
                 # remove later
                 print(rank, "is processing task:", task[1], end='\n\n')
+                
                 try:
                     out_code = process_task(r, task[1], custom_analyzer)
                 except:
@@ -224,18 +218,12 @@ def s_main(args):
     output_dir = args['output_dir']
 
     func_file = args['func_file']
-    executor = args['executor']
 
-    is_mpi = executor.isdigit() and int(executor) == 1
-
-    is_mpi = False
-
-    custom_analyzer = calc_avg
-    #custom_analyzer = calc_diff
+    custom_analyzer = func_deserializer_file(func_file)
 
     try:
         r = get_redis_instance(host, port)
-        diff_tasks(r, redis_queue_id, custom_analyzer, wait_time, output_dir, is_mpi)
+        diff_tasks(r, redis_queue_id, custom_analyzer, wait_time, output_dir)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
@@ -256,6 +244,5 @@ if __name__ == '__main__':
     }
 
     args['func_file'] = str(_config.CUSTOM_ANALYZER_FILE)
-    args['executor'] = str(_config.EXECUTOR)
 
     s_main(args)
