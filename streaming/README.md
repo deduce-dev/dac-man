@@ -78,3 +78,14 @@ Or to run it with docker:
 ```
 $ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data
 ```
+
+We also can specify what figure number we need to plot using `-f` option:
+```
+$ python3 main.py -e /path/to/dataset/ -f 4
+```
+or
+```
+$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data -f 4
+```
+
+Note that `-f 0` will plot all the figures in the paper.
