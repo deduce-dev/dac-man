@@ -44,7 +44,7 @@ worker_1    |
 worker_1    | Host:2caa09e50b32-PID:1 is processing task: b"('task:4dfad5de-d90e-4a7f-bab8-2e58f5549250', 'datablock:e1e192a8-506e-4972-8b56-1201c6a46d62', 'datablock:c0504588-27e9-48a9-8369-3361e1e65c6a', 'custom')"
 ```
 
-### scaling up workers
+### Scaling up workers
 To scale the number of workers processing tasks, run this command:
 ```
 $ docker-compose up --scale worker=4
@@ -52,3 +52,15 @@ $ docker-compose up --scale worker=4
 
 After the workers are done processing all streamed tasks, you will see results written in `${SHARED_HOST_DIR}/results`
 
+Wait for all workers to exit to fully see the results. However, you have to manually close the docker-compose run using `ctrl-c` because it won't exit on its own as the broker service will be still running as a `redis-server`.
+
+### Understanding results
+In this section, when we refer to data we are talking about timestamps that are saved in different stages in the experiment. This helps us evaluate the system performance.
+
+Under the `results` folder, we'll find two folders: `sources` & `workers`.
+
+#### sources
+`sources` folder has all the data saved by the streaming sources that streamed tasks to the broker
+
+#### workers
+`workers` folder has all the data saved by all workers that processed the streamed tasks
