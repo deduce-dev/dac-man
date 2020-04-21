@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ARG USER=dacman
+ARG USER=mpi
 ENV USER ${USER}
 
 # HOME must be added for NERSC to be able to load 
@@ -13,8 +13,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends sudo apt-utils && \
     apt-get install -y --no-install-recommends openssh-server \
-        python3-dev python3-numpy python3-pip python3-virtualenv python3-scipy redis-tools \
-        gcc gfortran binutils iperf vim iputils-ping && \
+        python3-dev python3-numpy python3-pip python3-virtualenv \
+        vim && \
     apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
@@ -32,6 +32,7 @@ RUN chown -R ${USER}:${USER} ${WORKDIR}
 
 WORKDIR ${WORKDIR}
 
+
 # Copy the specified content(s) into the container at ${WORKDIR}
 COPY . .
 
@@ -39,8 +40,6 @@ RUN pip3 install --upgrade pip
 
 USER ${USER}
 
-RUN pip3 install --user scipy scikit-learn redis==2.10.6 numpy
+RUN pip3 install --user numpy matplotlib
 
-ENV PYTHONPATH=${HOME}/.local/lib/python3.6/site-packages:$PYTHONPATH
-
-CMD ["/bin/bash"]
+CMD ["python3", "main.py", "-e", "/data/hipster", "-f", "0"]

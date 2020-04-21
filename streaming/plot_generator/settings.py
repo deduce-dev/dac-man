@@ -1,5 +1,4 @@
-#PLOT_DIR = "/data/plots"
-PLOT_DIR = "/home/absho/workspace/lbnl/deduce/playground/sc20_reproducibility/stats"
+PLOT_DIR = "/data/plots"
 EXPERIMENT_DIR = "/data/hipster"
 SOURCE_DIR = "sources"
 WORKER_DIR = "workers"
