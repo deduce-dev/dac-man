@@ -64,3 +64,17 @@ Under the `results` folder, we'll find two folders: `sources` & `workers`.
 
 #### workers
 `workers` folder has all the data saved by all workers that processed the streamed tasks
+
+## plot_generator
+This has the code that we used to generate all the figures used in the paper, including a `Dockerfile` for easy packaging.
+
+To generate the graphs run this command:
+```
+$ cd plot_generator/
+$ python3 main.py -e /path/to/dataset/
+```
+
+Or to run it with docker:
+```
+$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data
+```
