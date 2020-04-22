@@ -42,4 +42,4 @@ USER ${USER}
 
 RUN pip3 install --user numpy matplotlib
 
-CMD ["python3", "main.py", "-e", "/data/hipster", "-f", "0"]
+CMD ["python3", "main.py", "-e", "/data/streaming_eval_measurements", "-f", "0"]

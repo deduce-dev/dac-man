@@ -90,6 +90,8 @@ class LinePlot(Plot):
         ax.tick_params(labelsize=self._label_size)
 
         if xticks_step:
+            #print([str(i) for i in range(0, int(ax.get_xticks()[-1]), xticks_step)])
+            #ax.set_xticklabels([str(i) for i in range(0, int(ax.get_xticks()[-1]), xticks_step)], rotation=rotation)
             ax.set_xticks(range(0, int(ax.get_xticks()[-1]), xticks_step))
 
         if yticks_step:

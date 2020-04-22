@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ARG USER=hipster
+ARG USER=mpi
 ENV USER ${USER}
 
 # HOME must be added for NERSC to be able to load 
@@ -42,4 +42,4 @@ USER ${USER}
 
 RUN pip3 install --user numpy matplotlib
 
-CMD ["python3", "main.py", "-e", "/data/hipster", "-f", "0"]
+CMD ["python3", "main.py", "-e", "/data/streaming_eval_measurements", "-f", "0"]

@@ -56,7 +56,7 @@ def tput_redis_benchmark_bar_set_get(experiment_dir):
     bar_plot = BarPlot(plot_filename="redis_benchmark_tput_bar_c_64_datasize_set_get",
                        xlabel="Data-sizes (KB)",
                        ylabel="Throughput\n(requests/s)",
-                       inner_txt_rotation="vertical", inner_txt_size=20,
+                       inner_txt_rotation=45, inner_txt_size=20,
                        fig_size1=12, fig_size2=8, width=0.45, legend_size=25,
                        legend_loc="best", ylim_top=37000, label_size=25)
 
@@ -561,7 +561,7 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
     bar_plot = BarPlot(plot_filename="tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline",
                        xlabel="Applications",
                        ylabel="Throughput\n(tasks/s)",
-                       inner_txt_size=20, legend_size=25,
+                       inner_txt_size=20, inner_txt_rotation=45, legend_size=25,
                        ylim_top=5000)
 
     bar_plot.plot(
