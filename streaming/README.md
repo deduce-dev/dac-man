@@ -74,6 +74,8 @@ $ cd plot_generator/
 $ python3 main.py -e /path/to/dataset/
 ```
 
+Note: You may need to change the path where the graphs will be generated in settings.py module.
+
 Or to run it with docker:
 ```
 $ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data

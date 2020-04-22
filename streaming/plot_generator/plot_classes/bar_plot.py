@@ -33,10 +33,10 @@ class BarPlot(Plot):
                 for j, v in enumerate(value_arrs[i]):
                     if v < 0.1:
                         ax.text(ind[j] + i*self._width, v, "%.1e" % v, fontdict=self._inner_txt_size,
-                        horizontalalignment='center', verticalalignment='bottom')
+                                horizontalalignment='center', verticalalignment='bottom', rotation=45)
                     else:
                         ax.text(ind[j] + i*self._width, v, "%.1f" % v, fontdict=self._inner_txt_size,
-                        horizontalalignment='center', verticalalignment='bottom')
+                                horizontalalignment='center', verticalalignment='bottom', rotation=45)
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
 
@@ -69,3 +69,4 @@ class BarPlot(Plot):
 
         filename = self._plot_filename + "." + self._graph_ext
         plt.savefig(os.path.join(self._output_dir, filename))
+
