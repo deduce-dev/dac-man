@@ -68,13 +68,13 @@ Under the `results` folder, we'll find two folders: `sources` & `workers`.
 ## plot_generator
 This has the code that we used to generate all the figures used in the paper, including a `Dockerfile` for easy packaging.
 
-To generate the graphs run this command:
+To generate the figures by directly executing the code, run this command:
 ```
+$ export STREAM_HPC_EVAL_DIR=/path/for/plot_generation/
 $ cd plot_generator/
 $ python3 main.py -e /path/to/dataset/
 ```
-
-Note: You may need to change the path where the graphs will be generated in settings.py module.
+Note: env variable `STREAM_HPC_EVAL_DIR` has to be set to specify the directory where the figures will be at. Otherwise the code by default will try to generate the figures in `/data/plots` as specified in `plot_generator/settings.py`.
 
 Or to run it with docker:
 ```
