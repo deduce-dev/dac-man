@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  broker:
+    image: redis:5.0.1
+    restart: "no"
+    ports:
+      - "6379"
+    entrypoint: redis-server --save "" --appendonly no
+
+  fluxnet:
+    image: aaelbashandy/flux-data-generator:0.1
+    restart: "no"
+    links:
+      - "broker:broker"
+    volumes:
+      - result_dir:/data
+    entrypoint: python3 client.py fluxnet ${DATASET_SRC_1} -r broker -p ${REDIS_PORT} -s 2 -o ${SOURCE_RESULTS_DIR} -i True
+    depends_on:
+      - broker
+
+  lathuile:
+    image: aaelbashandy/flux-data-generator:0.1
+    restart: "no"
+    links:
+      - "broker:broker"
+    volumes:
+      - result_dir:/data
+    entrypoint: python3 client.py lathuile ${DATASET_SRC_2} -r broker -p ${REDIS_PORT} -s 2 -o ${SOURCE_RESULTS_DIR} -i True
+    depends_on:
+      - broker
+
+  worker:
+    image: aaelbashandy/moving-average:0.1
+    restart: "no"
+    links:
+      - "broker:broker"
+    volumes:
+      - result_dir:/data
+    entrypoint: python3 worker.py broker ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}
+    depends_on:
+      - broker
+
+
+# volume creating
+volumes:
+  result_dir:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind' # this is important if you want to bind a volume to a specific path
+      device: ${SHARED_HOST_DIR}

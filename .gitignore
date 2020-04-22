@@ -41,3 +41,7 @@ diff_*.yml
 
 # mkdocs
 site/
+
+# data
+*.h5
+*.csv
