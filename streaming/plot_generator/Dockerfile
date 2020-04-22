@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ARG USER=mpi
+ARG USER=hipster
 ENV USER ${USER}
 
 # HOME must be added for NERSC to be able to load 

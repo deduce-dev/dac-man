@@ -56,8 +56,9 @@ def tput_redis_benchmark_bar_set_get(experiment_dir):
     bar_plot = BarPlot(plot_filename="redis_benchmark_tput_bar_c_64_datasize_set_get",
                        xlabel="Data-sizes (KB)",
                        ylabel="Throughput\n(requests/s)",
-                       fig_size1=12, fig_size2=7, width=0.45, legend_size=25,
-                       legend_loc="best", ylim_top=35000, label_size=25)
+                       inner_txt_rotation="vertical", inner_txt_size=20,
+                       fig_size1=12, fig_size2=8, width=0.45, legend_size=25,
+                       legend_loc="best", ylim_top=37000, label_size=25)
 
     #
 
@@ -191,7 +192,8 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
     bar_plot = BarPlot(plot_filename="tput_3_apps_local_live_buffered_w_1",
                        xlabel="Processing Strategy",
                        ylabel="Throughput\n(tasks/s)",
-                       ylim_top=2200, legend_size=20,
+                       inner_txt_size=20,
+                       ylim_top=2300, legend_size=20,
                        legend_loc="upper right")
 
     bar_plot.plot(
@@ -203,6 +205,7 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
     bar_plot = BarPlot(plot_filename="latency_3_apps_local_live_buffered_w_1",
                        xlabel="Processing Strategy",
                        ylabel="Latency (s)",
+                       inner_txt_size=20,
                        ylim_top=2800, legend_size=20,
                        legend_loc="upper left")
 
@@ -213,10 +216,8 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
         std_arrs=apps_latency_std_values, ncol=1, display_val=True)
 
 
-def tput_3_apps_2_modes_buffered_w_1_64(experiment_dir):
-    # Figure 7 Throughput of apps with buffered data
-    # comparing performance between local and cluster
-    # modes from 1 to 64 workers
+def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
+    # Figure 7 and 9
     apps = ["als", "flux_msip", "flux_mscp"]
     data_sizes = ["10mb", "105b", "105b"]
     sources = [1, 2, 2]
@@ -256,29 +257,30 @@ def tput_3_apps_2_modes_buffered_w_1_64(experiment_dir):
         ]
 
         ylim_top=None
-        if apps[i] == "flux_msip":
-            ylim_top = 12000
-        elif apps[i] == "flux_mscp":
-            ylim_top = 12000
+        ncol = 1
+        legend_loc = "best"
+        if apps[i] == "flux_msip" or apps[i] == "flux_mscp":
+            ylim_top = 14000
+            legend_loc = "upper left"
 
         box_plot = BoxPlot(plot_filename="tput_%s_2_modes_buffered_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Throughput\n(tasks/s)",
                            fig_size1=8, fig_size2=6, font_size=32, label_size=32,
-                           legend_size=25, legend_loc="best", ylim_top=ylim_top)
+                           legend_size=28, legend_loc=legend_loc, ylim_top=ylim_top)
 
         box_plot.plot(
             apps_tput_avg_values,
             xtick_labels,
             legends=["Local", "Remote"],
-            ncol=1
+            ncol=ncol
         )
 
         box_plot = BoxPlot(plot_filename="latency_%s_2_modes_buffered_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Latency (s)",
                            fig_size1=8, fig_size2=6, font_size=32, label_size=32,
-                           legend_size=25, legend_loc="best")
+                           legend_size=28, legend_loc="best")
 
         box_plot.plot(
             apps_latency_avg_values,
@@ -288,8 +290,8 @@ def tput_3_apps_2_modes_buffered_w_1_64(experiment_dir):
         )
 
 
-def tput_2_apps_2_modes_live_w_1_64(experiment_dir):
-    # Figure 8
+def tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir):
+    # Figure 8 and 10
     apps = ["flux_msip", "flux_mscp"]
     data_sizes = ["105b", "105b"]
     sources = [2, 2]
@@ -350,7 +352,7 @@ def tput_2_apps_2_modes_live_w_1_64(experiment_dir):
 
 
 def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
-    # Figure 9
+    # Figure 11
     apps = ["als", "flux_msip", "flux_mscp"]
     data_sizes = ["10mb", "105b", "105b"]
     sources = [1, 2, 2]
@@ -382,7 +384,8 @@ def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
             ylim_top = 20000
         bar_plot = BarPlot(plot_filename="tput_%s_cori_buffered_w_64_640" % apps[i],
                            xlabel="Number of Workers", ylabel="Throughput\n(tasks/s)",
-                           fig_size1=9, fig_size2=7, font_size=32, label_size=32,
+                           font_size=32, label_size=32,
+                           #fig_size1=9, fig_size2=7,
                            ylim_top=ylim_top)
 
         bar_plot.plot(
@@ -392,7 +395,7 @@ def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
 
 
 def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
-    # Figure 10 A
+    # Figure 12 A
     apps = ["flux_msip"]
     data_sizes = ["105b"]
     sources = [2, 4, 6, 8, 10]
@@ -424,7 +427,7 @@ def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
 
 
 def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
-    # Figure 10 B
+    # Figure 12 B
     queue_data_dir = os.path.join(
         experiment_dir,
         "throttling_data"
@@ -466,8 +469,8 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
         xticks_step=200)
     
 
-def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
-    # Figure 11
+def tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
+    # Figure 13
     apps = ["als"]
     data_sizes = ["2mb", "4mb", "6mb", "8mb", "10mb"]
     sources = [1]
@@ -475,9 +478,12 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
 
     xtick_labels = data_sizes
 
-    apps_var_avg_values = []
-    apps_var_std_values = []
-    var = "normalized_throughput"
+    apps_tput_avg_values = []
+    apps_tput_std_values = []
+    apps_latency_avg_values = []
+    apps_latency_std_values = []
+    tput_var = "normalized_throughput"
+    latency_var = "avg_event_time_latency"
     for i in range(len(data_sizes)):
         exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
             is_local=False, is_buffered=False)
@@ -489,8 +495,10 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
 
         exp_cori.process()
 
-        apps_var_avg_values.append(exp_cori.get_agg_results(var, AggregateMethod.MEAN)[0])
-        apps_var_std_values.append(exp_cori.get_agg_results(var, AggregateMethod.STD)[0])
+        apps_tput_avg_values.append(exp_cori.get_agg_results(tput_var, AggregateMethod.MEAN)[0])
+        apps_tput_std_values.append(exp_cori.get_agg_results(tput_var, AggregateMethod.STD)[0])
+        apps_latency_avg_values.append(exp_cori.get_agg_results(latency_var, AggregateMethod.MEAN)[0])
+        apps_latency_std_values.append(exp_cori.get_agg_results(latency_var, AggregateMethod.STD)[0])
 
     bar_plot = BarPlot(plot_filename="tput_%s_cori_live_w_640_payload_2_10_mb" % apps[0],
                        xlabel="Data-sizes (MB)",
@@ -498,54 +506,25 @@ def tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
                        ylim_top=10)
 
     bar_plot.plot(
-        [apps_var_avg_values],
+        [apps_tput_avg_values],
         xtick_labels,
-        std_arrs=[apps_var_std_values]
+        std_arrs=[apps_tput_std_values]
     )
 
+    bar_plot = BarPlot(plot_filename="latency_%s_cori_live_w_640_payload_2_10_mb" % apps[0],
+                       xlabel="Data-sizes (MB)",
+                       ylabel="Latency (s)",
+                       ylim_bottom=0)
 
-def latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir):
-    # Figure 12
-    apps = ["als"]
-    data_sizes = ["2mb", "4mb", "6mb", "8mb", "10mb"]
-    sources = [1]
-    workers = [640]
-
-    xtick_labels = data_sizes
-
-    apps_var_avg_values = []
-    apps_var_std_values = []
-    var = "avg_event_time_latency"
-    for i in range(len(data_sizes)):
-        exp_cori = Experiment(apps[0], data_sizes[i], experiment_dir,
-            is_local=False, is_buffered=False)
-
-        for j in range(len(workers)):
-            # Adding Setup convention telling how many sources
-            # and workers were running for that experiment
-            exp_cori.add_setup(sources[j], workers[j])
-
-        exp_cori.process()
-
-        apps_var_avg_values.append(exp_cori.get_agg_results(var, AggregateMethod.MEAN)[0])
-        apps_var_std_values.append(exp_cori.get_agg_results(var, AggregateMethod.STD)[0])
-
-        bar_plot = BarPlot(plot_filename="latency_%s_cori_live_w_640_payload_2_10_mb" % apps[0],
-                           xlabel="Data-sizes (MB)",
-                           ylabel="Latency (s)",
-                           ylim_bottom=0)
-
-    print(apps_var_avg_values)
-    print(apps_var_std_values)
     bar_plot.plot(
-        [apps_var_avg_values],
+        [apps_latency_avg_values],
         xtick_labels,
-        std_arrs=[apps_var_std_values]
+        std_arrs=[apps_latency_std_values]
     )
 
 
 def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
-    # Figure 13
+    # Figure 14
     apps = ["als", "flux_msip"]
     data_sizes = ["1kb", "105b"]
     sources = [1, 2]
@@ -582,6 +561,7 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
     bar_plot = BarPlot(plot_filename="tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline",
                        xlabel="Applications",
                        ylabel="Throughput\n(tasks/s)",
+                       inner_txt_size=20, legend_size=25,
                        ylim_top=5000)
 
     bar_plot.plot(
@@ -589,7 +569,8 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
         xtick_labels,
         legends=["non-pipeline", "pipeline"],
         std_arrs=[std_tput_default_vals, std_tput_pipeline_vals],
-        display_val=True)
+        display_val=True,
+        ncol=1)
 
 
 def main(args):
@@ -600,36 +581,32 @@ def main(args):
         tput_redis_benchmark_bar_set_get(experiment_dir)
         tput_redis_benchmark_clients_line_set_get(experiment_dir)
         tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
-        tput_3_apps_2_modes_buffered_w_1_64(experiment_dir)
-        tput_2_apps_2_modes_live_w_1_64(experiment_dir)
+        tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir)
+        tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir)
         tput_3_apps_cori_buffered_w_64_640(experiment_dir)
         tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
         tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
-        tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
-        latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
+        tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
+        tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
     elif figure_num == 4:
         tput_redis_benchmark_bar_set_get(experiment_dir)
     elif figure_num == 5:
         tput_redis_benchmark_clients_line_set_get(experiment_dir)
     elif figure_num == 6:
         tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
-    elif figure_num == 7:
-        tput_3_apps_2_modes_buffered_w_1_64(experiment_dir)
-    elif figure_num == 8:
-        tput_2_apps_2_modes_live_w_1_64(experiment_dir)
-    elif figure_num == 9:
+    elif figure_num == 7 or figure_num == 9:
+        tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir)
+    elif figure_num == 8 or figure_num == 10:
+        tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir)
+    elif figure_num == 11:
         tput_3_apps_cori_buffered_w_64_640(experiment_dir)
-    elif figure_num == 10:
+    elif figure_num == 12:
         tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
         tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
-    elif figure_num == 11:
-        tput_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
-    elif figure_num == 12:
-        latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
     elif figure_num == 13:
+        tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
+    elif figure_num == 14:
         tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
-    elif figure_num == 111:
-        test(experiment_dir)
     elif figure_num < 4:
         raise ValueError("Figure %d cannot be generated" % figure_num)
     else:

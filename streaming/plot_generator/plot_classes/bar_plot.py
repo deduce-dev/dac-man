@@ -58,8 +58,6 @@ class BarPlot(Plot):
             else:
                 ax.legend(bar_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._legend_size)
 
-        #ax.relim()
-        #ax.autoscale_view()
         ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
 
         plt.tight_layout()

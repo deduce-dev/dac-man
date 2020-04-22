@@ -10,6 +10,7 @@ class Plot(object):
                  font_size=28, label_size=28,
                  legend_size=20, legend_loc="upper left",
                  label_pad_x=10, label_pad_y=15, inner_txt_size=16,
+                 inner_txt_rotation="horizontal",
                  fig_size1=9, fig_size2=5,
                  graph_ext="pdf", width=0.25,
                  color_list=["blue", "red", "darkorange",
@@ -35,6 +36,7 @@ class Plot(object):
         self._label_pad_y = label_pad_y
         self._inner_txt_size = {
             'size': inner_txt_size,
+            'rotation': inner_txt_rotation
         }
         self._fig_size1 = fig_size1
         self._fig_size2 = fig_size2
