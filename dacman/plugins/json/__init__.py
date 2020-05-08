@@ -206,6 +206,29 @@ class JSONPlugin(base.Comparator):
                     f'\t{v} unique keys for {k}'))
         return f'{level2_header}\n\t' + '\n\t'.join(level2_details)
 
+    def _check_custom_detail_level(self, detail_level: int) -> int:
+        max_detail_level = 2
+
+        try:
+            self.output_options
+            try:
+                custom_detail_level = self.output_options.get(
+                    'detail_level')
+                custom_detail_level = int(custom_detail_level)
+                if not (max_detail_level > custom_detail_level > 0):
+                    err_msg = ('Out of range detail level,'
+                               'valid ranges are: [0, 2]')
+                    raise Exception(err_msg)
+                detail_level = custom_detail_level
+                _log.info(f'Using custom detail level {detail_level}')
+            except Exception as e:
+                _log.error('Using default detail level. '
+                           f'Invalid custom detail level: {e}')
+        except:
+            _log.info('No custom detail level specified, '
+                      'using default detail level.')
+        return detail_level
+
     def percent_change(self):
         try:
             self.a_total_keys = (
@@ -220,9 +243,10 @@ class JSONPlugin(base.Comparator):
             return
         return self._percent_change
 
-    def stats(self, changes, detail_level=2):
+    def stats(self, changes, detail_level=0):
         if not self.percent_change():
             return
+        detail_level = self._check_custom_detail_level(detail_level)
 
         outputs = []
         if detail_level >= 0:
