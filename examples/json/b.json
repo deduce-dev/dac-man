@@ -1,0 +1,11 @@
+{
+   "age": "33",
+   "name": "Jane Doe",
+   "cars": {
+      "car1": {
+         "brand": "",
+         "color": "black"
+      }
+   },
+    "pets": {}
+}
