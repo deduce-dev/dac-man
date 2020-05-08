@@ -37,8 +37,9 @@ b.json
       "car2": {
          "brand": "Tesla",
          "color": "white"
-   }
-   "pets": "0"
+      }
+   },
+   "pets": {}
 }`
 ```
 The example files contain few lines, allowing us to visually inspect the
@@ -139,53 +140,6 @@ if __name__ == '__main__':
     run_my_change_analysis(file_a, file_b)
 ```
 
-cli_args=['b.json', 'a.json']
-[INFO] Sequentially comparing dataset pairs.
-Data comparator plugin = MyJSONPlugin
-[INFO] Comparing b.json and a.json using MyJSONPlugin
-
-Contents in b.json denoted with "+"
-Contents in a.json denoted with "-"
-
-
-+  pets: {
-+  }
-+  name: Jane Doe
--  name: John Doe
-  cars: {
-    car1: {
-+      brand:
--      brand: Ford
-+      color: black
--      color: white
-    }
-  }
-+  age: 33
--  age: 30
-[INFO] --- Using custom detail level 2
-
-Level 0 detail:
-        b.json has 14.29% more keys than a.json
-
-
-Level 1 detail:
-        Total number of keys in b.json: 7
-        Total number of keys in a.json: 6
-        Total number of overlapping keys in both files: 6
-
-
-Level 2 detail:
-        JSON level 0 has
-                1 unique keys for b.json
-                0 unique keys for a.json
-                3 keys shared between files
-        JSON level 1 has
-                0 unique keys for b.json
-                0 unique keys for a.json
-                3 keys shared between files
-[INFO] Data comparison complete.
-```
-
 ### Making the change analysis script executable
 
 Finally, we make the script executable by adding the "shebang" line at the top,
@@ -193,7 +147,7 @@ and using the `chmod` command to add executable permissions:
 
 ```py
 #!/usr/bin/env python3
-```
+o```
 
 ```sh
 chmod +x /home/user/my_json_analysis.py
@@ -210,3 +164,59 @@ dacman diff a.json b.json --script /home/user/my_json_analysis.py
 
 !!! tip
     A runnable copy of this file is available in [`examples/json/my_json_analysis.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/json/my_json_analysis.py)
+
+
+### Final Output
+The final output from executing the script above is as follows:
+
+```
+cli_args=['a.json', 'b.json']
+[INFO] Sequentially comparing dataset pairs.
+Data comparator plugin = MyJSONPlugin
+[INFO] Comparing a.json and b.json using MyJSONPlugin
+
+Contents in a.json denoted with "+"
+Contents in b.json denoted with "-"
+
+
+-  pets: {
+-  }
++  name: John Doe
+-  name: Jane Doe
+  cars: {
+-    car2: {
+-      brand: Tesla
+-      color: white
+-    }
+    car1: {
++      brand: Ford
+-      brand:
++      color: white
+-      color: black
+    }
+  }
++  age: 30
+-  age: 33
+[INFO] --- Using custom detail level 2
+
+Level 0 detail:
+        a.json has -66.67% less keys than b.json
+
+
+Level 1 detail:
+        Total number of keys in a.json: 6
+        Total number of keys in b.json: 10
+        Total number of overlapping keys in both files: 6
+
+
+Level 2 detail:
+        JSON level 0 has
+                0 unique keys for a.json
+                1 unique keys for b.json
+                3 keys shared between files
+        JSON level 1 has
+                3 unique keys for b.json
+                0 unique keys for a.json
+                3 keys shared between files
+[INFO] Data comparison complete.
+```
