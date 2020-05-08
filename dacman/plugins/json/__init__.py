@@ -215,7 +215,7 @@ class JSONPlugin(base.Comparator):
                 custom_detail_level = self.output_options.get(
                     'detail_level')
                 custom_detail_level = int(custom_detail_level)
-                if not (max_detail_level > custom_detail_level > 0):
+                if not (max_detail_level >= custom_detail_level >= 0):
                     err_msg = ('Out of range detail level,'
                                'valid ranges are: [0, 2]')
                     raise Exception(err_msg)
