@@ -14,9 +14,9 @@ together with the example data (shown immediately below) as two separate json fi
 
 In this example, we perform an analysis of the changes between the files `a.json` and `b.json`:
 
-```
-a.json
-`{
+`a.json`
+```py
+{
    "name": "John Doe",
    "age": "30",
    "cars": {
@@ -25,10 +25,12 @@ a.json
          "color":  "white"
       }
    }
-}`
+}
+```
 
-b.json
-`{
+`b.json`
+```
+{
    "age": "33",
    "name": "Jane Doe",
    "cars": {
@@ -42,11 +44,12 @@ b.json
       }
    },
    "pets": {}
-}`
+}
 ```
+
 The example files contain few lines, allowing us to visually inspect the
 differences.
-- b.json contains an additional key "pets"
+- `b.json` contains an additional key "pets"
 - The values for name, age and, cars differ
 
 ## Creating a specialized comparator class
@@ -88,14 +91,14 @@ if __name__ == '__main__':
 
 ### Implementing the change analysis with Dac-Man's API
 
-Next, we create a Python function taking in the two file paths as arguments,
+Next, we create a Python function `run_my_change_analysis(file_a, file_b)`
+taking in the two file paths as arguments,
 and implementing the custom change analysis using Dac-Man's API.
 This allows us to integrate our customized comparator class
 while reusing much of the functionality provided by Dac-Man.
 
 ```py
 import sys
-
 import dacman
 
 def run_my_change_analysis(file_a, file_b):
@@ -117,7 +120,6 @@ and set it as the plug-in to use for the comparison:
 
 ```py
 import sys
-
 import dacman
 from dacman.plugins.json import JSONPlugin
 
@@ -147,7 +149,7 @@ and using the `chmod` command to add executable permissions:
 
 ```py
 #!/usr/bin/env python3
-o```
+```
 
 ```sh
 chmod +x /home/user/my_json_analysis.py
@@ -169,7 +171,7 @@ dacman diff a.json b.json --script /home/user/my_json_analysis.py
 ### Final Output
 The final output from executing the script above is as follows:
 
-```
+```sh
 cli_args=['a.json', 'b.json']
 [INFO] Sequentially comparing dataset pairs.
 Data comparator plugin = MyJSONPlugin
