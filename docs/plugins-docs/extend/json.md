@@ -1,7 +1,7 @@
 # Extending the JSON plug-in
 
-This example illustrates how to implement a change analysis for JSON files
-tailored to specific features of the data being analyzed,
+The following example illustrates how to implement a change analysis for JSON
+files tailored to specific features of the data being analyzed,
 by creating a minimal extension of the built-in JSON plug-in
 with a more detailed output.
 
@@ -131,7 +131,7 @@ class MyJSONPlugin(JSONPlugin):
 def run_my_change_analysis(file_a, file_b):
     comparisons = [(file_a, file_b)]
     differ = dacman.DataDiffer(comparisons, dacman.Executor.DEFAULT)
-    differ.use_plugin(MyJSOnPlugin)
+    differ.use_plugin(MyJSONPlugin)
     differ.start()
 
 
