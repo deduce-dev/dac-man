@@ -13,6 +13,8 @@ together with the example data (shown immediately below) as two separate json fi
 ## Test data
 
 In this example, we perform an analysis of the changes between the files `a.json` and `b.json`:
+
+```
 a.json
 `{
    "name": "John Doe",
@@ -47,8 +49,6 @@ differences.
 - b.json contains an additional key "pets"
 - The values for name, age and, cars differ
 
-
-
 ## Creating a specialized comparator class
 
 In the following, we'll build an extension of the JSON plug-in tailored to the
@@ -70,10 +70,10 @@ for the outputs of the JSON plugin.
 
 ## Creating a runnable change analysis script
 
-### Creating the `main` block
+### Creating the `__main__` block
 
 We start from creating the skeleton of the analysis script in a Python file,
-for instance, `/home/user/my_json_anaysis.py`.
+for instance, `/home/user/my_json_analysis.py`.
 Dac-Man analysis scripts are required to accept two command-line arguments,
 where arguments are the file paths to be compared.
 
