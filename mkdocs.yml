@@ -24,7 +24,7 @@ nav:
     # - Introduction: plugins/introduction.md
     - Default: plugins/default.md
     - HDF5: plugins/hdf5.md
-    - CSV: 
+    - CSV:
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
     - Excel: plugins/excel.md
@@ -39,6 +39,7 @@ nav:
     - Extending built-in plug-ins:
       - CSV: plugins-docs/extend/csv.md
       - HDF5: plugins-docs/extend/hdf5-edf.md
+      - JSON: plugins-docs/extend/json.md
     - Creating a plug-in from scratch: plugins-docs/from-scratch.md
   - For developers:
     - Running tests: develop/tests.md
