@@ -3,7 +3,7 @@
 Dac-Man has a modular structure, and by default will only install packages that are necessary to its core functionality.
 To enable Dac-Man's built-in plug-ins, the required additional dependencies must be installed.
 
-It's possible to install additional dependencies by updating Dac-Man's environment
+It is possible to install additional dependencies by updating Dac-Man's environment
 using files in the `dependencies/` directory of the source code repository.
 
 ## Installing dependencies for all built-in plug-ins
@@ -29,7 +29,8 @@ pip install --requirement dependencies/pip/builtin-plugins.txt
 
 ## Built-in plug-ins dependencies
 
-More information on the individual dependencies required by the built-in plug-ins is given in the following table.
+More information about the individual dependencies required by the built-in
+plug-ins are given in the following table.
 
 | Package name | Documentation URL | Required by plug-in | Required for |
 |: --- |: --- :| --- | -- |
