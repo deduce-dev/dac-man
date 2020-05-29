@@ -1,23 +1,4 @@
 # Using Dac-Man
-
-## Quick Tutorial
-
-To capture changes between two directories `dir1` and `dir2`,
-run the following command:
-
-```sh
-dacman diff dir1 dir2
-```
-
-The above command identifies the number of files changed between the two directories.
-In order to retrieve information about data changes,
-i.e. changes in the data contained in each file,
-you can use the following command:
-
-```sh
-dacman diff dir1 dir2 --datachange
-```
-
 ## Command-line
 
 Dac-Man enables change capture and analysis in four simple steps,
