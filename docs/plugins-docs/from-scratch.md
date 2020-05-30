@@ -55,7 +55,7 @@ import numpy.linalg
 Dac-Man change analysis script needs to accept two arguments, with the
 arguments being the paths to the files or directories for comparison.
 These arguments are specified via the command-line, and pass on to the
-`run_matrix_change_ana()` function:
+`run_matrix_change_ana()` method:
 
 ```py
 #!/usr/bin/env python3
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     run_matrix_change_ana(path_a, path_b)
 ```
 
-The same arguments are also consumed by the `run_matrix_change_ana()` function,
+The same arguments are also consumed by the `run_matrix_change_ana()` method,
 which uses Dac-Man's API to perform the comparison between the input sources:
 
 ```py
@@ -122,7 +122,7 @@ At the core of a Dac-Man plug-in is the Comparator class. This class manages
 all the steps needed for comparing a single pair of files (one from each dataset).
 
 In our file `matrix_change_ana.py`, we add the code for our custom plug-in
-`MatrixTxtPlugin` above the `run_matrix_change_analysis()` function.
+`MatrixTxtPlugin` above the `run_matrix_change_analysis()` method.
 
 Dac-Man plug-ins should inherit from the `dacman.compare.base.Comparator`
 abstract base class, and implement the `description()`, `supports()`, and
@@ -168,8 +168,8 @@ def run_matrix_change_ana(path_a, path_b):
 
 ### Creating Dacman Records from sources
 
-The first step to implement the `compare()` function is to create Dac-Man
-records from the input sources. Since we will also be using the same step
+The first step to implement the `compare()` method is to create Dac-Man
+records of the input sources. Since we will also be using the same step
 to create a record for both files, we put the creation of a Dac-Man
 record in a separate helper method, `get_record()`:
 
@@ -188,7 +188,8 @@ class MatrixTxtPlugin(base.Comparator):
 ```
 
 At this point, the `DacmanRecord` objects are not yet capable of supporting
-our specific file format. We enable this by creating a specialized Adaptor class.
+our specific file format. This leads us to create a specialized
+Adaptor class, which we discussed in the next section.
 
 ### Creating an Adaptor for a custom file format
 
@@ -217,7 +218,7 @@ class MatrixTxtAdaptor(base.DacmanRecordAdaptor):
         return headers, data
 ```
 
-Finally, we use the `numpy.loadtxt()` function to load the data into a
+Finally, we use the `numpy.loadtxt()` method to load the data into a
 numpy array:
 
 ```py
@@ -276,19 +277,19 @@ class MatrixTxtPlugin(base.Comparator):
 
 ### Implementing specialized change metrics calculations for matrices
 
-With the specialized `MatrixTxtAdaptor`, we know that the matrix data
-contained in each source file is a 2D numpy array, accessible through
-the `.data` attribute of each `DacmanRecord` object.
-This allows us to leverage available tools supporting numpy arrays to
+With the specialized `MatrixTxtAdaptor`, the matrix data
+contained in each source file, a 2D numpy array, can be accessed through
+the `.data` attribute of each `DacmanRecord` object. This transformation
+allows us to leverage available tools supporting numpy arrays to
 implement our calculations very efficiently.
 
 We factor out all calculations to a separate method of the plug-in,
 `get_matrix_change_metrics()`, where the arguments are the two Dac-Man Records,
 and the method returns a dictionary containing the change metrics.
 
-We also add a `threshold` parameter to the plug-in, used to specify
+We also add a `threshold` parameter to the plug-in, which we use to specify
 the minimum (absolute) difference that two corresponding values from each
-matrix should have to be considered "changed".
+matrix should be considered to have "changed".
 
 ```py
 import numpy
@@ -327,9 +328,11 @@ class MatrixTxtPlugin(base.Comparator):
         }
 ```
 
-Then, we integrate these change metrics into the comparison by calling the function in the `compare()` method.
-We wrap the call to the `get_matrix_change_metrics()` method in a `try/except` statement
-to catch errors that can potentially occur during the calculations, and store the error message.
+Next, we integrate these change metrics into the comparison by calling the
+method in the `compare()` method. We wrap the call to the
+`get_matrix_change_metrics()` method in a `try/except` statement
+to catch errors that can potentially occur during calculations,
+and store the error message if it occurs.
 
 ```py
 class MatrixTxtPlugin(base.Comparator):
@@ -348,11 +351,12 @@ class MatrixTxtPlugin(base.Comparator):
 
 ### Adding methods for output
 
-Finally, we implement the methods `percent_change()` and `stats()`,
-used to access information about the amount of change expressed as a single value,
+Finally, we implement the methods `percent_change()` and `stats()`.
+These methods are used to access information about the amount of
+change expressed as a single value,
 and more detailed information about the changes in the files being compared.
 
-The choice of how to express these is left to the users.
+The choice of how to express these is left to the user.
 For this example, we use the previously calculated `frac_changed` for `percent_change()`,
 and print the results of the change metrics calculations in its entirety:
 
@@ -370,11 +374,11 @@ class MatrixTxtPlugin(base.Comparator):
 
 ### Integrating the plug-in in the custom change analysis
 
-At this point, the only thing left to do is integrating our specialized
+At this point, the only thing remaining is to integrate our specialized
 plug-in into Dac-Man's processing pipeline.
 
-In the `run_matrix_change_ana()` function, we specify `MatrixTxtPlugin`
-as the plug-in used in the `use_plugin()` method of the `DataDiffer` object:
+In the `run_matrix_change_ana()` method, we specify `MatrixTxtPlugin`
+as the plug-in to be used in the `use_plugin()` method of the `DataDiffer` object:
 
 ```py
 #!/usr/bin/env python3
@@ -514,7 +518,8 @@ if __name__ == '__main__':
 
 ## Running the change analysis
 
-First, make the `/home/user/matrix_change_ana.py` file executable by using e.g. the `chmod` command:
+In order to make the `/home/user/matrix_change_ana.py` file executable,
+use the `chmod` command as follows:
 
 ```sh
 chmod +x /home/user/matrix_change_ana.py
