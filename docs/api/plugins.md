@@ -31,7 +31,8 @@ Method for providing statistics on calculated changes from the `compare` method.
 
 ## Creating Plug-ins
 
-In order to create and register plug-ins in , users need to implement the methods in the `Comparator` class.
+In order to create and register plug-ins, users need to implement the methods
+in the `Comparator` class.
 Users can either choose to add multiple plug-ins in a single module,
 or create a module for each plug-in.
 
@@ -59,7 +60,7 @@ class TxtPlugin(Comparator):
   ...
 
 
-class CsvPlugin(Comparator):
+class CSVPlugin(Comparator):
   def supports():
     return ['csv']
   ...
