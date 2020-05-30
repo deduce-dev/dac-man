@@ -9,22 +9,23 @@ analyze changes in files of arbitrary type and structure.
 ## Overview
 
 In this example, we will develop a plug-in to detect and quantify changes in
-datasets composed of files of a specialized type. In this case, the files
+datasets composed of specialized file types. In this case, the files
 contain one 2D matrix with numeric (float) values, saved as text.
 
 Our goal is to compare two datasets, stored as directories `dataset-v1`
 and `dataset-v2`, to obtain the following information:
 
-- How many files were added, deleted, and modified between the two datasets
-- For modified files, calculate a custom change metric quantifying, and if possible,
-  the amount of changes between the two matrices stored in the two files
+- The number of files added, deleted, and modified between the two datasets
+- For modified files, calculate a custom change metric quantifying.
+  Furthermore, if possible, the amount of changes between the two matrices
+  stored in the two files will also be calculated.
 
 To achieve our goals, we can rely on Dac-Man's API to provide the functionality
 needed to perform directory-level comparison between the datasets. The remaining
-functionality that needs implementation can be categorized into the
-following:
+functionality requires implementation that can be categorized as follows:
 
-- A simple custom analysis script using Dac-Man's API, and contains 2 classes:
+- A simple custom analysis script using Dac-Man's API that will contain driver
+  methods and the following 2 classes:
   - A specialized plug-in class: To be used by Dac-Man to compare files that have
     been detected as modified
   - A specialized Adaptor class: This converts data from the specific file format
@@ -51,8 +52,8 @@ import numpy
 import numpy.linalg
 ```
 
-Dac-Man change analysis scripts need to accept two arguments, with the arguments
-being the paths to the files or directories for comparison.
+Dac-Man change analysis script needs to accept two arguments, with the
+arguments being the paths to the files or directories for comparison.
 These arguments are specified via the command-line, and pass on to the
 `run_matrix_change_ana()` function:
 
@@ -78,7 +79,7 @@ if __name__ == '__main__':
     run_matrix_change_ana(path_a, path_b)
 ```
 
-These arguments are then passed on to the `run_matrix_change_ana()` function,
+The same arguments are also consumed by the `run_matrix_change_ana()` function,
 which uses Dac-Man's API to perform the comparison between the input sources:
 
 ```py
@@ -112,8 +113,8 @@ if __name__ == '__main__':
 The `use_plugin()` method of the `DataDiffer` object allows the user to specify
 a specialized plug-in to perform the comparison.
 
-In the next section, we demonstrate how to implement everything needed for our
-custom change analysis using a custom Dac-Man plug-in.
+In the next section, we will build a custom Dac-Man plug-in
+for performing our custom change analysis.
 
 ## Creating a specialized plug-in
 
