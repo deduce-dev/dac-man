@@ -29,10 +29,10 @@ nav:
       - API: plugins/csv/api.md
     - Excel: plugins/excel.md
     - Extending plug-ins: plugins/extend.md
-  - Examples:
-    - Using custom analysis scripts: examples/script.md
-    - Adapting the CSV plug-in to custom data: examples/csv-simple.md
-    - HDF5 and EDF files: examples/hdf5-edf.md
+  #- Examples:
+    # - Using custom analysis scripts: examples/script.md
+    # - Adapting the CSV plug-in to custom data: examples/csv-simple.md
+    # - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
   - Plug-in documentation WIP:
