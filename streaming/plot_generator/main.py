@@ -3,6 +3,7 @@ import sys
 import argparse
 import csv
 import numpy as np
+from numpy import linalg as LA
 from experiment import Experiment, AggregateMethod
 from redis_stat_generator import RedisStatGenerator
 from plot_classes.line_plot import LinePlot
@@ -56,9 +57,11 @@ def tput_redis_benchmark_bar_set_get(experiment_dir):
     bar_plot = BarPlot(plot_filename="redis_benchmark_tput_bar_c_64_datasize_set_get",
                        xlabel="Data-sizes (KB)",
                        ylabel="Throughput\n(requests/s)",
-                       inner_txt_rotation=45, inner_txt_size=20,
-                       fig_size1=12, fig_size2=8, width=0.45, legend_size=25,
-                       legend_loc="best", ylim_top=37000, label_size=25)
+                       inner_txt_rotation=45, inner_txt_size=12,
+                       fig_size1=9, fig_size2=5, width=0.45, legend_size=25,
+                       legend_loc="best", ylim_top=4e4, label_size=25,
+                       is_log_scale=False)
+    #ylim_top=37000
 
     #
 
@@ -74,7 +77,7 @@ def tput_redis_benchmark_bar_set_get(experiment_dir):
         legends=['SET', 'GET'],
         std_arrs=[clients_std_set_vals[0]
         ,clients_std_get_vals[0]],
-        display_val=True)
+        display_val=False)
 
 
 def tput_redis_benchmark_clients_line_set_get(experiment_dir):
@@ -115,7 +118,7 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
         ylabel="Throughput\n(requests/s)",
         legend_loc="best",
         legend_size=25,
-        inner_txt_size=20,
+        inner_txt_size=22,
         label_size=25
     )
 
@@ -134,7 +137,7 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
         ylabel="Throughput\n(requests/s)",
         legend_loc="best",
         legend_size=25,
-        inner_txt_size=20,
+        inner_txt_size=22,
         label_size=25
     )
 
@@ -189,31 +192,61 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
         apps_latency_std_values.append(exp_local_live.get_agg_results(var2, AggregateMethod.STD) + 
             exp_local_buffered.get_agg_results(var2, AggregateMethod.STD))
 
+    tput_live_vals = []
+    tput_buffered_vals = []
+    for i in range(len(apps)):
+        tput_live_vals.append(apps_tput_avg_values[i][0])
+        tput_buffered_vals.append(apps_tput_avg_values[i][1])
+
+    tput_live_vals = tput_live_vals / LA.norm(tput_live_vals)
+    tput_buffered_vals = tput_buffered_vals / LA.norm(tput_buffered_vals)
+
+    apps_tput_norm_vals = []
+    for i in range(len(apps)):
+        apps_tput_norm_vals.append([tput_live_vals[i], tput_buffered_vals[i]])
+
     bar_plot = BarPlot(plot_filename="tput_3_apps_local_live_buffered_w_1",
                        xlabel="Processing Strategy",
                        ylabel="Throughput\n(tasks/s)",
-                       inner_txt_size=20,
-                       ylim_top=2300, legend_size=20,
-                       legend_loc="upper right")
+                       inner_txt_size=16,
+                       legend_size=22.5,
+                       ylim_top=10e4, legend_loc="upper right",
+                       is_log_scale=True)
 
     bar_plot.plot(
         apps_tput_avg_values,
         xtick_labels,
-        legends=["ImageAnalysis", "MovingAverage", "ChangeDetection"],
-        std_arrs=apps_tput_std_values, ncol=1, display_val=True)
+        legends=["ImageAnalysis", "Fluxnet-MA", "Fluxnet-CD"],
+        ncol=2, display_val=False)
+
+    #######################################################################
+
+    latency_live_vals = []
+    latency_buffered_vals = []
+    for i in range(len(apps)):
+        latency_live_vals.append(apps_latency_avg_values[i][0])
+        latency_buffered_vals.append(apps_latency_avg_values[i][1])
+
+    latency_live_vals = latency_live_vals / LA.norm(latency_live_vals)
+    latency_buffered_vals = latency_buffered_vals / LA.norm(latency_buffered_vals)
+
+    apps_latency_norm_vals = []
+    for i in range(len(apps)):
+        apps_latency_norm_vals.append([latency_live_vals[i], latency_buffered_vals[i]])
 
     bar_plot = BarPlot(plot_filename="latency_3_apps_local_live_buffered_w_1",
                        xlabel="Processing Strategy",
                        ylabel="Latency (s)",
-                       inner_txt_size=20,
-                       ylim_top=2800, legend_size=20,
-                       legend_loc="upper left")
+                       inner_txt_size=16,
+                       ylim_top=10e6, legend_size=23,
+                       legend_loc="upper left",
+                       is_log_scale=True)
 
     bar_plot.plot(
         apps_latency_avg_values,
         xtick_labels,
-        legends=["ImageAnalysis", "MovingAverage", "ChangeDetection"],
-        std_arrs=apps_latency_std_values, ncol=1, display_val=True)
+        legends=["ImageAnalysis", "Fluxnet-MA", "Fluxnet-CD"],
+        ncol=2, display_val=False)
 
 
 def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
@@ -266,7 +299,7 @@ def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
         box_plot = BoxPlot(plot_filename="tput_%s_2_modes_buffered_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Throughput\n(tasks/s)",
-                           fig_size1=8, fig_size2=6, font_size=32, label_size=32,
+                           font_size=32, label_size=32,
                            legend_size=28, legend_loc=legend_loc, ylim_top=ylim_top)
 
         box_plot.plot(
@@ -279,7 +312,7 @@ def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
         box_plot = BoxPlot(plot_filename="latency_%s_2_modes_buffered_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Latency (s)",
-                           fig_size1=8, fig_size2=6, font_size=32, label_size=32,
+                           font_size=32, label_size=32,
                            legend_size=28, legend_loc="best")
 
         box_plot.plot(
@@ -329,7 +362,7 @@ def tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir):
         box_plot = BoxPlot(plot_filename="tput_%s_2_modes_live_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Throughput\n(tasks/s)",
-                           legend_size=25, legend_loc="best")
+                           legend_size=28, legend_loc="best")
 
         box_plot.plot(
             apps_tput_avg_values,
@@ -341,7 +374,7 @@ def tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir):
         box_plot = BoxPlot(plot_filename="latency_%s_2_modes_live_w_1_64" % apps[i],
                            xlabel="Number of Workers",
                            ylabel="Latency (s)",
-                           legend_size=25, legend_loc="best")
+                           legend_size=28, legend_loc="best")
 
         box_plot.plot(
             apps_latency_avg_values,
@@ -454,8 +487,8 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
     line_plot = LinePlot(plot_filename="tput_1_app_cori_buffered_w_64_throttling",
                    xlabel="Time (s)",
                    ylabel="Number of tasks\nin queue",
-                   ylim_bottom=0, ylim_top=3000,
-                   label_size=22, inner_txt_size=19,
+                   ylim_bottom=0, ylim_top=4000,
+                   label_size=22, inner_txt_size=22,
                    color_list=['b', 'g', 'r'])
 
     line_plot.plot_time_data(
@@ -465,7 +498,7 @@ def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
         markevery=50,
         legends=["1500", "2000", "2500"],
         legend_title="Backpressure",
-        ncol=1,
+        ncol=3,
         xticks_step=200)
     
 
@@ -530,7 +563,7 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
     sources = [1, 2]
     workers = [64]
 
-    xtick_labels = ["ImageAnalysis", "MovingAverage"]
+    xtick_labels = ["ImageAnalysis", "Fluxnet-MA"]
 
     avg_tput_default_vals = []
     avg_tput_pipeline_vals = []
@@ -562,14 +595,15 @@ def tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir):
                        xlabel="Applications",
                        ylabel="Throughput\n(tasks/s)",
                        inner_txt_size=20, inner_txt_rotation=45, legend_size=25,
-                       ylim_top=5000)
+                       ylim_top=4000)
 
     bar_plot.plot(
         [avg_tput_default_vals, avg_tput_pipeline_vals],
         xtick_labels,
         legends=["non-pipeline", "pipeline"],
         std_arrs=[std_tput_default_vals, std_tput_pipeline_vals],
-        display_val=True,
+        yticks_step=1000,
+        display_val=False,
         ncol=1)
 
 

@@ -21,24 +21,27 @@ class BarPlot(Plot):
         for i in range(n_groups):
             if std_arrs:
                 p = ax.bar(ind + i*self._width, value_arrs[i], self._width,
-                        yerr=std_arrs[i], color=self._c_list[i],
-                        log=self._is_log_scale)
+                        yerr=std_arrs[i], color=self._c_list[i])
                 bar_handles.append(p[0])
             else:
                 p = ax.bar(ind + i*self._width, value_arrs[i], self._width,
-                        color=self._c_list[i], log=self._is_log_scale)
+                        color=self._c_list[i])
                 bar_handles.append(p[0])
 
             if display_val:
                 for j, v in enumerate(value_arrs[i]):
                     if v < 0.1:
                         ax.text(ind[j] + i*self._width, v, "%.1e" % v, fontdict=self._inner_txt_size,
-                        horizontalalignment='center', verticalalignment='bottom')
+                            horizontalalignment='center', verticalalignment='bottom')
                     else:
+                        #ax.text(ind[j] + i*self._width, v, "%s" % str(v)[:4], fontdict=self._inner_txt_size,
                         ax.text(ind[j] + i*self._width, v, "%.1f" % v, fontdict=self._inner_txt_size,
-                        horizontalalignment='center', verticalalignment='bottom')
+                            horizontalalignment='center', verticalalignment='bottom')
 
         ax.set_xticks(ind + ((n_groups-1) * self._width/2))
+
+        if self._is_log_scale:
+            ax.set_yscale('log')
 
         ax.set_xticklabels(xtick_labels, rotation=rotation)
         ax.tick_params(labelsize=self._label_size)
@@ -58,8 +61,6 @@ class BarPlot(Plot):
             else:
                 ax.legend(bar_handles, legends, ncol=n_groups, loc=self._legend_loc, fontsize=self._legend_size)
 
-        #ax.relim()
-        #ax.autoscale_view()
         ax.set_ylim(bottom=self._ylim_bottom, top=self._ylim_top)
 
         plt.tight_layout()
