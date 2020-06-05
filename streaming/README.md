@@ -1,4 +1,5 @@
-# Run Experiments locally
+# Run Experiments
+# locally
 This is a small guide to show as a sample how we evaluated our streaming systems. Each component we used is packaged in this folder `streaming`.
 
 ## services
@@ -91,3 +92,24 @@ $ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 
 ```
 
 Note that `-f 0` will plot all the figures in the paper.
+
+# On HPC
+Note: source data for streaming need to be downloaded from the specified websites.
+
+For running the experiments on HPC, users need to configure and launch the HPC containers. We used shifter for running our experiments on Cori, shifter is a software package that allows user-created docker images to run at NERSC. Shifter have access to publicly published docker images on Docker Hub. We do have 3 separate docker images that represent each component in our defined architecture: streaming source, Redis-server, application-worker. A streaming-source container reads a dataset that the user provides. A Redis-server container hosts a Redis-server; However, the right ports need to be exposed for outer containers to be able to connect to it. A Worker can read tasks + datablocks from the specified broker (Redis).
+
+To be able to launch each of the mentioned components, we first must have shifter pull each component image:
+
+- `shifterimg pull repo-name/streaming-source:tag`
+- `shifterimg pull repo-name/redis:tag`
+- `shifterimg pull repo-name/app-worker:tag`
+
+Once the images are downloaded, they don't need to be downloaded everytime we launch component instances on Cori.
+
+Now we are ready to launch all component instances on Cori:
+
+- To launch a Redis-server: `srun -N 1 -n 1 -C ${ARCHITECTURE} --qos=${QUEUE} shifter redis-server`
+- To launch a single streaming source: `srun -N 1 -n 1 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
+- To run for example 10 worker instances on a single Node: `srun -N 1 -n 10 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}`
+
+This of course assumes that the user will have access on the ip address of the newly created Redis-server `$REDIS_HOST`.
