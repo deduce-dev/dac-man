@@ -96,20 +96,20 @@ Note that `-f 0` will plot all the figures in the paper.
 # On HPC
 Note: source data for streaming need to be downloaded from the specified websites.
 
-For running the experiments on HPC, users need to configure and launch the HPC containers. We used shifter for running our experiments on Cori, shifter is a software package that allows user-created docker images to run at NERSC. Shifter have access to publicly published docker images on Docker Hub. We do have 3 separate docker images that represent each component in our defined architecture: streaming source, Redis-server, application-worker. A streaming-source container reads a dataset that the user provides. A Redis-server container hosts a Redis-server; However, the right ports need to be exposed for outer containers to be able to connect to it. A Worker can read tasks + datablocks from the specified broker (Redis).
+For running the experiments on HPC, users need to configure and launch the HPC containers. We used Shifter for running our experiments on Cori. Shifter is a software package that allows user-created docker images to run at Cori. Shifter has access to publicly published docker images on Docker Hub. We have 3 separate docker images that represent each component in our defined architecture: streaming source, Redis-server, application-worker. A streaming-source container reads a dataset that the user provides. A Redis-server container hosts Redis. A Worker can read tasks + datablocks from the specified Redis. In our experiments, we hosted the streaming source and Redis components on a standalone server and had the application-workers running on Cori. 
+As for Redis, the right ports need to be exposed for outer containers to be able to connect to it. Exposing ports in Docker allows containers to be connected to through these specified ports. For instance, the main port that Redis uses to listen to connections is "6379"; but in Docker this port isn't allowed to be seen outside the container unless we specifically expose this port. For example, this launches a Redis container with an exposed port  `docker run -p ${PORT}:6379 redis`.
 
-To be able to launch each of the mentioned components, we first must have shifter pull each component image:
+To be able to launch each of the mentioned components, we first must have Docker/Shifter pull each component image:
 
-- `shifterimg pull repo-name/streaming-source:tag`
-- `shifterimg pull repo-name/redis:tag`
-- `shifterimg pull repo-name/app-worker:tag`
+- Standalone Server: `docker pull repo-name/streaming-source:tag`
+- Standalone Server: `docker pull repo-name/redis:tag`
+- Cori: `shifterimg pull repo-name/app-worker:tag`
 
-Once the images are downloaded, they don't need to be downloaded everytime we launch component instances on Cori.
+Now we are ready to connect all components together:
+Note: Understandably, Streaming source is different based on each application.
 
-Now we are ready to launch all component instances on Cori:
+- Standalone Server: To launch a Redis-server: `docker run -p ${PORT}:6379 redis`
+- Standalone Server: To launch a single streaming source: `docker run repo-name/streaming-source:tag  python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
+- Cori: To run for example 10 worker instances on a single Node: `srun -N 1 -n 10 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}`
 
-- To launch a Redis-server: `srun -N 1 -n 1 -C ${ARCHITECTURE} --qos=${QUEUE} shifter redis-server`
-- To launch a single streaming source: `srun -N 1 -n 1 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
-- To run for example 10 worker instances on a single Node: `srun -N 1 -n 10 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}`
-
-This of course assumes that the user will have access on the ip address of the newly created Redis-server `$REDIS_HOST`.
+This of course assumes that the user will have access on the ip address of the newly created Redis-server `$REDIS_HOST`. The setup needs to be configured properly.
