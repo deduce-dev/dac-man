@@ -79,7 +79,7 @@ Note: You may need to change the path where the graphs will be generated in sett
 
 Or to run it with docker:
 ```
-$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data
+$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.2 python3 main.py -e /data
 ```
 
 We also can specify what figure number we need to plot using `-f` option:
