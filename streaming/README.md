@@ -109,7 +109,7 @@ Now we are ready to connect all components together:
 Note: Understandably, Streaming source is different based on each application.
 
 - Standalone Server: To launch a Redis-server: `docker run -p ${PORT}:6379 redis`
-- Standalone Server: To launch a single streaming source: `docker run repo-name/streaming-source:tag  python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
+- Standalone Server: To launch a single streaming source: `docker run repo-name/streaming-source:tag python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
 - Cori: To run for example 10 worker instances on a single Node: `srun -N 1 -n 10 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}`
 
-This of course assumes that the user will have access on the ip address of the newly created Redis-server `$REDIS_HOST`. The setup needs to be configured properly.
+This of course assumes that the user will have access on the ip address of the newly created Redis-server `${REDIS_HOST}`. The setup needs to be configured properly.
