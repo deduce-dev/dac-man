@@ -36,7 +36,7 @@ import logging
 ##########################################################
 
 def import_error(pkg):
-    print("{} is not installed or possibly not in the path.".format(pkg))
+    print(f"{pkg} is not installed or possibly not in the path.")
     sys.exit()
 
 class DefaultAdaptor(DacmanRecordAdaptor):
@@ -83,7 +83,7 @@ class FitsAdaptor(DacmanRecordAdaptor):
         header_record_list = []
         data_record_list = []
         for k, v in hdu.header.items():
-            header_record_list.append('{}: {}'.format(k, v))
+            header_record_list.append(f'{k}: {v}')
 
         data_dims = self._get_hdu_shape(hdu)
         if len(data_dims) == 2: # 2-D array
@@ -116,7 +116,7 @@ class ImageAdaptor(DacmanRecordAdaptor):
         header_record_list = []
         data_record_list = []
         for k, v in img.header.items():
-            header_record_list.append('{}: {}'.format(k, v))
+            header_record_list.append(f'{k}: {v}')
 
         data_dims = img.data.shape
         if len(data_dims) == 2:  # 2-D array
@@ -159,8 +159,7 @@ class DacmanRecord(object):
     def _transform_source(self):
         adaptor = self._filetype()
         if adaptor is None:
-            self.logger.warning("No adaptor found for {}. "
-                                "Using default adaptor.".format(self.file_ext))
+            self.logger.warning(f"No adaptor found for {self.file_ext}. Using default adaptor.")
             adaptor = DefaultAdaptor()
         headers, data = adaptor.transform(self.source)
         self.headers = headers
@@ -203,10 +202,10 @@ class DacmanRecord(object):
                 adaptor = self.file_adaptors[self.file_ext]()
                 return adaptor
             else:
-                errmsg = "{} is not installed or possibly not" \
-                         " in the path. Required for structured" \
-                         " reading of {} files.".format(self.lib_support[self.file_ext],
-                                                        self.file_ext)
+                errmsg = (
+                    f"{self.lib_support[self.file_ext]} is not installed or possibly not"
+                    f" in the path. Required for structured reading of {self.file_ext} files."
+                ) 
                 self.logger.warning(errmsg)
                 return None
 

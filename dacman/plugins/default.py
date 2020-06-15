@@ -89,21 +89,21 @@ class DefaultPlugin(Comparator):
     def stats(self, changes):
         print("Changes in headers:")
         self._element_stats(changes['headers'])
-        print("\t % Change = {}".format(self.p_change_header))
+        print(f"\t % Change = {self.p_change_header}")
         print("Changes in values:")
         self._element_stats(changes['values'])
-        print("\t % Change = {}".format(self.p_change_data))
+        print(f"\t % Change = {self.p_change_data}")
 
     def _element_stats(self, changes):
         added = len(changes['added'])
         deleted = len(changes['deleted'])
         modified = len(changes['modified'])
         unchanged = len(changes['unchanged'])
-        print("\t Added={}, Deleted={}, Modified={}, Unchanged={}".format(added,
-                                                                          deleted,
-                                                                          modified,
-                                                                          unchanged))
-
-
-
-
+        text = (
+            '\t '
+            f'Added={added}, '
+            f'Deleted={deleted}, '
+            f'Modified={modified}, '
+            f'Unchanged={unchanged}'
+        )
+        print(text)

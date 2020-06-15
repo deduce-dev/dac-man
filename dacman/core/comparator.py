@@ -96,8 +96,6 @@ def compare(old_datapath, new_datapath, custom_stagingdir):
     _added = []
     _deleted = []
     _modified = {}
-    
-    #cprint(__modulename__, 'Comparing {} and {}'.format(old_datapath, new_datapath))
 
     # MD5 hash for a zero-byte file
     __MAGIC_HASH__ = 'd41d8cd98f00b204e9800998ecf8427e'

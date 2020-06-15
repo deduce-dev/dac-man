@@ -29,7 +29,7 @@ def dacman_args_with_script(dacman_args, script_name):
 
 
 def is_plugin_used(plugin_name, text):
-    return 'comparator plugin = {}'.format(plugin_name) in text
+    return f'comparator plugin = {plugin_name}' in text
 
 
 def test_builtin_plugin_is_used_on_matching_files_by_default(script_runner, dir_test, dacman_args):

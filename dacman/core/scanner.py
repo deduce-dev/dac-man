@@ -68,13 +68,10 @@ def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, d
    logger = logging.getLogger(__name__)
 
    if not os.path.exists(datapath):
-      #cprint(__modulename__, 'Datapath `{}` does not exist!'.format(datapath))
       logger.error('Datapath %s does not exist!', datapath)
       sys.exit()
    
    if not os.path.isdir(datapath):
-      #print('Indexing currently allowed only for data in a directory.')
-      #cprint(__modulename__, 'Indexing currently allowed only for data in a directory.')
       logger.error('Indexing currently allowed only for data in a directory.')
       sys.exit()
       
@@ -95,7 +92,6 @@ def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, d
 
    # keeping this for feature enhancements and future optimizations
    #dirtree = DirectoryTree(datapath, stagingdir)
-   #cprint(__modulename__, 'Scanning datapath {}'.format(datapath))
    logger.info('Scanning datapath %s', datapath)
 
    ### Doing this is too slow ###
@@ -144,7 +140,7 @@ def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, d
             only save the file paths and not dir paths
             '''
             if not entry.is_dir(follow_symlinks=symlinks):
-               line = '{}\n'.format(relative_path)
+               line = f'{relative_path}\n'
                f.write(line)
                if details:
                   file_stats = entry.stat()
@@ -172,7 +168,7 @@ def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, d
             only save the file paths and not dir paths
             '''
             if not (ignore_file or entry.is_dir(follow_symlinks=symlinks)):
-               line = '{}\n'.format(relative_path)
+               line = f'{relative_path}\n'
                f.write(line)
                if details:
                   file_stats = entry.stat()
@@ -190,7 +186,7 @@ def scan(datapath, custom_stagingdir=None, nonrecursive=False, symlinks=False, d
 
    basepath_file = os.path.join(indexdir, 'DATAPATH')
    with open(basepath_file, 'w') as f:
-      f.write('{}\n'.format(datapath))
+      f.write(f'{datapath}\n')
 
    # close the metadata file
    mf.close()

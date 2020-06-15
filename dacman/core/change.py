@@ -193,7 +193,7 @@ utility function to find directory entries
 def find_direntries(dir):
     entries = {}
     if not os.path.exists(dir):
-       cprint(__modulename__, 'Directory {} does not exist'.format(dir))
+       cprint(__modulename__, f'Directory {dir} does not exist')
        sys.exit()
 
     for entry in scandir(dir):
@@ -835,7 +835,6 @@ def save_subdir_changes_to_cache(change, stagingdir,
    _mfile = os.path.join(change_subdir, 'MODIFIED')
    _mcfile = os.path.join(change_subdir, 'METACHANGE')
    
-   #print("CHANGEDIR: {}, CHANGESUBDIR: {}".format(change_dir, change_subdir))
    os.mkdir(change_subdir)
 
    dacman_utils.list_to_file(change_data['UNCHANGED'], _ufile)

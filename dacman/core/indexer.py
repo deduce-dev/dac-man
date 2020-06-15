@@ -172,7 +172,7 @@ def tigres_index(stagingdir, datapath):
     exec_plugin = tigres.utils.Execution.get(exec_name)
 
     try:
-        logfile = 'deduce_index_{}.log'.format(round(time.time()))
+        logfile = f'deduce_index_{round(time.time())}.log'
         tigres.start(name='deduce_index', log_dest=logfile, execution=exec_plugin)
         tigres.set_log_level(tigres.Level.ERROR)
 

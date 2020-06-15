@@ -22,7 +22,7 @@ def run(comparisons, plugin):
     logger.info('Using tigres for parallel comparison.')
 
     try:
-        logfile = 'dacman_diff_{}.log'.format(str(round(time.time())))
+        logfile = f'dacman_diff_{round(time.time())}.log'
         tigres.start(name='dacman_diff', log_dest=logfile, execution=exec_plugin)
         tigres.set_log_level(tigres.Level.ERROR)
 
@@ -46,7 +46,7 @@ def run(comparisons, plugin):
 
     except tigres.utils.TigresException as e:
         print(str(e))
-        logger.info('Error in comapring datasets using Tigres. {}'.format(e))
+        logger.info(f'Error in comparing datasets using Tigres. {e}')
     finally:
         tigres.end()
         if diff_results is not None:

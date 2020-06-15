@@ -57,14 +57,14 @@ def cprint(caller, str):
 def dict_to_file(data, filepath):
     with open(filepath, 'w') as f:
         for key in data:
-            line = '{}: {}\n'.format(key, data[key])
+            line = f'{key}: {data[key]}\n'
             f.write(line)
 
 
 def list_to_file(data, filepath):
     with open(filepath, 'w') as f:
         for elem in data:
-            line = '{}\n'.format(elem)
+            line = f'{elem}\n'
             f.write(line)
 
 
@@ -92,13 +92,15 @@ def file_to_dict_list(filename):
 
 
 def hash_comparison_id(old_path, new_path):
-   hash = hashlib.md5('{}{}'.format(old_path, new_path).encode('utf-8')).hexdigest()
-   return hash
+    # TODO check if this is still used somewhere and/or works properly in Python 3
+    to_hash = f'{old_path}{new_path}'.encode('utf-8')
+    hash = hashlib.md5(to_hash).hexdigest()
+    return hash
 
 
 def get_hash_id(path):
-   hash = hashlib.md5(path.encode('utf-8')).hexdigest()
-   return hash
+    hash = hashlib.md5(path.encode('utf-8')).hexdigest()
+    return hash
 
 
 def get_nfiles(path, stagingdir):

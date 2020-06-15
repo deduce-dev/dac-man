@@ -252,7 +252,7 @@ class Differ(object):
             comm = MPI.COMM_WORLD
             rank = comm.Get_rank()
             if rank == 0:
-                self.logger.info('Runtime system = {}'.format(self.executor))
+                self.logger.info(f'Runtime system = {self.executor}')
                 change_pairs = self.get_change_pairs()
                 if self._diff_all or self.old_path_is_file > 0:
                     differ = DataDiffer(change_pairs, self.executor)
@@ -265,7 +265,7 @@ class Differ(object):
                     differ.mpi_communicator = comm
                     differ.start()
         else:
-            self.logger.info('Runtime system = {}'.format(self.executor))
+            self.logger.info(f'Runtime system = {self.executor}')
             change_pairs = self.get_change_pairs()
             if (self._diff_all or self.old_path_is_file) and len(change_pairs) > 0:
                 differ = DataDiffer(change_pairs, self.executor)

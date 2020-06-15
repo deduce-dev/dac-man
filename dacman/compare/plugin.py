@@ -30,9 +30,9 @@ class PluginManager(object):
                             if comparator.__class__.__name__ == plugin_info[data_type]:
                                 return comparator
                         else:
-                            print("Configured plugin {} not found. Using available plugins.".format(plugin_info[data_type]))
+                            print(f"Configured plugin {plugin_info[data_type]} not found. Using available plugins.")
                     else:
-                        print("Plugin for {} not found. Using default plugin.".format(data_type))
+                        print(f"Plugin for {data_type} not found. Using default plugin.")
         if data_type in COMPARATORS_MAP:
             return COMPARATORS_MAP[data_type][0]
         else:
@@ -54,7 +54,7 @@ def _get_comparators():
         comparator = plugin()
         LOG.debug(f'comparator={comparator}')
         supports = comparator.supports()
-        LOG.info("Plugin {} supports: {}".format(plugin, supports))
+        LOG.info(f"Plugin {plugin} supports: {supports}")
         if type(supports) == list:
             for s in supports:
                 _add_comparator(s, comparator, comparators)

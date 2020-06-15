@@ -48,21 +48,18 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
             comparator = comparator_plugin()
         else:
             print("Invalid comparator plugin")
-            logger.error('Invalid comparator plugin: {}'.format(comparator_plugin))
+            logger.error(f'Invalid comparator plugin: {comparator_plugin}')
             sys.exit()
 
     if external_plugin:
-        print("External comparator plugin = {}".format(comparator_plugin))
-        logger.info('Comparing {} and {} using {}'.format(new_file,
-                                                          old_file,
-                                                          comparator_plugin))
+        print(f"External comparator plugin = {comparator_plugin}")
+        logger.info(f'Comparing {new_file} and {old_file} using {comparator_plugin}')
         result = _external(comparator_plugin, new_file, old_file, *argv)
     else:
-        print("Data comparator plugin = {}".format(comparator.__class__.__name__))
+        comparator_class_name = comparator.__class__.__name__
+        print(f"Data comparator plugin = {comparator_class_name}")
 
-        logger.info('Comparing {} and {} using {}'.format(new_file,
-                                                          old_file,
-                                                          comparator.__class__.__name__))
+        logger.info(f'Comparing {new_file} and {old_file} using {comparator_class_name}')
 
         changes = comparator.compare(new_file, old_file, *argv)
         result = comparator.stats(changes)
