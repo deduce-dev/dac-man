@@ -28,6 +28,8 @@ nav:
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
     - Excel: plugins/excel.md
+    - HDF5: plugins/hdf5.md
+    - JSON: plugins/json/index.md
     - Extending plug-ins: plugins/extend.md
   #- Examples:
     # - Using custom analysis scripts: examples/script.md

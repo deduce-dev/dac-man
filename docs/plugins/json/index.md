@@ -37,6 +37,7 @@ cd examples/json
 dacman diff a.json b.json --datachange
 ```
 
+
 ### Output
 
 ```
@@ -81,7 +82,6 @@ Level 0 detail:
 [INFO] Data comparison complete.
 [INFO] Diff completed
 ```
-
 
 ### Interpreting the comparison output
 The following is the output from the comparison.
