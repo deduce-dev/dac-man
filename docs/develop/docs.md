@@ -4,10 +4,15 @@
 
 Dac-Man's HTML documentation is built from the contents of the `docs` directory
 using the MkDocs documentation generator with the mkdocs-material theme.
-Both can be installed using pip:
+Both can be installed using Pip:
 
 ```sh
 pip install mkdocs mkdocs-material
+```
+
+Alternatively, the following should be used if using the Conda environment:
+```sh
+conda install mkdocs mkdocs-material
 ```
 
 ## Previewing changes locally

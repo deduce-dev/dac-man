@@ -8,7 +8,8 @@ To run the tests, clone Dac-Man's source repository and navigate to the `tests` 
 git clone https://github.com/dghoshal-lbl/dac-man && cd dac-man/tests
 ```
 
-Then, install the additional dependencies by updating Dac-Man's environment:
+Next, if using the Conda environment, install additional dependencies
+by updating Dac-Man's environment:
 
 ```sh
 conda env update --name dacman-env --file ../dependencies/conda/pytest.yml

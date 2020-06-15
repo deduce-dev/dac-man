@@ -37,20 +37,8 @@ cd examples/json
 dacman diff a.json b.json --datachange
 ```
 
-### Interpreting the Comparison output
-The following is the output from the comparison.
-The first couple of printouts are for informational purposes and the actual
-comparison output is printed after the line `[INFO] Comparing ... using JSONPlugin`
-The lines denoted with `+` are the contents present in the file `a.json`,
-but not in `b.json`. Likewise, `-` denotes the contents present in `b.json` that are
-different from that in `a.json`
 
-At the end of the output, the reader will note the following message:
-`[INFO] --- No custom detail level specified, using default detail level.`
-It is possible to have the plugin output the differences in more detail.
-The default output level used here is level 0. The section titled
-"Extending built-in plug-ins" will cover aspects of how to have the plugin
-output in more detail.
+### Output
 
 ```
 $ dacman diff a.json b.json --datachange
@@ -94,3 +82,19 @@ Level 0 detail:
 [INFO] Data comparison complete.
 [INFO] Diff completed
 ```
+
+### Interpreting the comparison output
+The following is the output from the comparison.
+The first couple of printouts are for informational purposes and the actual
+comparison output is printed after the line `[INFO] Comparing ... using JSONPlugin`.
+
+The lines denoted with `+` are the contents present in the file `a.json`,
+but not in `b.json`. Likewise, `-` denotes the contents present in `b.json` that are
+different from that in `a.json`
+
+At the end of the output, the reader will note the following message:
+`[INFO] --- No custom detail level specified, using default detail level.`
+It is possible to have the plugin output the differences in more detail.
+The default output level used here is level 0. The section titled
+"Extending built-in plug-ins" will cover aspects of how to have the plugin
+output in more detail.

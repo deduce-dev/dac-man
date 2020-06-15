@@ -13,8 +13,8 @@ nav:
   - Quickstart: quickstart.md
   - Using Dac-Man:
     - General use: use/general.md
-    - On HPC clusters: use/hpc.md
     - Plug-ins: use/plugins.md
+    - On HPC clusters: use/hpc.md
     - Additional use cases: use/misc.md
     - Customization: use/config.md
   - API:
@@ -23,6 +23,7 @@ nav:
   - Dac-Man Plug-ins:
     # - Introduction: plugins/introduction.md
     - Default: plugins/default.md
+    - HDF5: plugins/hdf5.md
     - CSV:
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
@@ -30,10 +31,10 @@ nav:
     - HDF5: plugins/hdf5.md
     - JSON: plugins/json/index.md
     - Extending plug-ins: plugins/extend.md
-  - Examples:
-    - Using custom analysis scripts: examples/script.md
-    - Adapting the CSV plug-in to custom data: examples/csv-simple.md
-    - HDF5 and EDF files: examples/hdf5-edf.md
+  #- Examples:
+    # - Using custom analysis scripts: examples/script.md
+    # - Adapting the CSV plug-in to custom data: examples/csv-simple.md
+    # - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
   - Plug-in documentation WIP:
@@ -48,7 +49,7 @@ nav:
   - Troubleshooting: troubleshooting.md
   - License: license.md
 
-copyright: 'Copyright &copy; 2018--2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
+copyright: 'Copyright &copy; 2018--2020, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.'
 repo_name: dghoshal-lbl/dac-man
 repo_url: https://github.com/dghoshal-lbl/dac-man
 

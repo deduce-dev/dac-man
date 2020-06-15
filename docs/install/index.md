@@ -54,26 +54,61 @@ conda env create --file ./environment.yml
 !!! note
     By default, the name of the Conda environment is set in `environment.yml` as `dacman-env`. If for any reason a different name for the environment is needed, modify the value for `name` in `environment.yml`, and then adapt the steps described throughout this documentation specifying the new name to the `--name` option of `conda` commands.
 
-## Installing Dac-Man in an existing environment
+### Installing in an existing Conda environment
 
-Instead of creating a Conda environment for Dac-Man from scratch, it's possible to install Dac-Man in an existing environment.
+If using an existing Conda environment, these steps help illustrate how to install Dac-Man.
 
-### Installing in an existing Python virtual environment (virtualenv)
-
-These steps illustrate how to install Dac-Man in an existing Python virtual environment (virtualenv) named e.g. `my-existing-venv`.
-
-First, activate the virtualenv:
+Assuming our existing environment has the name `my-conda-env`, we navigate
+to the root of Dac-Man's repository, then run the following command to install
+Dac-Man as well as its core dependencies:
 
 ```sh
-source /path/to/my-existing-env/bin/activate
+conda env update --name my-conda-env --file ./environment.yml
 ```
 
-Then, from the root of Dac-Man's repository,
-run the following command to install Dac-Man as well as its core dependencies.
+---
+
+!!! tip
+    In this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
+
+
+### Installing Dac-Man using Pip and Virtualenv
+Alternatively, we can use Pip to install Dac-man in Virtualenv.
+
+`Virtualenv` is a tool to create isolated Python environments
+Refer to the [Virtualenv install guide](https://virtualenv.pypa.io/en/latest/installation.html)
+for installation details.
+
+## Installing Dac-Man in a new Virtualenv environment
+When `virtualenv` is installed, start by setting up a virtual environment with Python3.7 later installed.
+As an example, our virtual environment is named dacman-env. Next, activate the environment.
+At this point, your prompt should indicate that you are in the activated environment (note
+the activated environment indicated by `(dacman-env)`),
+and check the Python version installed, using the command `python --version`
+```sh
+$ python3 -m venv dacman-env
+$ activate dacman-env
+$ (dacman-env) python --version
+Python 3.7.7
+```
+
+Next, clone the Dac-Man source code repository using Git:
 
 ```sh
+git clone https://github.com/dghoshal-lbl/dac-man
+```
+
+Then, navigate to the root of the cloned repository
+and run this command to install the core dependencies:
+```sh
+cd dac-man
 pip install .
 ```
+
+## Installing Dac-Man in an existing environment
+
+Instead of creating an environment for Dac-Man from scratch,
+it is possible to install Dac-Man in an existing environment.
 
 ### Installing in an existing Conda environment
 
@@ -91,6 +126,12 @@ conda env update --name my-conda-env --file ./environment.yml
 
 !!! tip
     Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
+
+
+### Installing in an existing Python virtual environment (virtualenv)
+The steps to install in an existing environment are similar to the instructions
+described in "### Installing Dac-Man using Pip and Virtualenv"
+
 
 ## Installing Dac-Man in Binder
 
