@@ -55,7 +55,7 @@ repo_url: https://github.com/dghoshal-lbl/dac-man
 
 extra:
   social:
-    - type: globe
+    - icon: octicons/globe
       link: http://deduce.lbl.gov
 
 markdown_extensions:
