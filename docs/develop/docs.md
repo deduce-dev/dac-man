@@ -4,15 +4,20 @@
 
 Dac-Man's HTML documentation is built from the contents of the `docs` directory
 using the MkDocs documentation generator with the mkdocs-material theme.
-Both can be installed using Pip:
+
+Run the following steps to set up a dedicated Conda environment with all dependencies needed to build the documentation.
+
+From the root directory of the Dac-Man source code repository,
+create the Conda environment:
 
 ```sh
-pip install mkdocs mkdocs-material
+conda env create --file dependencies/conda/docs.yml
 ```
 
-Alternatively, the following should be used if using the Conda environment:
+Then, activate the environment:
+
 ```sh
-conda install mkdocs mkdocs-material
+conda activate dacman-docs
 ```
 
 ## Previewing changes locally
