@@ -45,7 +45,6 @@ nav:
     - Creating a plug-in from scratch: plugins-docs/from-scratch.md
   - For developers:
     - Running tests: develop/tests.md
-    - Documentation: develop/docs.md
   - Troubleshooting: troubleshooting.md
   - License: license.md
 
@@ -55,7 +54,7 @@ repo_url: https://github.com/dghoshal-lbl/dac-man
 
 extra:
   social:
-    - type: globe
+    - icon: octicons/globe
       link: http://deduce.lbl.gov
 
 markdown_extensions:
