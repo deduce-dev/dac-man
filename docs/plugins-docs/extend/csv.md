@@ -5,7 +5,7 @@ tailored to specific features of the data being analyzed,
 by creating a minimal extension of the built-in CSV plug-in.
 
 A complete runnable version of the entire script is available at the end of this section,
-and in the [`examples/csv`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,
+and in the [`examples/csv`](https://github.com/deduce-dev/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,
 together with the example data shown below as two separate CSV files.
 
 ## Creating the `main` block of the change analysis script
@@ -270,4 +270,4 @@ dacman diff A.csv B.csv --script /home/user/my_csv_ana.py
 ```
 
 !!! tip
-    A complete runnable copy of this file is already available as [`examples/csv/my_csv_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/my_csv_ana.py)
+    A complete runnable copy of this file is already available as [`examples/csv/my_csv_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/csv/my_csv_ana.py)

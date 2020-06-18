@@ -5,7 +5,7 @@ Dac-Man's test suite is based on pytest.
 To run the tests, clone Dac-Man's source repository and navigate to the `tests` directory:
 
 ```sh
-git clone https://github.com/dghoshal-lbl/dac-man && cd dac-man/tests
+git clone https://github.com/deduce-dev/dac-man && cd dac-man/tests
 ```
 
 Next, if using the Conda environment, install additional dependencies

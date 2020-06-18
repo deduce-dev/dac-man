@@ -3,7 +3,7 @@
 This section contains information about some of the issues that may arise while using Dac-Man.
 
 !!! important
-    If your issue is not addressed by this material, we encourage you to let us know, either by opening an issue on Dac-Man's [issue tracker](https://github.com/dghoshal-lbl/dac-man/issues), or by contacting us at dac-man at lbl dot gov.
+    If your issue is not addressed by this material, we encourage you to let us know, either by opening an issue on Dac-Man's [issue tracker](https://github.com/deduce-dev/dac-man/issues), or by contacting us at dac-man at lbl dot gov.
 
 ## `dacman: command not found` error when invoking `dacman`
 

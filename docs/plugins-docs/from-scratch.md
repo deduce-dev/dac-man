@@ -4,7 +4,7 @@ This example illustrates how to create a Dac-Man plug-in from scratch to
 analyze changes in files of arbitrary type and structure.
 
 !!! example
-    A ready-to-use example script can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
+    A ready-to-use example script can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
 
 ## Overview
 
@@ -526,7 +526,7 @@ chmod +x /home/user/matrix_change_ana.py
 ```
 
 !!! example
-    A ready-to-use script for this example can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
+    A ready-to-use script for this example can be found under [`examples/scripts/matrix_change_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/scripts/matrix_change_ana.py).
 
 To run the change analysis on two versions of an example dataset,
 navigate to the `example/data/matrix_txt` directory and run:

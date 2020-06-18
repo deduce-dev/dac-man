@@ -27,7 +27,7 @@ No additional dependencies.
 As this is a built-in Dac-Man plug-in, the JSON plug-in will be used by default
 when comparing JSON files.
 
-The [`examples/json/`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/json/) directory of the Dac-Man source code repository contains two example JSON files.
+The [`examples/json/`](https://github.com/deduce-dev/dac-man/blob/master/examples/json/) directory of the Dac-Man source code repository contains two example JSON files.
 To compare these example files, navigate to the `examples/json/` directory
 and run `dacman diff` with the paths to the example files of `a.json` and `b.json`
 followed by the `--datachange` option:

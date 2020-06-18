@@ -96,7 +96,7 @@ Then, follow the same steps to install Dac-Man using Conda as illustrated in the
 including installing additional [plug-in dependencies](../../install/dependencies/) as needed:
 
 ```sh
-git clone https://github.com/dghoshal-lbl/dac-man
+git clone https://github.com/deduce-dev/dac-man
 cd dac-man
 conda env create --file environment.yml
 # optional - install dependencies for built-in plug-ins
