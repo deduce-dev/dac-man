@@ -1,9 +1,7 @@
-scandir>=1.5
-six>=1.10.0
 # NOTE "4.2" caused problems when installing from conda
 # I suspect it might be a matter of differences in package names
 # using "4.2b1" since it seems to be working with both pip and conda
 # PyYAML>=4.2
 PyYAML>=4.2b1
-numpy
+numpy<=1.17
 straight.plugin
