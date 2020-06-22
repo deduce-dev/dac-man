@@ -61,9 +61,7 @@ setup(name='dacman',
                    'Programming Language :: Python :: 2.7',
                    'Topic :: Scientific/Engineering',
                    'License :: OSI Approved :: 3-clause BSD License'],
-      # TODO does this "plugins" here refer to the old plug-ins directory?
-      # if so, then we don't need it anymore
-      packages=find_packages(exclude=['ez_setup', 'tests', 'plugins']),
+      packages=find_packages(exclude=['ez_setup', 'tests']),
       include_package_data=True,
       package_data={'dacman': ['config/*.yaml']},
       zip_safe=False,
