@@ -23,7 +23,6 @@ nav:
   - Dac-Man Plug-ins:
     # - Introduction: plugins/introduction.md
     - Default: plugins/default.md
-    - HDF5: plugins/hdf5.md
     - CSV:
       - The CSV plug-in: plugins/csv/index.md
       - API: plugins/csv/api.md
