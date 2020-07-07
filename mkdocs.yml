@@ -29,14 +29,12 @@ nav:
     - Excel: plugins/excel.md
     - HDF5: plugins/hdf5.md
     - JSON: plugins/json/index.md
-    - Extending plug-ins: plugins/extend.md
   #- Examples:
     # - Using custom analysis scripts: examples/script.md
     # - Adapting the CSV plug-in to custom data: examples/csv-simple.md
     # - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
-  - Plug-in documentation WIP:
     - Extending built-in plug-ins:
       - CSV: plugins-docs/extend/csv.md
       - HDF5: plugins-docs/extend/hdf5-edf.md
