@@ -7,9 +7,9 @@ nav:
   - Introduction: index.md
   - Installation:
     - Installing Dac-Man: install/index.md
+  - Testing the Installation: testing.md
     - Installing plug-in dependencies: install/dependencies.md
     - Updating Dac-Man: install/update.md
-    - Testing the installation: install/test.md
   - Quickstart: quickstart.md
   - Using Dac-Man:
     - General use: use/general.md
@@ -42,8 +42,6 @@ nav:
       - HDF5: plugins-docs/extend/hdf5-edf.md
       - JSON: plugins-docs/extend/json.md
     - Creating a plug-in from scratch: plugins-docs/from-scratch.md
-  - For developers:
-    - Running tests: develop/tests.md
   - Troubleshooting: troubleshooting.md
   - License: license.md
 
