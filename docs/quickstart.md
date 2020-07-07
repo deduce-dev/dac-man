@@ -68,8 +68,7 @@ it will automatically be used by Dac-Man when comparing files of the supported t
 
 ### Using the CSV plug-in
 
-As one of Dac-Man's built-in plug-ins, after enabling it by installing its dependencies,
-the CSV plug-in will be used automatically when comparing CSV files.
+When dependencies are installed, Dac-Man's CSV plugin-in will be used automatically when comparing CSV files.
 
 The `examples/data/csv` directory contains the two example files `A.csv` and `B.csv`.
 
@@ -82,8 +81,7 @@ dacman diff data/csv/A.csv data/csv/B.csv
 
 ### Using the HDF5 plug-in
 
-As one of Dac-Man's built-in plug-ins, after enabling it by installing its dependencies,
-the HDF5 plug-in will be used automatically when comparing HDF5 files.
+When dependencies are installed, Dac-Man's HDF5 plugin-in will be used automatically when comparing HDF5 files.
 
 The `examples/data/hdf5` directory contains the two example files `A.h5` and `B.h5`.
 
@@ -98,7 +96,7 @@ dacman diff data/hdf5/A.h5 data/hdf5/B.h5
 
 Plug-ins are also supported when using Dac-Man to compare entire directories with the `--datachange` option.
 When Dac-Man detects a modification in a file of a supported type,
-it will automatically choose the corresponding plug-in to perform the comparison bet.
+it will automatically choose the corresponding plug-in to perform the comparison.
 
 The `examples/data/plugin_test` directory contains the two sub-directories `v0` and `v1`,
 containing multiple files of the types supported by the built-in plug-ins.

@@ -14,19 +14,19 @@ There are two main components of Dac-Man:
 
 ## Features
 
-The key features of Dac-Man include:
+Dac-Man's key features include:
 
 - **HPC support**. Dac-Man provides MPI support for enabling parallel change capture in HPC environments
-- **Offline comparison**. Datasets can be compared away from the actual location of the data,
   allowing users to find changes without necessarily moving the datasets to a common location
 - **Extendable**. Users can plug-in their own scripts to calculate changes
+- **Support for remote comparison**. Changes in datasets can be identified and compared across systems without moving data to a single location
 - **Flexible command-line options**. Dac-Man provides different options to configure change detection
 - **Detailed output**. Dac-Man outputs contain details on the different types and amount of change
 - **Customizable logging**. Users can customize where and what to log,
-  including the detailed steps in the change capture process
+  including detailed steps in the change capture process
 
 ## Getting Started
 
 Dac-Man is developed using Python 3, and distributed under the "new" or "revised" BSD [license](./license/#license).
-For detailed instructions on the installation, refer to the [Installation](./install) section.
-To quickly get up-and-running with Dac-Man, head over to the [Quickstart](./quickstart) section.
+To get up and running with Dac-Man, install the tool following the [installation instructions](./install/#installing-dac-man-using-conda),
+then use the [Quickstart](./quickstart) to try out features.

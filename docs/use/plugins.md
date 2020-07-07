@@ -8,7 +8,7 @@ Additionally, the structure and format of files varies substantially across scie
 
 The Dac-Man plug-in framework allows users to implement their own plug-ins
 for comparing files and datasets of different types and formats.
-Additionally, Dac-Man also provides built-in plug-ins for a variety of popular scientific data formats,
+Dac-Man also provides built-in plug-ins for a variety of popular scientific data formats,
 including hierarchical datasets (e.g [HDF5](../../plugins/hdf5)),
 image files (e.g. [FITS](../../plugins/default), [EDF](../../examples/hdf5-edf)),
 and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
