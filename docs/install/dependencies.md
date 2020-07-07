@@ -3,7 +3,7 @@
 Dac-Man has a modular structure, and by default will only install packages that are necessary to its core functionality.
 To enable Dac-Man's built-in plug-ins, the required additional dependencies must be installed.
 
-It's possible to install additional dependencies by updating Dac-Man's environment
+It is possible to install additional dependencies by updating Dac-Man's environment
 using files in the `dependencies/` directory of the source code repository.
 
 ## Installing dependencies for all built-in plug-ins
@@ -29,12 +29,13 @@ pip install --requirement dependencies/pip/builtin-plugins.txt
 
 ## Built-in plug-ins dependencies
 
-More information on the individual dependencies required by the built-in plug-ins is given in the following table.
+More information about the individual dependencies required by the built-in
+plug-ins are given in the following table.
 
 | Package name | Documentation URL | Required by plug-in | Required for |
 |: --- |: --- :| --- | -- |
-| `h5py` | [Link](http://docs.h5py.org/en/latest/index.html) | Default, HDF5 | Reading `.h5` files |
-| `astropy` | [Link](http://docs.astropy.org/en/stable/) | Default | Reading `.fits` files |
+| `h5py` | [Link](https://docs.h5py.org/en/latest/index.html) | Default, HDF5 | Reading `.h5` files |
+| `astropy` | [Link](https://docs.astropy.org/en/stable/) | Default | Reading `.fits` files |
 | `fabio` | [Link](https://fabio.readthedocs.io/en/latest/) | Default | Reading `.edf` and `.tif` files |
 | `pandas` | [Link](https://pandas.pydata.org/pandas-docs/stable/) | CSV, Excel | Reading `.csv`/`.xls*` files, data processing |
 | `xlrd` | [Link](https://xlrd.readthedocs.io/en/latest/) | Excel | Reading `.xls*` files (through `pandas`), Excel utility functions |

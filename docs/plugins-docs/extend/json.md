@@ -6,7 +6,7 @@ by creating a minimal extension of the built-in JSON plug-in
 with a more detailed output.
 
 A complete runnable version of the entire script is available at the end of this section,
-and in the [`examples/json`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/json/)
+and in the [`examples/json`](https://github.com/deduce-dev/dac-man/blob/master/examples/json/)
 directory of the Dac-Man source code repository,
 together with the example data (shown immediately below) as two separate json files.
 
@@ -165,7 +165,7 @@ dacman diff a.json b.json --script /home/user/my_json_analysis.py
 ```
 
 !!! tip
-    A runnable copy of this file is available in [`examples/json/my_json_analysis.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/json/my_json_analysis.py)
+    A runnable copy of this file is available in [`examples/json/my_json_analysis.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/json/my_json_analysis.py)
 
 
 ### Final Output

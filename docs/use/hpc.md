@@ -1,10 +1,15 @@
 # Using Dac-Man on HPC Clusters
 
+In this section, we detail some of the steps needed to run Dac-Man on HPC
+clusters. The instructions here will be tailored based on our experience
+running Dac-Man on the NERSC Cori cluster, however, they should translate
+to HPC Clusters in general.
+
 ## Requirements
 
 The `mpi4py` is required to enable running Dac-Man with MPI.
 Installation steps and additional information
-on how to install Dac-Man's MPI dependencies are given in the following.
+on how to install Dac-Man's MPI dependencies are given below.
 
 ### Installing dependencies for running Dac-Man with MPI
 
@@ -18,7 +23,7 @@ conda env update --name dacman-env --file dependencies/conda/mpi.yml
 ```
 
 !!! important
-    Different computing environments might have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's own documentation to find out how to enable MPI.
+    Different computing environments may have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's own documentation to find out how to enable MPI.
 
 ## Using MPI
 
@@ -27,21 +32,18 @@ Dac-Man allows you to parallelize the following steps:
 - `index`
 - `diff` with the `--datachange` option
 
-To parallelize on HPC clusters, you need to enable the MPI support
-by using the appropriate flags:
+To parallelize on HPC clusters, enable MPI support by using the appropriate flags:
 
 ```sh
 dacman index ... -m mpi
 dacman diff ... -e mpi --datachange
 ```
 
-To distribute the tasks to multiple workers,
-you need to use the MPI executable appropriate for the system in use,
+To distribute tasks to multiple workers, use the MPI executable appropriate for the system in use,
 e.g. `srun`, `mpiexec`, `mpirun`, etc.
 
 For example, to run Dac-Man on an HPC cluster with 8 nodes and 32 cores per node,
-where the MPI executable is `srun`,
-you can use:
+where the MPI executable is `srun`, do the following:
 
 ```sh
 srun -n 256 dacman index ... -m mpi
@@ -50,8 +52,7 @@ srun -n 256 dacman diff ... -e mpi --datachange
 
 ## Batch Script
 
-To submit a batch job to a cluster,
-you need to include the Dac-Man command in your job script.
+To submit a batch job to a cluster, include the Dac-Man command in your job script.
 The example below shows a batch script (`hpcEx.batch`) for the Slurm scheduler.
 
 ```sh
@@ -81,8 +82,8 @@ This sections provides information on how to run Dac-Man at scale on the Cori HP
 
 #### Enabling Conda
 
-The Conda package manager is already installed at NERSC.
-To enable it, from one of Cori's login nodes,
+The Conda package manager is preinstalled at NERSC.
+To enable the package on one of Cori's login nodes,
 load one of the Anaconda Python modules as described [here](https://docs.nersc.gov/programming/high-level-environments/python/#anaconda-python):
 
 ```sh
@@ -95,7 +96,7 @@ Then, follow the same steps to install Dac-Man using Conda as illustrated in the
 including installing additional [plug-in dependencies](../../install/dependencies/) as needed:
 
 ```sh
-git clone https://github.com/dghoshal-lbl/dac-man
+git clone https://github.com/deduce-dev/dac-man
 cd dac-man
 conda env create --file environment.yml
 # optional - install dependencies for built-in plug-ins
@@ -104,17 +105,17 @@ conda env update --name dacman-env --file dependencies/conda/builtin-plugins.yml
 
 #### Enable MPI
 
-The installation method for MPI dependencies described above will not work on Cori,
-since the package versions installed via Pip or Conda are not compatible with the MPI libraries supported on Cori.
+On systems where incompatibilities exist between packaged versions installed
+via Pip or Conda with the system's MPI libraries, e.g. Cori, build the `mpi4py`
+package manually.
 
-To enable MPI on Cori, the `mpi4py` package must be built manually.
-To do so, first activate the Dac-Man Conda environment:
+First, activate the Dac-Man Conda environment:
 
 ```sh
 conda activate dacman-env
 ```
 
-Then, follow the steps described in [this section](https://docs.nersc.gov/programming/high-level-environments/python/mpi4py/#mpi4py-in-your-custom-conda-environment) of the NERSC documentation
+Next, follow the steps described in [this section](https://docs.nersc.gov/programming/high-level-environments/python/mpi4py/#mpi4py-in-your-custom-conda-environment) of the NERSC documentation
 to download, build, and install the `mpi4py` package.
 
 ### Running a test job
@@ -128,7 +129,7 @@ To access a node in an interactive session, run:
 salloc -N 1 -C haswell -q interactive -t 30:00
 ```
 
-Finally, once inside the interactive compute node session,
+Finally, once logged on to the interactive compute node session,
 invoke `dacman` on any two test data directories.
 On Cori, the MPI executable is `srun`:
 

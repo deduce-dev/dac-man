@@ -6,7 +6,7 @@ customizing the HDF5 functionality to match the structure of the source data
 and adding custom change metric calculations.
 
 !!! tip
-    The complete code for this example can be found in [`examples/hdf5_edf/edf_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/hdf5_edf/edf_change_ana.py).
+    The complete code for this example can be found in [`examples/hdf5_edf/edf_change_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/hdf5_edf/edf_change_ana.py).
 
 ## Overview
 

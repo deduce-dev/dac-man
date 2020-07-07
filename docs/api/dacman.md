@@ -18,12 +18,12 @@ class dacman.DataDiffer(comparisons, executor=Executor.DEFAULT)
 ```
 
 Class that compares multiple files or objects.
-It takes a list of comparisons and performs the comparisons in parallel.
+This class takes a list of comparisons and performs the comparisons in parallel.
 The `executor` argument specifies the type of runtime to be used for doing the comparisons.
 
 ### `use_plugin(plugin)`
 
-Method to set a specific plug-in for camparing the files.
+Method to set a specific plug-in for comparing the files.
 If no plug-in is set, then Dac-Man will select one of the internal plug-ins based on file/data types.
 
 ### `start()`

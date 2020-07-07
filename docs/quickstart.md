@@ -1,11 +1,8 @@
 # Dac-Man Quick Start Guide
 
-This document will get you started using the Dac-Man data change tool on your personal computer.
-This guide will help you use the Dac-Man tool to compare two versions of a sample dataset.
-Having completed this guide you will be ready to use Dac-Man to compare your own datasets.
-
-More detailed information about Dac-Man's features and functionality
-can be found in the [*Using Dac-Man*](../use/general/) section of the documentation.
+This guide serves as a starting point for using Dac-Man.
+In this guide, we will demonstrate how to use the Dac-Man data change tool to compare two
+versions of a sample dataset.
 
 !!! important
     This guide assumes you have installed Dac-Man as described in the [installation instructions](../install).
@@ -16,9 +13,10 @@ can be found in the [*Using Dac-Man*](../use/general/) section of the documentat
 
 Dac-Man is able to compare directories of files as well as individual files for changes.
 
-After activating Dac-Man's environment,
-navigate to the `examples` directory of Dac-Man's source code repository.
-Then, to compare two directories for changes, run the `dacman diff` command with the directories as arguments:
+First, activate Dac-Man's environment, then navigate to the `examples`
+directory of Dac-Man's source code repository. Next, compare two directories
+for changes by running the `dacman diff` command with the directory paths as
+arguments:
 
 ```sh
 cd dac-man/examples
@@ -60,7 +58,7 @@ depending on the file type.
 
 ### Enabling built-in plug-ins
 
-Dac-Man comes with built-in plug-ins for CSV and HDF5 files.
+Dac-Man comes with built-in plug-ins for CSV, HDF5, and JSON files.
 
 To enable a particular plug-in, its required additional dependencies must be installed.
 Follow [these steps](../install/dependencies/) to install dependencies for all of Dac-Man's built-in plug-ins.
@@ -114,6 +112,8 @@ dacman diff data/plugin_test/v0 data/plugin_test/v1 --datachange
 
 ### Additional information
 
-For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
+More detailed information about Dac-Man's features and functionality,
+can be found in the [*Using Dac-Man*](../use/general/) section of the documentation.
 
+For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
 - [Using Dac-Man's plug-ins](../use/plugins/)

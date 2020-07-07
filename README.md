@@ -28,16 +28,18 @@ Installation and usage instructions,
 as well as commented examples illustrating Dac-Man's features,
 are available on [Dac-Man's documentation website](https://dst.lbl.gov/projects/deduce/dac-man/).
 
+A copy of the documentation is available for download [here](https://github.com/deduce-dev/dac-man/releases/FIXME).
+
 Contribute
 ----------
 
-* Issue Tracker: <https://github.com/dghoshal-lbl/dac-man/issues>
-* Source Code: <https://github.com/dghoshal-lbl/dac-man>
+* Issue Tracker: <https://github.com/deduce-dev/dac-man/issues>
+* Source Code: <https://github.com/deduce-dev/dac-man>
 
 Support
 -------
 
-If you have any issues, please contact us at: dac-man@lbl.gov
+If you have any issues, please contact us at: dac-man@lbl.gov.
 
 License
 -------

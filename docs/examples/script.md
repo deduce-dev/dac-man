@@ -39,7 +39,7 @@ This change analysis consists of:
 
 ### Using Python
 
-A complete example implementing this change analysis using Python is available at [`examples/scripts/diff_pattern_count.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/diff_pattern_count.py).
+A complete example implementing this change analysis using Python is available at [`examples/scripts/diff_pattern_count.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/scripts/diff_pattern_count.py).
 
 The content of the script can be modified as needed,
 for example to change the value of the pattern being searched (`"e"`, in this particular example).
@@ -61,7 +61,7 @@ dacman diff v0 v1 --datachange --script /home/user/diff_pattern_count.py
 Even though Dac-Man itself is written in Python,
 custom change analysis scripts can be developed using any language.
 
-An example implementing the same change analysis written in Bash and using the `grep`, `wc` and `bc` UNIX programs is available at [`examples/scripts/diff_pattern_count.sh`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/scripts/diff_pattern_count.sh).
+An example implementing the same change analysis written in Bash and using the `grep`, `wc` and `bc` UNIX programs is available at [`examples/scripts/diff_pattern_count.sh`](https://github.com/deduce-dev/dac-man/blob/master/examples/scripts/diff_pattern_count.sh).
 
 Once the appropriate "shebang" is set (`#!/bin/bash`), the same steps as the Python script apply:
 
