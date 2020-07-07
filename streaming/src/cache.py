@@ -48,12 +48,28 @@ class Cache(object):
 
         return datablock_id
 
+    def put_multi_datablocks(self, datablocks):
+        datab_mappings = {}
+
+        datablock_ids = []
+        for datab in datablocks:
+            datablock_id = "%s:%s" % (_settings.DATABLOCK_PREFIX, str(uuid.uuid4()))
+            datablock_ids.append(datablock_id)
+
+            datab_mappings[datablock_id] = datab
+
+        self._data_datablock_send_start[datablock_id] = time.time()
+        self._redis.mset(datab_mappings)
+        self._data_datablock_send_end[datablock_id] = time.time()
+
+        return datablock_ids
+
     def get_current_window_size(self, window_key):
         n_objs = self._redis.llen(window_key)
         return n_objs
 
-    def assign_datablock_to_window(self, window_key, datablock_id):
-        n = self._redis.lpush(window_key, datablock_id)
+    def assign_datablocks_to_window(self, window_key, datablock_ids):
+        n = self._redis.lpush(window_key, *datablock_ids)
         return n
 
     # Inserts entries to task-list and task-queue
@@ -66,11 +82,8 @@ class Cache(object):
         self._data_task_send_end[task_uuid] = time.time()
 
     # Retrieves datablock-ids within a window
-    def get_windowed_datablocks(self, window_key):
-        datablock_ids = []
-        for i in range(0, self._redis.llen(window_key)):
-            datablock_ids.append(self._redis.lindex(window_key, i))
-        return datablock_ids
+    def get_windowed_datablock_ids(self, window_key, start=0, end=-1):
+        return self._redis.lrange(window_key, start, end)
 
     # Saving stats to disk
     def write_stats(self, output_dir):
