@@ -6,6 +6,17 @@ Dac-Man enables change capture and analysis with four simple steps,
 providing users with flexibility when identifying and capturing changes.
 Dac-Man provides four command-line options to manage each of these steps separately.
 
+<!-- Set table widths so that CLI flags are not split over multiple lines -->
+<!-- adapted from: https://stackoverflow.com/a/58338258 -->
+<style>
+table th:first-of-type {
+    width: 35%;
+}
+table th:nth-of-type(2) {
+    width: 65%;
+}
+</style>
+
 ### `scan`
 
 This command scans and saves the directory structure and other metadata related to a data path.
