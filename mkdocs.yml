@@ -5,12 +5,12 @@ theme:
     primary: teal
 nav:
   - Introduction: index.md
-  - Installation:
-    - Installing Dac-Man: install/index.md
+  - Installing Dac-Man: install/index.md
   - Testing the Installation: testing.md
+  - Quickstart: quickstart.md
+  - Advanced installation:
     - Installing plug-in dependencies: install/dependencies.md
     - Updating Dac-Man: install/update.md
-  - Quickstart: quickstart.md
   - Using Dac-Man:
     - General use: use/general.md
     - Plug-ins: use/plugins.md
