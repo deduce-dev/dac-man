@@ -1,16 +1,7 @@
 # Dac-Man: A Framework to Track, Compare and Analyze Large Scientific Data Changes
 
-Scientific datasets are updated frequently due to changes in instrument configuration, software updates, quality assessments or data cleaning algorithms.
-However, due to the large size and complex data structures of these datasets,
-existing tools either do not scale or are unable to generate meaningful change information.
-
 The **Dac-Man** (**Da**ta **C**hange **Man**agement) framework allows users to
 efficiently and effectively identify, track and manage data change and associated provenance in scientific datasets.
-There are two main components of Dac-Man:
-
-- Change tracker that keeps track of the changes between different
-  versions of a dataset
-- Query manager that manages data change related queries
 
 ## Features
 

@@ -1,11 +1,5 @@
 # Using Dac-Man's Plug-in Framework
 
-Scientific datasets come in various formats and data types.
-It is not a sustainable solution to compare files and datasets of different types in a single way.
-For example, image files are very different from text files,
-and therefore need to be compared differently.
-Additionally, the structure and format of files varies substantially across scientific disciplines.
-
 The Dac-Man plug-in framework allows users to implement their own plug-ins
 for comparing files and datasets of different types and formats.
 Dac-Man also provides built-in plug-ins for a variety of popular scientific data formats,
@@ -15,12 +9,9 @@ and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
 
 ## Usage
 
-By default, Dac-Man automatically selects at runtime which plug-in to use for data comparison,
-based on the file types,
-choosing among available plug-ins placed inside the `dacman/plugins/` directory of the source code.
-
-However, users can also specify explicitly which plug-in to use for data comparisons
-in several ways, described below.
+Dac-Man automatically selects which plug-in to use at runtime based on file types,
+choosing from the plug-ins installed inside the `dacman/plugins` directory.
+Users can specify which plug-in to use in several ways, described below.
 
 ### Configuring plug-in selection for specific file types
 
