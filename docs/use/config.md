@@ -4,9 +4,8 @@
 
 For every dataset, Dac-Man saves all metadata and index information in a staging area.
 Each directory in the staging area uniquely identifies the dataset (using a hash representation of the dataset path) indexed by Dac-Man.
-By default, this staging area for is located in `$HOME/.dacman/data`.
-However, the staging area can be changed to a custom location through
-the command-line.
+By default, this staging area is located in `$HOME/.dacman/data`.
+The staging area can be changed to a custom location through the command-line.
 You can change the staging area by using the following command:
 
 ```sh
@@ -16,9 +15,9 @@ dacman index mydir/ -s mystage
 The command above creates the indexes inside `mystage` directory.
 You can copy or move these indexes to compare and calculate the changes,
 without necessarily copying or moving the data.
-This is specifically useful when the datasets to be compared are located on different systems.
-The example below shows how can the staged indexes and metadata information be copied and compared for finding changes,
-without copying the data itself.
+This is useful when the datasets to be compared are located on different systems.
+The command below demonstrates how staged Dac-Man indexes and metadata can be copied and
+compared to identify changes without copying data itself.
 
 ```sh
 scp -r user:pass@~/.dacman/data/ /path/to/mystage/
@@ -27,11 +26,12 @@ dacman diff /path/to/localdir/ /remotedir/ -s /path/to/mystage
 
 ## Plug-ins
 
-By default, Dac-Man compares the data by transforming file data into Dac-Man records,
+By default, Dac-Man compares the data by transforming file data into Dac-Man records
 that use one-dimensional arrays as their underlying data structure.
 
-You can also use plug-ins by providing external scripts.
-You can use your own custom scripts as plug-ins by simply providing the path to the script.
+You can also use plug-ins by providing external scripts. Custom scripts can be used
+as plug-ins by providing the path to the executable script.
+
 For example, `myscript` can be used as a plug-in:
 
 ```sh
