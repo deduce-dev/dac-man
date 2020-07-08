@@ -5,7 +5,7 @@ An overview of these methods is given below.
 
 ## Specifying custom analysis scripts via the command line
 
-As we have seen in the [Quickstart](../,,.quickstart) section, when comparing the contents of two files,
+As we have seen in the [Quickstart](../../quickstart) section, when comparing the contents of two files,
 Dac-Man's default behavior is to automatically select one of the available plug-ins to perform the comparison.
 
 Dac-Man also allows users to use their own change analysis scripts instead of the available plug-ins,

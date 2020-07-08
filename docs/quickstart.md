@@ -26,7 +26,7 @@ dacman diff data/simple/v0 data/simple/v1
 ```
 
 This comparison will produce output that lists the number of changes between the two folders in five categories.
-For more information about Dac-Man's output, refer to the [*Outputs*](../use/general/#outputs) subsection.
+For more information about Dac-Man's output, refer to the [*Outputs*](../reference/commands/#outputs) subsection.
 
 ```txt
 Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
@@ -113,11 +113,12 @@ dacman diff data/plugin_test/v0 data/plugin_test/v1 --datachange
 ### Additional information
 
 More detailed information about Dac-Man's features and functionality,
-can be found in the [*Using Dac-Man*](../use/general/) section of the documentation.
+can be found in the [*Reference*](../reference/commands/) section of the documentation.
 
 For more information on Dac-Man's plug-in framework, refer to these sections of the documentation:
 
-- [Using Dac-Man's plug-ins](../use/plugins/)
+- [Running Custom Change Analyses](../use/plugins)
+- [Dac-Man's plug-in API reference](../reference/plugins-api)
 
 ## Running Dac-Man in Binder
 
