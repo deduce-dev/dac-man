@@ -9,7 +9,7 @@ The `Comparator` class is an abstract class that provides the underlying methods
 for defining the metadata and algorithm for capturing data changes.
 All the methods in this class are abstract and need to be implemented by the derived plug-in class.
 
-### `supports()`
+#### `supports()`
 
 A static method returning the file/data types that are supported by the specific plug-in.
 
