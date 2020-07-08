@@ -12,7 +12,6 @@ nav:
     - Running Custom Change Analyses: use/plugins.md
     - Running in Parallel on HPC Clusters: use/hpc.md
     - Additional use cases: use/misc.md
-    - Customization: use/config.md
   - Dac-Man Plug-ins:
     # - Introduction: plugins/introduction.md
     - Installing plug-in dependencies: install/dependencies.md
