@@ -16,9 +16,6 @@ nav:
     - On HPC clusters: use/hpc.md
     - Additional use cases: use/misc.md
     - Customization: use/config.md
-  - API:
-      Dac-Man: api/dacman.md
-      Plug-ins: api/plugins.md
   - Dac-Man Plug-ins:
     # - Introduction: plugins/introduction.md
     - Default: plugins/default.md
@@ -39,6 +36,10 @@ nav:
       - HDF5: plugins-docs/extend/hdf5-edf.md
       - JSON: plugins-docs/extend/json.md
     - Creating a plug-in from scratch: plugins-docs/from-scratch.md
+  - Reference:
+      Commands and Output: reference/commands.md
+      Dac-Man API: reference/dacman-api.md
+      Plug-ins API: reference/plugins-api.md
   - Troubleshooting: troubleshooting.md
   - License: license.md
 

@@ -1,4 +1,4 @@
-# Using Dac-Man
+# Dac-Man Commands and Output
 
 ## Command-line
 
