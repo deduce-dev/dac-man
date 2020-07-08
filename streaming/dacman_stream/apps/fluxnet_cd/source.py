@@ -1,6 +1,8 @@
-from source import WindowedStreamSrc
-import pandas as pd
 import sys
+import os
+import argparse
+import pandas as pd
+from dacman_stream.source import WindowedStreamSrc
 
 def main(host, port, dataset_iterator, dataset_src,
          measurement, window_size, key_name, stats_dir):
@@ -11,25 +13,33 @@ def main(host, port, dataset_iterator, dataset_src,
     stream_src.set_stats_dir(stats_dir)
 
     stream_src.set_dataset_iterator(dataset_iterator)
-    stream_src.stream()
+    stream_src.stream(dataset_src, measurement)
 
 
 ###################
 # Data stream transformation
-def transform_fluxnet_stream(stream_src):
+def transform_fluxnet_stream(stream_src, measurement=None):
     df = pd.read_csv(stream_src, comment='#', sep=',', na_filter=False, dtype='str')
-    df['datetime'] = df['TIMESTAMP_END']
-    for index, row in df.iterrows():
-        yield row
 
+    window_key = "datetime"
+    df[window_key] = df['TIMESTAMP_END']
+    dataset_len = len(df.index)
+    for i in range(dataset_len):
+        window_key_val, data_point = df.loc[i, [window_key, measurement]]
+        yield window_key_val, [data_point]
 
-def transform_lathuile_stream(stream_src):
+def transform_lathuile_stream(stream_src, measurement=None):
     df = pd.read_csv(stream_src, comment='#', sep=',', na_filter=False, dtype='str')
-    df['datetime'] = (pd.to_datetime(df['Year'].str[:-2]) + pd.to_timedelta(df['DoY'].str[:-2] + 'days') + \
+
+    window_key = "datetime"
+    df[window_key] = (pd.to_datetime(df['Year'].str[:-2]) + pd.to_timedelta(df['DoY'].str[:-2] + 'days') + \
         pd.to_timedelta('-1 day') + pd.to_timedelta(pd.to_numeric(df['Time']), unit='h'))
-    df['datetime'] = df['datetime'].dt.strftime('%Y%m%d%H%M')
-    for index, row in df.iterrows():
-        yield row
+    df[window_key] = df[window_key].dt.strftime('%Y%m%d%H%M')
+    
+    dataset_len = len(df.index)
+    for i in range(dataset_len):
+        window_key_val, data_point = df.loc[i, [window_key, measurement]]
+        yield window_key_val, [data_point]
 
 
 ###################
@@ -46,7 +56,7 @@ def _fluxnetSourceParser(subparsers):
     parser_worker.add_argument('-r', '--redis_host', type=str, required=True, help='Redis host')
     parser_worker.add_argument('-p', '--redis_port', type=str, required=True, help='Redis port')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
-    parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
+    parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=2)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
 
@@ -63,18 +73,21 @@ def _lathuileSourceParser(subparsers):
     parser_worker.add_argument('-r', '--redis_host', type=str, required=True, help='Redis host')
     parser_worker.add_argument('-p', '--redis_port', type=str, required=True, help='Redis port')
     parser_worker.add_argument('-k', '--keyname', type=str, help='key name', default='datetime')
-    parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=1)
+    parser_worker.add_argument('-s', '--windowsize', type=int, help='window size', default=2)
     parser_worker.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
 
 ###################
 # Usage with Ameriflux data, for creating tasks with two datablocks
-# python source.py fluxnet data/fluxnet2015/FLX_AT-Neu_FLUXNET2015_FULLSET_HH_2002-2012_1-3.csv -s 2
-# python source.py lathuile data/la_thuile/AT-Neu.2002.synth.hourly.allvars.csv -s 2
+# python source.py fluxnet data/fluxnet2015/FLX_AT-Neu_FLUXNET2015_FULLSET_HH_2002-2012_1-3.csv
+#    -s 2 -r redis-host -p redis-port -o stats_dir
+#
+# python source.py lathuile data/la_thuile/AT-Neu.2002.synth.hourly.allvars.csv
+#    -s 2 -r redis-host -p redis-port -o stats_dir
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="",
-                                     prog="dstream",
+                                     prog="source.py",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparsers = parser.add_subparsers()
@@ -91,7 +104,7 @@ if __name__ == '__main__':
     elif args.action == 'lathuile':
         fn = transform_lathuile_stream
     else:
-        raise ValueError("%s is not supported." % args.action
+        raise ValueError("%s is not supported." % args.action +
             "Only fluxnet & lathuile are supported so far")
 
     main(args.redis_host, args.redis_port, fn, args.filename, args.measurement,

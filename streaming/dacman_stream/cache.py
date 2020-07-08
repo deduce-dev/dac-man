@@ -1,12 +1,11 @@
 import os
 from hashlib import blake2b
 import redis
-import settings as _settings
+import dacman_stream.settings as _settings
 import uuid
 import socket
 import time
 import csv
-
 
 # Cache implementation using Redis
 class Cache(object):
@@ -76,9 +75,11 @@ class Cache(object):
     def create_task(self, *datablock_ids):
         task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
 
+        print((task_uuid, *datablock_ids))
+
         self._data_task_send_start[task_uuid] = time.time()
         self._redis.rpush(self._task_list, task_uuid)
-        self._redis.lpush(self._task_q, (task_uuid, *datablock_ids, "custom"))
+        self._redis.lpush(self._task_q, (task_uuid, *datablock_ids))
         self._data_task_send_end[task_uuid] = time.time()
 
     # Retrieves datablock-ids within a window
