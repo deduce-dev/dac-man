@@ -27,9 +27,6 @@ The `--datachange` option tells to compare the data within the files of the two 
 !!! example
     An example showing how to use custom scripts for data change analysis can be found [here](../../examples/script).
 
-In addition, the Dac-Man plug-in framework allows users to implement their own plug-ins
-for comparing files and datasets of different types and formats.
-
 ## Configuring plug-in selection for specific file types
 
 The criteria used by Dac-Man to automatically select the plug-in to use for each file content comparison is based on the file type.
@@ -39,10 +36,6 @@ Users can edit this file to override the default behavior and customize the sele
 
 The entries specified in the `plugins.yaml` file can refer to any of the plug-ins available within the Dac-Man plug-in framework.
 All of the built-in plug-ins will be available once their dependencies (if any) have been installed.
-Dac-Man provides built-in plug-ins for a variety of popular scientific data formats,
-including hierarchical datasets (e.g [HDF5](../../plugins/hdf5)),
-image files (e.g. [FITS](../../plugins/default), [EDF](../../examples/hdf5-edf)),
-and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
 For an overview of the built-in plug-ins, refer to the corresponding entry under the *Plug-ins* section.
 For steps on installing dependencies for the build-in plug-ins, see [here](../../install/dependencies).
 
