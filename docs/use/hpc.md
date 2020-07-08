@@ -1,13 +1,12 @@
 # Using Dac-Man on HPC Clusters
 
 In this section, we detail some of the steps needed to run Dac-Man on HPC
-clusters. The instructions here will be tailored based on our experience
-running Dac-Man on the NERSC Cori cluster, however, they should translate
-to HPC Clusters in general.
+clusters. The instructions here are based on our experience running
+Dac-Man on the NERSC Cori system. They should translate to other HPC systems.
 
 ## Requirements
 
-The `mpi4py` is required to enable running Dac-Man with MPI.
+The `mpi4py` package is required to enable running Dac-Man with MPI.
 Installation steps and additional information
 on how to install Dac-Man's MPI dependencies are given below.
 
@@ -15,19 +14,19 @@ on how to install Dac-Man's MPI dependencies are given below.
 
 The `mpi4py` package is required to use Dac-Man with MPI.
 
-To update Dac-Man's environment, run this command from the root of the local copy
-of the Dac-Man's source code repository:
+If you have not installed all of Dac-Man’s optional dependencies then run this command from the
+root directory of your local copy of the Dac-Man repository:
 
 ```sh
 conda env update --name dacman-env --file dependencies/conda/mpi.yml
 ```
 
 !!! important
-    Different computing environments may have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's own documentation to find out how to enable MPI.
+    Different computing environments may have specific requirements for interfacing user applications with MPI, e.g. using custom versions of MPI libraries. This is especially true for HPC systems. In this case, refer to the system's documentation to find out how to enable MPI.
 
 ## Using MPI
 
-Dac-Man allows you to parallelize the following steps:
+Dac-Man allows you to parallelize two steps of the change analysis:
 
 - `index`
 - `diff` with the `--datachange` option
@@ -76,7 +75,7 @@ sbatch hpcEx.batch
 
 ## Using Dac-Man on NERSC
 
-This sections provides information on how to run Dac-Man at scale on the Cori HPC cluster at NERSC.
+This section explains how to run Dac-Man at scale using Cori at NERSC.
 
 ### Installation
 
@@ -87,7 +86,7 @@ To enable the package on one of Cori's login nodes,
 load one of the Anaconda Python modules as described [here](https://docs.nersc.gov/programming/high-level-environments/python/#anaconda-python):
 
 ```sh
-module load python/3.7-anaconda-2019.07
+module load python
 ```
 
 #### Installing Dac-Man
