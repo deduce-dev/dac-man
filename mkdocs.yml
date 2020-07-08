@@ -8,8 +8,6 @@ nav:
   - Installing Dac-Man: install/index.md
   - Testing the Installation: testing.md
   - Quickstart: quickstart.md
-  - Advanced installation:
-    - Installing plug-in dependencies: install/dependencies.md
   - Using Dac-Man:
     - General use: use/general.md
     - Plug-ins: use/plugins.md
@@ -18,6 +16,7 @@ nav:
     - Customization: use/config.md
   - Dac-Man Plug-ins:
     # - Introduction: plugins/introduction.md
+    - Installing plug-in dependencies: install/dependencies.md
     - Default: plugins/default.md
     - CSV:
       - The CSV plug-in: plugins/csv/index.md
