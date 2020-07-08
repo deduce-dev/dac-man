@@ -1,27 +1,12 @@
-# Using Dac-Man's Plug-in Framework
+# Running Custom Change Analyses
 
-The Dac-Man plug-in framework allows users to implement their own plug-ins
-for comparing files and datasets of different types and formats.
-Dac-Man also provides built-in plug-ins for a variety of popular scientific data formats,
-including hierarchical datasets (e.g [HDF5](../../plugins/hdf5)),
-image files (e.g. [FITS](../../plugins/default), [EDF](../../examples/hdf5-edf)),
-and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
+Dac-Man offers several ways for users to customize how change analyses are performed.
+An overview of these methods is given below.
 
-## Usage
+## Specifying custom analysis scripts via the command line
 
-Dac-Man automatically selects which plug-in to use at runtime based on file types,
-choosing from the plug-ins installed inside the `dacman/plugins` directory.
-Users can specify which plug-in to use in several ways, described below.
-
-### Configuring plug-in selection for specific file types
-
-When Dac-Man is run for the first time, a plug-ins configuration file is created in the user's home directory,
-under `$HOME/.dacman/config/plugins.yaml`.
-
-Users can edit this file to override the default behavior and customize the selection of a plug-in for comparisons of specific file types.
-This file may contain any of the available plug-ins registered with the Dac-Man plug-in framework.
-
-### Specifying custom analysis scripts via the command line
+As we have seen in the [Quickstart](../,,.quickstart) section, when comparing the contents of two files,
+Dac-Man's default behavior is to automatically select one of the available plug-ins to perform the comparison.
 
 Dac-Man also allows users to use their own change analysis scripts instead of the available plug-ins,
 by specifying the path to an executable with the `--script` option when invoking Dac-Man via the command-line interface:
@@ -42,10 +27,33 @@ The `--datachange` option tells to compare the data within the files of the two 
 !!! example
     An example showing how to use custom scripts for data change analysis can be found [here](../../examples/script).
 
-### Using the Dac-Man API
+In addition, the Dac-Man plug-in framework allows users to implement their own plug-ins
+for comparing files and datasets of different types and formats.
 
-In addition to using the `dacman` command-line utility,
-users can write their own change analysis pipelines using the Dac-Man API.
+## Configuring plug-in selection for specific file types
+
+The criteria used by Dac-Man to automatically select the plug-in to use for each file content comparison is based on the file type.
+When Dac-Man is run for the first time, a plug-ins configuration file is created in the user's home directory,
+under `$HOME/.dacman/config/plugins.yaml`.
+Users can edit this file to override the default behavior and customize the selection of a plug-in for comparisons of specific file types.
+
+The entries specified in the `plugins.yaml` file can refer to any of the plug-ins available within the Dac-Man plug-in framework.
+All of the built-in plug-ins will be available once their dependencies (if any) have been installed.
+Dac-Man provides built-in plug-ins for a variety of popular scientific data formats,
+including hierarchical datasets (e.g [HDF5](../../plugins/hdf5)),
+image files (e.g. [FITS](../../plugins/default), [EDF](../../examples/hdf5-edf)),
+and tabular data (e.g. [CSV](../../plugins/csv), [Excel](../../examples/excel)).
+For an overview of the built-in plug-ins, refer to the corresponding entry under the *Plug-ins* section.
+For steps on installing dependencies for the build-in plug-ins, see [here](../../install/dependencies).
+
+## Developing a fully customized change analysis using custom plug-ins and the Dac-Man API
+
+In addition to the built-in plugins, users can also create and register their own plug-ins in Dac-Man.
+The [Plug-in API](../../reference/plugins-api) section describes the Dac-Man plug-in API
+that can be used to create user-defined plug-ins in Dac-Man.
+
+Finally, in addition to using the `dacman` command-line utility,
+Dac-Man's Python API allows users to use Dac-Man's functionality within their own change analysis pipelines.
 The API also provides the necessary module for users to specify a plug-in in their code.
 
 ```py
@@ -58,10 +66,6 @@ def my_diff(file1, file2):
     differ.use_plugin(DefaultPlugin)
     differ.start()
 ```
-
-Users can also create and register their own plug-ins in Dac-Man.
-The [Plug-in API](../../api/plugins) section describes the Dac-Man plug-in API
-that can be used to create user-defined plug-ins in Dac-Man.
 
 !!! example
     An example showing how to extend Dac-Man's built-in plug-ins, and use Dac-Man's API to incorporate them into custom analysis scripts can be found [here](../../examples/csv-simple).

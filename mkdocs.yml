@@ -8,10 +8,9 @@ nav:
   - Installing Dac-Man: install/index.md
   - Testing the Installation: testing.md
   - Quickstart: quickstart.md
-  - Using Dac-Man:
-    - General use: use/general.md
-    - Plug-ins: use/plugins.md
-    - On HPC clusters: use/hpc.md
+  - Extended Usage Scenarios:
+    - Running Custom Change Analyses: use/plugins.md
+    - Running in Parallel on HPC Clusters: use/hpc.md
     - Additional use cases: use/misc.md
     - Customization: use/config.md
   - Dac-Man Plug-ins:
