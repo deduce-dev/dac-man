@@ -10,7 +10,6 @@ nav:
   - Quickstart: quickstart.md
   - Advanced installation:
     - Installing plug-in dependencies: install/dependencies.md
-    - Updating Dac-Man: install/update.md
   - Using Dac-Man:
     - General use: use/general.md
     - Plug-ins: use/plugins.md
