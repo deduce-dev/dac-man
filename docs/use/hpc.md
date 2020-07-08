@@ -86,7 +86,7 @@ To enable the package on one of Cori's login nodes,
 load one of the Anaconda Python modules as described [here](https://docs.nersc.gov/programming/high-level-environments/python/#anaconda-python):
 
 ```sh
-module load python/3.7-anaconda-2019.07
+module load python
 ```
 
 #### Installing Dac-Man
