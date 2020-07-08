@@ -19,10 +19,6 @@ class BasicStreamSrc(object):
 
     def data_send(self, datablocks):
         datablock_ids = self.cache.put_multi_datablocks(datablocks)
-        print(len(datablock_ids))
-        if len(datablock_ids) > 2:
-            print(datablock_ids)
-            exit()
         self.cache.create_task(*datablock_ids)
 
     def stream(self, *stream_args):
@@ -69,13 +65,6 @@ class WindowedStreamSrc(BasicStreamSrc):
                 "Actual window size: %d > intended window size: %d" \
                     % (self.cache.get_current_window_size(win_key), self.window_size)
             self.cache.create_task(*datablock_ids)
-
-    #def get_window_key(self, row):
-    #    print(row)
-    #    print(self.window_key)
-    #    exit()
-    #    window_key = row[self.window_key]
-    #    return window_key
 
     def stream(self, *stream_args):
         '''

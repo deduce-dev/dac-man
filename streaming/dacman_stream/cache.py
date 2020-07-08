@@ -1,4 +1,5 @@
 import os
+import sys
 from hashlib import blake2b
 import redis
 import dacman_stream.settings as _settings
@@ -75,7 +76,7 @@ class Cache(object):
     def create_task(self, *datablock_ids):
         task_uuid = "%s:%s" % (_settings.TASK_PREFIX, str(uuid.uuid4()))
 
-        print((task_uuid, *datablock_ids))
+        sys.stdout.write(str((task_uuid, *datablock_ids)) + "\n")
 
         self._data_task_send_start[task_uuid] = time.time()
         self._redis.rpush(self._task_list, task_uuid)
