@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Dac-Man JSON plug-in allows to detect, analyze, and display semantic
+The Dac-Man JSON plug-in allows users to detect, analyze, and display semantic
 changes in JSON (JavaScript Object Notation) files.
 
 The following differences are compared through this plugin:

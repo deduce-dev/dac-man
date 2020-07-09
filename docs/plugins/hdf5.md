@@ -1,6 +1,6 @@
 # The Dac-Man HDF5 Plug-in
 
-A Dac-man plug-in to compare HDF5 files, using information from metadata collected from the contained Objects.
+The Dac-Man HDF5 plug-in compares HDF5 files using metadata information collected from the Objects contained in the file.
 
 !!! note
     To reduce ambiguities, capitalized nouns (Object, Dataset, Group, Attribute, File, etc) are used when referring to HDF5 data types or concepts.

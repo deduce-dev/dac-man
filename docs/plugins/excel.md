@@ -19,8 +19,7 @@ The `pandas` and `xlrd` packages are required as additional dependencies for thi
 
 ### Using the Excel Plug-in
 
-As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
-the Excel plug-in will be used by default when comparing Excel files.
+The included Excel plug-in will be used by Dac-Man to compare Excel files when its dependencies are installed.
 
 The [`examples/plugin_test/`](https://github.com/deduce-dev/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
 contains two example Excel files in the two sub-directories `v0` and `v1`.

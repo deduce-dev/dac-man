@@ -1,13 +1,13 @@
-# Additional environments and use cases
+# Additional settings and use cases
 
 ## Setting the location of the staging area
 
-For every dataset, Dac-Man saves all metadata and index information in a staging area.
-Each directory in the staging area uniquely identifies the dataset (using a hash representation of the dataset path) indexed by Dac-Man.
-By default, this staging area for is located in `$HOME/.dacman/data`.
-However, the staging area can be changed to a custom location through
-the command-line.
-You can change the staging area by using the following command:
+When indexing a dataset, Dac-Man uses a staging area to save all metadata and index information.
+Each directory in the staging area uniquely identifies each dataaset (using a hash representation of the dataset path) indexed by Dac-Man.
+Users can customize this location when analyzing read-only datasets or comparing files on different systems.
+
+The default staging area is located in `$HOME/.dacman/data`.
+Users can change the staging area path through the command-line with this command:
 
 ```sh
 dacman index mydir/ -s mystage

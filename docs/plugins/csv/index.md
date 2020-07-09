@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Dac-Man CSV plug-in allows to detect, analyze, and display changes in CSV (Comma-Separated Values) files.
+The Dac-Man CSV plug-in allows users to detect, analyze, and display changes in CSV (Comma-Separated Values) files.
 
 By including the tabular data content of the source files in the change analysis,
 Dac-Man provides several advantages over a line-by-line analysis
@@ -28,8 +28,7 @@ The `pandas` package is required as an additional dependency for this plug-in.
 
 ### Using the CSV Plug-in
 
-As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
-the CSV plug-in will be used by default when comparing CSV files.
+The included CSV plug-in will be used by Dac-Man to compare CSV files when its dependencies are installed.
 
 The [`examples/plugin_test/`](https://github.com/deduce-dev/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
 contains two example CSV files in the two sub-directories `v0` and `v1`.
