@@ -13,6 +13,7 @@ nav:
     - Running in Parallel on HPC Clusters: use/hpc.md
     - Additional use cases: use/misc.md
   - Dac-Man Plug-ins:
+    - Overview: plugins/overview.md
     # - Introduction: plugins/introduction.md
     - Installing plug-in dependencies: install/dependencies.md
     - Default: plugins/default.md
