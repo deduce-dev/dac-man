@@ -94,13 +94,3 @@ class UIDDatasetPlugin(HDF5Plugin):
             return metadata['attributes']['uid']
         return metadata['name']
 ```
-
-### Elementwise comparison between Attributes
-
-Even though in the current implementation Attributes are compared as a single item, it is possible to perform a more granular comparison.
-Attributes in HDF5 are mappings between text keys and values, where values can be of any supported data type.
-Effectively, for the purpose of a comparison, Attributes can be considered a flat Group (i.e. no sub-groups) with one or more Datasets.
-Therefore, comparisons between Attributes can be treated in a similar way as comparison between Groups:
-
-- Attribute keys can be present in only one of the Objects being compared; in both and values are equal; or in both and values are different
-- For Attribute values, the types of change are the same as for Datasets

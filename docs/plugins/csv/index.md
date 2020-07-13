@@ -107,10 +107,6 @@ The parameters described in this section are the core options of this plug-in,
 used to specify additional information about the source data
 to obtain more accurate and specific results from the change analysis.
 
-In line with Dac-Man's design principles, the user is given full choice
-about the amount of additional information to provide
-(and, correspondingly, the level of detail and specificity of the change analysis).
-
 If no option is given, Dac-Man will perform the analysis using the default values,
 using table data in the `orig` format as described above.
 After running the analysis for the first time,
