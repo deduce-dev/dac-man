@@ -38,7 +38,7 @@ class BasicStreamSrc(object):
                 break
 
         if self.stats_dir is not None:
-            self.cache.write_stats(self.stats_dir)
+            self.cache.write_streaming_source_stats(self.stats_dir)
 
 
 # WindowedStreamSrc Implementation
@@ -86,4 +86,4 @@ class WindowedStreamSrc(BasicStreamSrc):
             self.data_send(window_key_val, datablocks)
 
         if self.stats_dir is not None:
-            cache.write_stats(self.stats_dir)
+            cache.write_streaming_source_stats(self.stats_dir)

@@ -47,7 +47,7 @@ def transform_als_stream(dataset, data_fraction=1):
 # python source.py data/image_dataset_5.0.h5 -r redis-host -p redis-port -o stats_dir
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="",
+    parser = argparse.ArgumentParser(description="Image Analysis streaming source",
                                      prog="source.py",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -57,9 +57,6 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
     args = parser.parse_args()
-    if len(args.__dict__) == 0:
-        parser.print_usage()
-        sys.exit(1)
 
     fn = transform_als_stream
 

@@ -86,7 +86,7 @@ def _lathuileSourceParser(subparsers):
 #    -s 2 -r redis-host -p redis-port -o stats_dir
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="",
+    parser = argparse.ArgumentParser(description="fluxnet streaming source",
                                      prog="source.py",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -95,9 +95,6 @@ if __name__ == '__main__':
     _lathuileSourceParser(subparsers)
 
     args = parser.parse_args()
-    if len(args.__dict__) == 0:
-        parser.print_usage()
-        sys.exit(1)
 
     if args.action == 'fluxnet':
         fn = transform_fluxnet_stream

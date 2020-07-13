@@ -14,10 +14,18 @@ class Cache(object):
         self._task_q = self._get_entity_name(_settings.TASK_QUEUE_NAME)
         self._task_list = self._get_entity_name(_settings.JOB_ORDERED_LIST)
         self._redis = self._init_redis(host, port)
+
+        # stat vars for streaming source
         self._data_datablock_send_start = {}
         self._data_datablock_send_end = {}
         self._data_task_send_start = {}
         self._data_task_send_end = {}
+
+        # stat vars for workers
+        self._data_pull_start = {}
+        self._data_pull_end = {}
+        self._job_end_processing = {}
+        self._job_end_data_put = {}
 
     def _get_entity_name(self, name):
         hash_digest = blake2b(digest_size=20)
@@ -32,12 +40,27 @@ class Cache(object):
         )
         return r
 
-    def get_redis_instance(self):
-        return self._redis
-
     def set_redis_instance(self, r):
         self._redis = r
         return self._redis
+
+    def worker_ready(self):
+        self._redis.set("worker", 1)
+
+    def pull_task(self, br_wait_time=10):
+        return self._redis.brpop(self._task_q, br_wait_time)
+
+    def dataid_to_datablock(self, task_uuid, *datablock_ids):
+        self._data_pull_start[task_uuid] = time.time()
+        datablocks = self._redis.mget(datablock_ids)
+        self._data_pull_start[task_uuid] = time.time()
+
+        return datablocks
+
+    def put_results(self, task_uuid, *results):
+        self._job_end_processing[task_uuid] = time.time()
+        self._redis.set(task_uuid, results)
+        self._job_end_data_put[task_uuid] = time.time()
 
     def put_datablock(self, datablock):
         datablock_id = "%s:%s" % (_settings.DATABLOCK_PREFIX, str(uuid.uuid4()))
@@ -87,8 +110,8 @@ class Cache(object):
     def get_windowed_datablock_ids(self, window_key, start=0, end=-1):
         return self._redis.lrange(window_key, start, end)
 
-    # Saving stats to disk
-    def write_stats(self, output_dir):
+    # Saving streaming source stats to disk
+    def write_streaming_source_stats(self, output_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -114,4 +137,57 @@ class Cache(object):
         with open(output_full_path, 'w') as csv_file:
             writer = csv.writer(csv_file)
             for key, value in self._data_task_send_end.items():
+               writer.writerow([key, value])
+
+    # Saving streaming source stats to disk
+    def write_wroker_stats(self, output_dir):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        ####################################################################
+        name = _settings.CSV_WORKER_DICTS_DIRS[0]
+        if not os.path.exists(os.path.join(output_dir, name)):
+            os.makedirs(os.path.join(output_dir, name))
+
+        output_full_path = os.path.join(output_dir, name, 
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in self._data_pull_start.items():
+               writer.writerow([key, value])
+
+        ####################################################################
+        name = _settings.CSV_WORKER_DICTS_DIRS[1]
+        if not os.path.exists(os.path.join(output_dir, name)):
+            os.makedirs(os.path.join(output_dir, name))
+
+        output_full_path = os.path.join(output_dir, name, 
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in self._data_pull_end.items():
+               writer.writerow([key, value])
+
+        ####################################################################
+        name = _settings.CSV_WORKER_DICTS_DIRS[2]
+        if not os.path.exists(os.path.join(output_dir, name)):
+            os.makedirs(os.path.join(output_dir, name))
+
+        output_full_path = os.path.join(output_dir, name, 
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in self._job_end_processing.items():
+               writer.writerow([key, value])
+
+        ####################################################################
+        name = _settings.CSV_WORKER_DICTS_DIRS[3]
+        if not os.path.exists(os.path.join(output_dir, name)):
+            os.makedirs(os.path.join(output_dir, name))
+
+        output_full_path = os.path.join(output_dir, name, 
+                '%s_%s_%s.csv' % (name, socket.gethostname(), os.getpid()))
+        with open(output_full_path, 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in self._job_end_data_put.items():
                writer.writerow([key, value])
