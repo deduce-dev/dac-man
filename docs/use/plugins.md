@@ -49,16 +49,5 @@ Finally, in addition to using the `dacman` command-line utility,
 Dac-Man's Python API allows users to use Dac-Man's functionality within their own change analysis pipelines.
 The API also provides the necessary module for users to specify a plug-in in their code.
 
-```py
-from dacman import Executor, DataDiffer
-from dacman.plugins.default import DefaultPlugin
-
-def my_diff(file1, file2):
-    comparisons = [(file1, file2)]
-    differ = DataDiffer(comparisons, executor=Executor.DEFAULT)
-    differ.use_plugin(DefaultPlugin)
-    differ.start()
-```
-
 !!! example
     An example showing how to extend Dac-Man's built-in plug-ins, and use Dac-Man's API to incorporate them into custom analysis scripts can be found [here](../../examples/csv-simple).
