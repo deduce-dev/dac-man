@@ -70,7 +70,7 @@ it will automatically be used by Dac-Man when comparing files of the supported t
 
 ### Using the CSV plug-in
 
-When dependencies are installed, Dac-Man's CSV plugin-in will be used automatically when comparing CSV files.
+When dependencies are installed, Dac-Man's CSV plug-in will be used automatically when comparing CSV files.
 
 The `examples/data/csv` directory contains the two example files `A.csv` and `B.csv`.
 
@@ -83,7 +83,7 @@ dacman diff data/csv/A.csv data/csv/B.csv
 
 ### Using the HDF5 plug-in
 
-When dependencies are installed, Dac-Man's HDF5 plugin-in will be used automatically when comparing HDF5 files.
+When dependencies are installed, Dac-Man's HDF5 plug-in will be used automatically when comparing HDF5 files.
 
 The `examples/data/hdf5` directory contains the two example files `A.h5` and `B.h5`.
 

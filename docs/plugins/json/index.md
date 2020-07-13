@@ -5,7 +5,7 @@ changes in JSON (JavaScript Object Notation) files.
 
 ## Key concepts
 
-The following differences are compared through this plugin:
+The following differences are compared through this plug-in:
 
 - If both keys are present at the same levels in the JSON, values between
    these keys are compared for differences.
@@ -14,9 +14,9 @@ The following differences are compared through this plugin:
 
 It is important to note that the computation here only applies to the semantic
 side of JSON, and any structural comparison is not accounted for. The ordering
-of keys and values in a file are not taken into account by the plugin. For
+of keys and values in a file are not taken into account by the plug-in. For
 example, if both files contain the key `key1`, but have them at different
-lines of the file, this plugin will not treat that as a difference.
+lines of the file, this plug-in will not treat that as a difference.
 
 ## Usage
 
@@ -96,7 +96,7 @@ different from that in `a.json`
 
 At the end of the output, the reader will note the following message:
 `[INFO] --- No custom detail level specified, using default detail level.`
-It is possible to have the plugin output the differences in more detail.
+It is possible to have the plug-in output the differences in more detail.
 The default output level used here is level 0. The section titled
-"Extending included plug-ins" will cover aspects of how to have the plugin
+"Extending included plug-ins" will cover aspects of how to have the plug-in
 output in more detail.

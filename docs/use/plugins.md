@@ -41,7 +41,7 @@ For steps on installing dependencies for the build-in plug-ins, see [here](../..
 
 ## Developing a fully customized change analysis using custom plug-ins and the Dac-Man API
 
-In addition to the included plugins, users can also create and register their own plug-ins in Dac-Man.
+In addition to the included plug-in, users can also create and register their own plug-ins in Dac-Man.
 The [Plug-in API](../../reference/plugins-api) section describes the Dac-Man plug-in API
 that can be used to create user-defined plug-ins in Dac-Man.
 

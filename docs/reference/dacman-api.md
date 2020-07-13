@@ -9,7 +9,7 @@ Data can be compared using `dacman.diff()`.
 def dacman.diff(new_file, old_file, *argv, comparator_plugin=None)
 ```
 
-Function to perform a single comparison using the specified plugin.
+Function to perform a single comparison using the specified plug-in.
 
 ## `dacman.DataDiffer`
 
@@ -48,4 +48,4 @@ Types of runtime in Dac-Man.
 dacman.plugins.default.DefaultPlugin
 ```
 
-Module containing the system and user-defined plugins.
+Module containing the system and user-defined plug-in.

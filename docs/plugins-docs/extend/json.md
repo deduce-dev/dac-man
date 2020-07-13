@@ -69,7 +69,7 @@ class MyJSONPlugin(JSONPlugin):
 
 ### Setting the output detail level from the header
 The only customization we are specifying here is varying the detail level
-for the outputs of the JSON plugin.
+for the outputs of the JSON plug-in.
 
 ## Creating a runnable change analysis script
 
