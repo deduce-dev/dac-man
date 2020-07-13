@@ -2,10 +2,10 @@
 
 The Dac-Man HDF5 plug-in compares HDF5 files using metadata information collected from the Objects contained in the file.
 
+## Key Concepts
+
 !!! note
     To reduce ambiguities, capitalized nouns (Object, Dataset, Group, Attribute, File, etc) are used when referring to HDF5 data types or concepts.
-
-## Key Concepts
 
 The operation of the plug-in can be summarized in these steps:
 
@@ -72,13 +72,7 @@ cd examples/plugin_test
 dacman diff v0 v1 --datachange
 ```
 
-## Extending the Plug-in
-
-The capability of HDF5 files of storing arbitrary data within a complex structure means that the range of possible comparisons is effectively unlimited.
-Rather than trying to anticipate all possible use cases, the plug-in is designed so that it is possible for users to modify the default behavior, and extend it with more specialized functionality.
-
-In this section, a few cases are given as examples.
-A complete walkthrough of developing an extension of the plug-in for a custom change analysis can be found in the [examples section](../../examples/hdf5-edf).
+## API
 
 ### Changing the indexing of the comparison pairs
 

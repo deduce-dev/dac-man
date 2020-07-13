@@ -1,9 +1,9 @@
 # The Dac-Man JSON plug-in
 
-## Introduction
-
 The Dac-Man JSON plug-in allows users to detect, analyze, and display semantic
 changes in JSON (JavaScript Object Notation) files.
+
+## Key concepts
 
 The following differences are compared through this plugin:
 
@@ -20,10 +20,12 @@ lines of the file, this plugin will not treat that as a difference.
 
 ## Usage
 
-### Dependencies
+### Requirements
+
 No additional dependencies.
 
 ### Using the JSON Plug-in
+
 As this is a built-in Dac-Man plug-in, the JSON plug-in will be used by default
 when comparing JSON files.
 
@@ -36,7 +38,6 @@ followed by the `--datachange` option:
 cd examples/json
 dacman diff a.json b.json --datachange
 ```
-
 
 ### Output
 
@@ -84,6 +85,7 @@ Level 0 detail:
 ```
 
 ### Interpreting the comparison output
+
 The following is the output from the comparison.
 The first couple of printouts are for informational purposes and the actual
 comparison output is printed after the line `[INFO] Comparing ... using JSONPlugin`.

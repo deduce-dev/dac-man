@@ -16,9 +16,7 @@ nav:
     # - Introduction: plugins/introduction.md
     - Installing plug-in dependencies: install/dependencies.md
     - Default: plugins/default.md
-    - CSV:
-      - The CSV plug-in: plugins/csv/index.md
-      - API: plugins/csv/api.md
+    - CSV: plugins/csv/index.md
     - Excel: plugins/excel.md
     - HDF5: plugins/hdf5.md
     - JSON: plugins/json/index.md
