@@ -2,7 +2,7 @@
 
 This example illustrates how to implement a change analysis for CSV files
 tailored to specific features of the data being analyzed,
-by creating a minimal extension of the built-in CSV plug-in.
+by creating a minimal extension of the included CSV plug-in.
 
 A complete runnable version of the entire script is available at the end of this section,
 and in the [`examples/csv`](https://github.com/deduce-dev/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,

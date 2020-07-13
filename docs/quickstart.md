@@ -58,12 +58,12 @@ Added: 1, Deleted: 1, Modified: 1, Metadata-only: 0, Unchanged: 1
 Dac-Man plug-ins allow to analyze changes between file contents in a more specialized way,
 depending on the file type.
 
-### Enabling built-in plug-ins
+### Enabling included plug-ins
 
-Dac-Man comes with built-in plug-ins for CSV, HDF5, and JSON files.
+Dac-Man comes with included plug-ins for CSV, HDF5, and JSON files.
 
 To enable a particular plug-in, its required additional dependencies must be installed.
-Follow [these steps](../install/dependencies/) to install dependencies for all of Dac-Man's built-in plug-ins.
+Follow [these steps](../install/dependencies/) to install dependencies for all of Dac-Man's included plug-ins.
 
 Once a plug-in has been enabled,
 it will automatically be used by Dac-Man when comparing files of the supported type.
@@ -101,9 +101,9 @@ When Dac-Man detects a modification in a file of a supported type,
 it will automatically choose the corresponding plug-in to perform the comparison.
 
 The `examples/data/plugin_test` directory contains the two sub-directories `v0` and `v1`,
-containing multiple files of the types supported by the built-in plug-ins.
+containing multiple files of the types supported by the included plug-ins.
 
-To test the built-in plug-ins, after installing the dependencies,
+To test the included plug-ins, after installing the dependencies,
 run this command from the `examples` directory:
 
 ```sh

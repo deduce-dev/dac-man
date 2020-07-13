@@ -26,7 +26,7 @@ No additional dependencies.
 
 ### Using the JSON Plug-in
 
-As this is a built-in Dac-Man plug-in, the JSON plug-in will be used by default
+As this is an included Dac-Man plug-in, the JSON plug-in will be used by default
 when comparing JSON files.
 
 The [`examples/json/`](https://github.com/deduce-dev/dac-man/blob/master/examples/json/) directory of the Dac-Man source code repository contains two example JSON files.
@@ -98,5 +98,5 @@ At the end of the output, the reader will note the following message:
 `[INFO] --- No custom detail level specified, using default detail level.`
 It is possible to have the plugin output the differences in more detail.
 The default output level used here is level 0. The section titled
-"Extending built-in plug-ins" will cover aspects of how to have the plugin
+"Extending included plug-ins" will cover aspects of how to have the plugin
 output in more detail.

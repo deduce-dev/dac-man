@@ -98,7 +98,7 @@ including installing additional [plug-in dependencies](../../install/dependencie
 git clone https://github.com/deduce-dev/dac-man
 cd dac-man
 conda env create --file environment.yml
-# optional - install dependencies for built-in plug-ins
+# optional - install dependencies for included plug-ins
 conda env update --name dacman-env --file dependencies/conda/builtin-plugins.yml
 ```
 

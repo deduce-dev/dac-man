@@ -35,13 +35,13 @@ under `$HOME/.dacman/config/plugins.yaml`.
 Users can edit this file to override the default behavior and customize the selection of a plug-in for comparisons of specific file types.
 
 The entries specified in the `plugins.yaml` file can refer to any of the plug-ins available within the Dac-Man plug-in framework.
-All of the built-in plug-ins will be available once their dependencies (if any) have been installed.
-For an overview of the built-in plug-ins, refer to the corresponding entry under the *Plug-ins* section.
+All of the included plug-ins will be available once their dependencies (if any) have been installed.
+For an overview of the included plug-ins, refer to the corresponding entry under the *Plug-ins* section.
 For steps on installing dependencies for the build-in plug-ins, see [here](../../install/dependencies).
 
 ## Developing a fully customized change analysis using custom plug-ins and the Dac-Man API
 
-In addition to the built-in plugins, users can also create and register their own plug-ins in Dac-Man.
+In addition to the included plugins, users can also create and register their own plug-ins in Dac-Man.
 The [Plug-in API](../../reference/plugins-api) section describes the Dac-Man plug-in API
 that can be used to create user-defined plug-ins in Dac-Man.
 
@@ -50,4 +50,4 @@ Dac-Man's Python API allows users to use Dac-Man's functionality within their ow
 The API also provides the necessary module for users to specify a plug-in in their code.
 
 !!! example
-    An example showing how to extend Dac-Man's built-in plug-ins, and use Dac-Man's API to incorporate them into custom analysis scripts can be found [here](../../examples/csv-simple).
+    An example showing how to extend Dac-Man's included plug-ins, and use Dac-Man's API to incorporate them into custom analysis scripts can be found [here](../../examples/csv-simple).

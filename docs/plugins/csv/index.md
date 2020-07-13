@@ -85,7 +85,7 @@ Depending on the actual values of the options, the differences with the `orig` f
 The `pandas` package is required as an additional dependency for this plug-in.
 
 !!! tip
-    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's included plug-ins in a single step.
 
 ### Using the CSV Plug-in
 

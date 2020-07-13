@@ -1,6 +1,6 @@
 # Extending Dac-Man's Built-in Plug-ins
 
-Dac-Man's built-in plug-ins are designed to be easy to extend,
+Dac-Man's included plug-ins are designed to be easy to extend,
 serving as a starting point for users to develop custom change analysis
 tailored to their particular use cases.
 

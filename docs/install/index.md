@@ -62,7 +62,7 @@ conda env update --name my-conda-env --file ./environment.yml
 ---
 
 !!! tip
-    In this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
+    In this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's included plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
 
 ## Installing Dac-Man in a new Python virtual environment using Pip
 
@@ -118,7 +118,7 @@ conda env update --name my-conda-env --file ./environment.yml
 ---
 
 !!! tip
-    Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's built-in plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
+    Also in this case, only Dac-man's core dependencies will be installed after these steps. Instructions on how to install dependencies for enabling Dac-Man's included plug-ins can be found on [this page](./dependencies), depending on whether Pip ([here](./dependencies/#using-pip)) or Conda ([here](./dependencies/#using-conda)) was used to install Dac-Man.
 
 ### Installing in an existing Python virtual environment (virtualenv)
 

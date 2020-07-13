@@ -30,7 +30,7 @@ Currently, the plug-in uses adaptors for the following file formats:
 
 !!! tip
     These [instructions](../../install/dependencies) describe how to install
-    dependencies for all of Dac-Man's built-in plug-ins in a single step.
+    dependencies for all of Dac-Man's included plug-ins in a single step.
 
 This plug-in requires additional packages, depending on the exact file type
 that will be analyzed, as described in the following table:

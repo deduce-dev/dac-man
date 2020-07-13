@@ -1,18 +1,18 @@
 # Installing plug-in dependencies
 
 Dac-Man has a modular structure, and by default will only install packages that are necessary to its core functionality.
-To enable Dac-Man's built-in plug-ins, the required additional dependencies must be installed.
+To enable Dac-Man's included plug-ins, the required additional dependencies must be installed.
 
 It is possible to install additional dependencies by updating Dac-Man's environment
 using files in the `dependencies/` directory of the source code repository.
 
-## Installing dependencies for all built-in plug-ins
+## Installing dependencies for all included plug-ins
 
 ### Using Conda
 
 If Dac-Man was installed using Conda,
 run this command from the root of the local copy of the Dac-Man source code repository
-to update Dac-Man's environment and enable all built-in plug-ins:
+to update Dac-Man's environment and enable all included plug-ins:
 
 ```sh
 conda env update --name dacman-env --file dependencies/conda/builtin-plugins.yml
@@ -29,7 +29,7 @@ pip install --requirement dependencies/pip/builtin-plugins.txt
 
 ## Built-in plug-ins dependencies
 
-More information about the individual dependencies required by the built-in
+More information about the individual dependencies required by the included
 plug-ins are given in the following table.
 
 | Package name | Documentation URL | Required by plug-in | Required for |

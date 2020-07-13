@@ -15,7 +15,7 @@ For more information, refer to the CSV plug-in [documentation](../csv/).
 The `pandas` and `xlrd` packages are required as additional dependencies for this plug-in.
 
 !!! tip
-    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's included plug-ins in a single step.
 
 ### Using the Excel Plug-in
 

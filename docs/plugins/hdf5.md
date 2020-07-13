@@ -55,11 +55,11 @@ Whenever possible, the nomenclature is consistent with the `h5py` API.
 The `h5py` Python package is required as an additional dependency.
 
 !!! tip
-    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's included plug-ins in a single step.
 
 ### Using the HDF5 Plug-in
 
-As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
+As part of the included Dac-Man plug-ins, once its dependencies have been installed,
 the HDF5 plug-in will be used by default when comparing HDF5 files.
 
 The [`examples/plugin_test/`](https://github.com/deduce-dev/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
