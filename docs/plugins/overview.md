@@ -7,7 +7,7 @@ A Dac-Man plug-in is a component of the Dac-Man framework used to analyze change
 When Dac-Man detects that two versions of the same file are not identical,
 it selects the appropriate plug-in based on the filetype,
 and performs the final part of the change analysis by running the change analysis implemented in the plug-in's `compare()` method,
-passing the two files as arguments.
+passing the paths of the two files as arguments.
 
 In terms of the concrete implementation, a Dac-Man plug-in is a subclass of the `Comparator` base class.
 The [Plug-in API](../../reference/plugins-api) page of this document's reference section contains the description of the `Comparator` base class and its methods.
