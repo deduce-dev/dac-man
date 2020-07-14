@@ -27,7 +27,7 @@ nav:
     # - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
-    - Extending built-in plug-ins:
+    - Extending an included plug-in:
       - CSV: plugins-docs/extend/csv.md
       - HDF5: plugins-docs/extend/hdf5-edf.md
       - JSON: plugins-docs/extend/json.md

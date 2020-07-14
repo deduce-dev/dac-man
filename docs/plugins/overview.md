@@ -45,10 +45,10 @@ that can be used to create user-defined plug-ins in Dac-Man.
 
 We can distinguish two main strategies to create user-defined plug-ins:
 
-- **Extending an existing plug-in**: a new plug-in is created by subclassing one of the included plug-ins.
+- **Extending an included plug-in**: a new plug-in is created by subclassing one of the included plug-ins.
   This can be used when analyzing changes in datasets where files are in one of the supported formats, and have some kind of shared schema or internal structure that can be leveraged to make the change analysis more specific
 - **Creating a plug-in from scratch**: a new plug-in is created by subclassing the `Comparator` base class directly. This can be used to enable change analyses between datasets where files are in a format other than those supported by the included plug-ins, including custom file formats
 
-Examples covering both of these strategies are available in the *Extending existing plug-ins* and *Creating a plug-in from scratch* sections.
+Examples covering both of these strategies are available in the *Extending an included plug-in* and *Creating a plug-in from scratch* sections.
 The examples include a step-by-step walkthrough of the plug-in's creation,
 as well as pointers to the complete example scripts and datasets.
