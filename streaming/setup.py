@@ -17,5 +17,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
+    install_requires=['redis==3.5.3'],
     python_requires='>=3.6',
 )

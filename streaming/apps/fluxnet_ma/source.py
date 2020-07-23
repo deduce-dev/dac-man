@@ -1,5 +1,3 @@
-import sys
-import os
 import argparse
 import pandas as pd
 from deduce_stream.source import BasicStreamSrc

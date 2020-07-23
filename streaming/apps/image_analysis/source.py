@@ -1,5 +1,3 @@
-import sys
-import os
 import argparse
 import h5py
 from deduce_stream.source import BasicStreamSrc
