@@ -1,4 +1,4 @@
-from dacman_stream.cache import Cache
+from deduce_stream.cache import Cache
 
 # StreamSource Implementation
 class BasicStreamSrc(object):
@@ -86,4 +86,4 @@ class WindowedStreamSrc(BasicStreamSrc):
             self.data_send(window_key_val, datablocks)
 
         if self.stats_dir is not None:
-            cache.write_streaming_source_stats(self.stats_dir)
+            self.cache.write_streaming_source_stats(self.stats_dir)

@@ -2,7 +2,7 @@ import os
 import sys
 from hashlib import blake2b
 import redis
-import dacman_stream.settings as _settings
+import deduce_stream.settings as _settings
 import uuid
 import socket
 import time
@@ -53,11 +53,11 @@ class Cache(object):
     def dataid_to_datablock(self, task_uuid, *datablock_ids):
         self._data_pull_start[task_uuid] = time.time()
         datablocks = self._redis.mget(datablock_ids)
-        self._data_pull_start[task_uuid] = time.time()
+        self._data_pull_end[task_uuid] = time.time()
 
         return datablocks
 
-    def put_results(self, task_uuid, *results):
+    def put_results(self, task_uuid, results):
         self._job_end_processing[task_uuid] = time.time()
         self._redis.set(task_uuid, results)
         self._job_end_data_put[task_uuid] = time.time()
@@ -101,9 +101,11 @@ class Cache(object):
 
         sys.stdout.write(str((task_uuid, *datablock_ids)) + "\n")
 
+        task = str((task_uuid, *datablock_ids))
+
         self._data_task_send_start[task_uuid] = time.time()
         self._redis.rpush(self._task_list, task_uuid)
-        self._redis.lpush(self._task_q, (task_uuid, *datablock_ids))
+        self._redis.lpush(self._task_q, task)
         self._data_task_send_end[task_uuid] = time.time()
 
     # Retrieves datablock-ids within a window

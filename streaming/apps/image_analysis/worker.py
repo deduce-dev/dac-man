@@ -4,10 +4,10 @@ import numpy as np
 from math import sqrt
 from scipy import stats
 from sklearn.metrics import mean_squared_error
-from dacman_stream.worker import DacmanWorker
+from deduce_stream.worker import StreamProcessingWorker
 
 def main(host, port, analysis_operator, stats_dir):
-    worker = DacmanWorker(host, port)
+    worker = StreamProcessingWorker(host, port)
     worker.set_stats_dir(stats_dir)
 
     worker.set_analysis_operator(analysis_operator)
@@ -17,9 +17,9 @@ def main(host, port, analysis_operator, stats_dir):
 ###################
 # Data stream transformation
 def image_analysis(frameA, frameB):
-    matrix1 = np.fromstring(frameA, dtype='<f4')
-    matrix2 = np.fromstring(frameB, dtype='<f4')
-
+    matrix1 = np.frombuffer(frameA)
+    matrix2 = np.frombuffer(frameB)
+    
     # compute RMSE between the 2 input frames
     rms = sqrt(mean_squared_error(matrix1, matrix2))
     # logarithm of RMSE
@@ -27,7 +27,7 @@ def image_analysis(frameA, frameB):
 
     t_test_t, t_test_p = stats.ttest_ind(matrix1, matrix2, equal_var=True)
     
-    return rms_log, t_test_t, t_test_p
+    return np.asarray([rms_log, t_test_t, t_test_p]).tobytes()
 
 
 ###################

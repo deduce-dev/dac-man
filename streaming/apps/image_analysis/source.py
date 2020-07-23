@@ -2,7 +2,7 @@ import sys
 import os
 import argparse
 import h5py
-from dacman_stream.source import BasicStreamSrc
+from deduce_stream.source import BasicStreamSrc
 
 def main(host, port, dataset_iterator, dataset_src,
          stats_dir):
@@ -37,7 +37,7 @@ def transform_als_stream(dataset, data_fraction=1):
                 log_mat_pos2 = dx2[:frame_len]
                 matrix2 = log_mat_pos2.flatten()
 
-                yield [matrix1, matrix2]
+                yield [matrix1.tobytes(), matrix2.tobytes()]
 
                 matrix1 = matrix2
 

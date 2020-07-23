@@ -1,9 +1,15 @@
+import os
+import sys
+import socket
 import _thread
-from dacman_stream.cache import Cache
+from deduce_stream.cache import Cache
 
 # StreamSource Implementation
-class DacmanWorker(object):
+class StreamProcessingWorker(object):
     def __init__(self, host, port):
+        self.worker_id = \
+            "%s:%s - %s:%s" % ("Host", socket.gethostname(), 
+                    "PID", os.getpid())
         self.cache = Cache(host, port)
         self.wait_time = 10
         self.max_failed_count = 10
@@ -29,16 +35,18 @@ class DacmanWorker(object):
         for processing -Each worker is executing this function-
         where this processes a single task.
         '''
-        #task_uuid, data_id1, data_id2, protocol = eval(task_entry)
         task = eval(task_entry)
 
         task_uuid = task[0]
         datablock_ids = task[1:]
 
+        sys.stdout.write("Worker %s: processing %s" % (self.worker_id, task_uuid)
+            + '\n')
+
         datablocks = self.cache.dataid_to_datablock(task_uuid, *datablock_ids)
 
         results = self.analysis_operator(*datablocks)
-        self.cache.put_results(task_uuid, *results)
+        self.cache.put_results(task_uuid, results)
 
     def process(self):
         '''
@@ -64,9 +72,11 @@ class DacmanWorker(object):
                 
                 self.process_task(task[1])
             else:
-                print("Queue is empty")
+                sys.stdout.write("Queue is empty" + '\n')
                 failed_count += 1
 
                 if failed_count == 5 and self.stats_dir:
-                    print(rank, "Writing to csv to", output_dir, end='\n\n')
+                    sys.stdout.write("Writing to csv to" + self.stats_dir + '\n\n')
                     _thread.start_new_thread(self.cache.write_wroker_stats, (self.stats_dir,))
+
+        sys.stdout.write("%s quiting...\n" % self.worker_id)
