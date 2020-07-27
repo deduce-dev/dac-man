@@ -4,11 +4,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="deduce-stream-elbashandy", # Replace with your own username
-    version="0.0.1",
-    author="Abdelrahman Elbashandy, Devarshi Ghoshal",
-    author_email="AAelbashandy@lbl.gov, DGhoshal@lbl.gov ",
-    description="A Streaming analysis frameword",
+    name="deduce-stream", # Replace with your own username
+    version="0.1.0",
+    author="Abdelrahman Elbashandy, Devarshi Ghoshal, Lavanya Ramakrishnan",
+    author_email="AAelbashandy@lbl.gov, DGhoshal@lbl.gov, lramakrishnan@lbl.gov",
+    description="A Streaming analysis framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/deduce-dev/dac-man/tree/streaming",

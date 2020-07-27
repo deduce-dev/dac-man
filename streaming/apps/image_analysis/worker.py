@@ -4,7 +4,7 @@ import numpy as np
 from math import sqrt
 from scipy import stats
 from sklearn.metrics import mean_squared_error
-from deduce_stream.worker import StreamProcessingWorker
+from deduce_stream import StreamProcessingWorker
 
 def main(host, port, analysis_operator, stats_dir):
     worker = StreamProcessingWorker(host, port)

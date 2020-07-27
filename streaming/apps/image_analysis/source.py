@@ -1,6 +1,6 @@
 import argparse
 import h5py
-from deduce_stream.source import BasicStreamSrc
+from deduce_stream import BasicStreamSrc
 
 def main(host, port, dataset_iterator, dataset_src,
          stats_dir):

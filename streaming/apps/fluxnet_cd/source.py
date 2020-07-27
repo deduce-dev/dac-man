@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from deduce_stream.source import WindowedStreamSrc
+from deduce_stream import WindowedStreamSrc
 
 def main(host, port, dataset_iterator, dataset_src,
          measurement, window_size, key_name, stats_dir):

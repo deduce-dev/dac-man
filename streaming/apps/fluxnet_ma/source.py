@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from deduce_stream.source import BasicStreamSrc
+from deduce_stream import BasicStreamSrc
 
 def main(host, port, dataset_iterator, dataset_src,
          measurement, stats_dir):

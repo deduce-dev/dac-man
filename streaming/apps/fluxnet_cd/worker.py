@@ -1,5 +1,5 @@
 import argparse
-from deduce_stream.worker import StreamProcessingWorker
+from deduce_stream import StreamProcessingWorker
 
 def main(host, port, analysis_operator, stats_dir):
     worker = StreamProcessingWorker(host, port)
