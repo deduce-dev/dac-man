@@ -80,7 +80,7 @@ def _external(plugin, new_file, old_file, *argv):
                             universal_newlines=True
                             )
     except FileNotFoundError as e:
-        logger.error('Plugin definition not found (is `#!/usr/bin/env python3` at the top of the script?).')
+        logger.error('Plugin definition not found (please ensure that the path is correct and the script is executable).')
         logger.error(e)
         return None
     out, err = proc.communicate()
