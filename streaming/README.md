@@ -20,7 +20,7 @@ $ cd compose/moving_average/
 $ docker-compose up
 ```
 
-The experiment should be starting at this point and you should be seeing text in the standart output that looks like this:
+The experiment should be starting at this point and you should be seeing text in the standard output that looks like this:
 ```
 $ docker-compose up
 Creating network "moving_average_default" with the default driver
@@ -68,6 +68,8 @@ Under the `results` folder, we'll find two folders: `sources` & `workers`.
 
 ## plot_generator
 This has the code that we used to generate all the figures used in the paper, including a `Dockerfile` for easy packaging.
+
+We have uploaded our original experiment results/logs to [zenodo](https://doi.org/10.5281/zenodo.3761785). To exactly replicate our figures, download the dataset and run the following scripts.
 
 To generate the graphs run this command:
 ```
