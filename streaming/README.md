@@ -5,8 +5,12 @@ Deduce-Stream provides the right computing elements that allow:
 1. Streaming scientific data
 2. Real-time user-specified analysis processing to the data stream
 
+### For PDSW 2020
+
 Note: This branch was added to include all the code that we used for testing
-and performing benchmark experiments for Deduce-Stream:
+and performing benchmark experiments for Deduce-Stream.
+
+For reproducibility please go to the `experiments` directory:
 ```
 cd experiments/
 ```
