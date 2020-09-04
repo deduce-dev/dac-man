@@ -2,7 +2,8 @@ import argparse
 from deduce_stream import StreamProcessingWorker
 
 def main(host, port, analysis_operator, stats_dir):
-    worker = StreamProcessingWorker(host, port)
+    worker = StreamProcessingWorker()
+    worker.set_cache(host, port)
     worker.set_stats_dir(stats_dir)
 
     worker.set_analysis_operator(analysis_operator)
@@ -10,7 +11,7 @@ def main(host, port, analysis_operator, stats_dir):
 
 
 ###################
-# Data stream transformation
+# Data stream processing
 def calc_diff(dataA, dataB):
     return float(dataA) - float(dataB)
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-r', '--redis_host', type=str, required=True, help='Redis host')
-    parser.add_argument('-p', '--redis_port', type=str, required=True, help='Redis port')
+    parser.add_argument('-p', '--redis_port', type=int, required=True, help='Redis port')
     parser.add_argument('-o', '--output_stats_dir', type=str, help='output stats directory')
 
     args = parser.parse_args()

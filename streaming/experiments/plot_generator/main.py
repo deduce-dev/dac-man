@@ -112,6 +112,8 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
 
     xtick_labels = [str(int(ds/1000)) for ds in ind]
 
+    fmt = ["--o", "--x", "--v", "--*", "--D"]
+
     line_plot = LinePlot(
         plot_filename="redis_benchmark_tput_line_clients_datasize_set",
         xlabel="Data-sizes (KB)",
@@ -124,11 +126,12 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
 
     line_plot.plot(
         clients_set_vals,
-        xtick_labels, "--o",
+        xtick_labels, fmt,
         ind=ind,
         legends=client_num_str,
         legend_title="Number of Clients",
         rotation="vertical",
+        markersize=12,
         ncol=3)
 
     line_plot = LinePlot(
@@ -143,11 +146,12 @@ def tput_redis_benchmark_clients_line_set_get(experiment_dir):
 
     line_plot.plot(
         clients_get_vals,
-        xtick_labels, "--o",
+        xtick_labels, fmt,
         ind=ind,
         legends=client_num_str,
         legend_title="Number of Clients",
         rotation="vertical",
+        markersize=12,
         ncol=3)
 
 
@@ -213,6 +217,10 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
                        ylim_top=10e4, legend_loc="upper right",
                        is_log_scale=True)
 
+    print("========================")
+    print(apps_tput_avg_values)
+    exit()
+
     bar_plot.plot(
         apps_tput_avg_values,
         xtick_labels,
@@ -248,7 +256,8 @@ def tput_latency_3_apps_local_live_buffered_w_1(experiment_dir):
         legends=["ImageAnalysis", "Fluxnet-MA", "Fluxnet-CD"],
         ncol=2, display_val=False)
 
-
+'''
+# Box Plots
 def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
     # Figure 7 and 9
     apps = ["als", "flux_msip", "flux_mscp"]
@@ -301,6 +310,10 @@ def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
                            ylabel="Throughput\n(tasks/s)",
                            font_size=32, label_size=32,
                            legend_size=28, legend_loc=legend_loc, ylim_top=ylim_top)
+
+        print("========================")
+        print(apps_tput_avg_values)
+        exit()
 
         box_plot.plot(
             apps_tput_avg_values,
@@ -382,6 +395,176 @@ def tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir):
             legends=["Local", "Remote"],
             ncol=1
         )
+'''
+
+def tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir):
+    # Figure 7 and 9
+    apps = ["als", "flux_msip"]
+    data_sizes = ["10mb", "105b"]
+    sources = [1, 2]
+    workers = [1, 4, 8, 16, 32, 64]
+
+    xtick_labels = [str(w) for w in workers]
+
+    var1 = "normalized_throughput"
+    var2 = "avg_event_time_latency"
+    for i in range(len(apps)):
+        exp_local = Experiment(apps[i], data_sizes[i], experiment_dir,
+            is_local=True, is_buffered=True)
+        if apps[i] == "flux_msip" or apps[i] == "flux_mscp":
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+               is_local=False, is_buffered=True, scaling_style="strong_scaling")
+        else:
+            exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+                is_local=False, is_buffered=True)
+
+        for j in range(len(workers)):
+            # Adding Setup convention telling how many sources
+            # and workers were running for that experiment
+            exp_local.add_setup(sources[i], workers[j])
+            exp_cori.add_setup(sources[i], workers[j])
+
+        exp_local.process()
+        exp_cori.process()
+
+        apps_tput_avg_values = [
+            exp_local.get_agg_results(var1),
+            exp_cori.get_agg_results(var1)
+        ]
+
+        apps_tput_std_values = [
+            exp_local.get_agg_results(var1, method=AggregateMethod.STD),
+            exp_cori.get_agg_results(var1, method=AggregateMethod.STD)
+        ]
+
+        apps_latency_avg_values = [
+            exp_local.get_agg_results(var2),
+            exp_cori.get_agg_results(var2)
+        ]
+
+        apps_latency_std_values = [
+            exp_local.get_agg_results(var2, method=AggregateMethod.STD),
+            exp_cori.get_agg_results(var2, method=AggregateMethod.STD)
+        ]
+
+        ylim_top=None
+        ncol = 1
+        legend_loc = "upper left"
+
+
+        bar_plot = BarPlot(plot_filename="tput_%s_2_modes_buffered_w_1_64" % apps[i],
+                       xlabel="Number of Workers",
+                       ylabel="Throughput\n(tasks/s)",
+                       font_size=32, label_size=32,
+                       ylim_top=ylim_top, legend_size=22,
+                       legend_loc=legend_loc)
+
+        bar_plot.plot(
+            apps_tput_avg_values,
+            xtick_labels,
+            std_arrs=apps_tput_std_values,
+            legends=["Local", "Remote"],
+            ncol=ncol)
+
+        legend_loc = "upper right"
+
+        bar_plot = BarPlot(plot_filename="latency_%s_2_modes_buffered_w_1_64" % apps[i],
+                       xlabel="Number of Workers",
+                       ylabel="Latency (s)",
+                       font_size=32, label_size=32,
+                       ylim_top=ylim_top, legend_size=22,
+                       legend_loc=legend_loc)
+
+        bar_plot.plot(
+            apps_latency_avg_values,
+            xtick_labels,
+            std_arrs=apps_latency_std_values,
+            legends=["Local", "Remote"],
+            ncol=ncol)
+
+
+def tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir):
+    # Figure 8 and 10
+    apps = ["flux_msip"]
+    data_sizes = ["105b"]
+    sources = [2]
+    workers = [1, 4, 8, 16, 32, 64]
+
+    xtick_labels = [str(w) for w in workers]
+
+    var1 = "normalized_throughput"
+    var2 = "avg_event_time_latency"
+    for i in range(len(apps)):
+        exp_local = Experiment(apps[i], data_sizes[i], experiment_dir,
+            is_local=True, is_buffered=False)
+        exp_cori = Experiment(apps[i], data_sizes[i], experiment_dir,
+            is_local=False, is_buffered=False)
+
+        for j in range(len(workers)):
+            # Adding Setup convention telling how many sources
+            # and workers were running for that experiment
+            exp_local.add_setup(sources[i], workers[j])
+            exp_cori.add_setup(sources[i], workers[j])
+
+        exp_local.process()
+        exp_cori.process()
+
+        apps_tput_avg_values = [
+            exp_local.get_agg_results(var1),
+            exp_cori.get_agg_results(var1)
+        ]
+
+        apps_tput_std_values = [
+            exp_local.get_agg_results(var1, method=AggregateMethod.STD),
+            exp_cori.get_agg_results(var1, method=AggregateMethod.STD)
+        ]
+
+        apps_latency_avg_values = [
+            exp_local.get_agg_results(var2),
+            exp_cori.get_agg_results(var2)
+        ]
+
+        apps_latency_std_values = [
+            exp_local.get_agg_results(var2, method=AggregateMethod.STD),
+            exp_cori.get_agg_results(var2, method=AggregateMethod.STD)
+        ]
+
+        ylim_top=2000
+        ncol = 2
+        legend_loc = "upper right"
+
+        bar_plot = BarPlot(plot_filename="tput_%s_2_modes_live_w_1_64" % apps[i],
+                       xlabel="Number of Workers",
+                       ylabel="Throughput\n(tasks/s)",
+                       font_size=32, label_size=32,
+                       ylim_top=ylim_top, legend_size=22,
+                       legend_loc=legend_loc)
+
+        bar_plot.plot(
+            apps_tput_avg_values,
+            xtick_labels,
+            std_arrs=apps_tput_std_values,
+            legends=["Local", "Remote"],
+            ncol=ncol)
+
+        ylim_top=None
+        ncol = 1
+
+        '''
+        bar_plot = BarPlot(plot_filename="latency_%s_2_modes_live_w_1_64" % apps[i],
+                       xlabel="Number of Workers",
+                       ylabel="Latency (s)",
+                       font_size=32, label_size=32,
+                       ylim_top=ylim_top, legend_size=22,
+                       legend_loc=legend_loc)
+
+        bar_plot.plot(
+            apps_latency_avg_values,
+            xtick_labels,
+            std_arrs=apps_latency_std_values,
+            legends=["Local", "Remote"],
+            ncol=ncol)
+        '''
 
 
 def tput_3_apps_cori_buffered_w_64_640(experiment_dir):
@@ -456,7 +639,7 @@ def tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir):
         line_plot.plot(
             [exp_cori.get_agg_results(var)],
             xtick_labels,
-            "--o")
+            ["--o"])
 
 
 def tput_1_app_cori_buffered_w_64_throttling(experiment_dir):
@@ -611,35 +794,31 @@ def main(args):
     experiment_dir = args.experiment_dir
     figure_num = args.figure_num
 
+    # if figure_num == 0:
+    #     tput_redis_benchmark_bar_set_get(experiment_dir)
+    #     tput_redis_benchmark_clients_line_set_get(experiment_dir)
+    #     tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
+    #     tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir)
+    #     tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir)
+    #     tput_3_apps_cori_buffered_w_64_640(experiment_dir)
+    #     tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
+    #     tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
+    #     tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
+    #     tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
     if figure_num == 0:
-        tput_redis_benchmark_bar_set_get(experiment_dir)
         tput_redis_benchmark_clients_line_set_get(experiment_dir)
-        tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
         tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir)
         tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir)
-        tput_3_apps_cori_buffered_w_64_640(experiment_dir)
-        tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
-        tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
-        tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
         tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
-    elif figure_num == 4:
-        tput_redis_benchmark_bar_set_get(experiment_dir)
-    elif figure_num == 5:
+    #elif figure_num == 4:
+    #    tput_redis_benchmark_bar_set_get(experiment_dir)
+    elif figure_num == 2:
         tput_redis_benchmark_clients_line_set_get(experiment_dir)
-    elif figure_num == 6:
-        tput_latency_3_apps_local_live_buffered_w_1(experiment_dir)
-    elif figure_num == 7 or figure_num == 9:
+    elif figure_num == 3 or figure_num == 5:
         tput_latency_3_apps_2_modes_buffered_w_1_64(experiment_dir)
-    elif figure_num == 8 or figure_num == 10:
+    elif figure_num == 4:
         tput_latency_2_apps_2_modes_live_w_1_64(experiment_dir)
-    elif figure_num == 11:
-        tput_3_apps_cori_buffered_w_64_640(experiment_dir)
-    elif figure_num == 12:
-        tput_1_app_cori_buffered_w_128_640_weak_scaling(experiment_dir)
-        tput_1_app_cori_buffered_w_64_throttling(experiment_dir)
-    elif figure_num == 13:
-        tput_latency_1_app_cori_live_w_640_payload_2_10_mb(experiment_dir)
-    elif figure_num == 14:
+    elif figure_num == 6:
         tput_2_apps_cori_live_w_64_pipeline_vs_non_pipeline(experiment_dir)
     elif figure_num < 4:
         raise ValueError("Figure %d cannot be generated" % figure_num)

@@ -6,16 +6,32 @@ from deduce_stream.cache import Cache
 
 # StreamSource Implementation
 class StreamProcessingWorker(object):
-    def __init__(self, host, port):
+    def __init__(self):
         self.worker_id = \
             "%s:%s - %s:%s" % ("Host", socket.gethostname(), 
                     "PID", os.getpid())
-        self.cache = Cache(host, port)
+        self.cache = None
         self.wait_time = 10
         self.max_failed_count = 10
         self.analysis_operator = None
 
         self.stats_dir = None
+
+    def set_cache(self, host, port):
+        """Sets cache/broker (Currently only Redis is supported)
+
+        Parameters
+        ----------
+        host : str
+            cache host address
+        port : int
+            cache port
+        """
+        self.cache = Cache(host, port)
+
+    def delete_cache(self):
+        """Unset cache"""
+        self.cache = None
 
     def set_wait_time(self, wait_time):
         self.wait_time = wait_time
@@ -52,8 +68,12 @@ class StreamProcessingWorker(object):
         '''
         Main Processing Engine
         '''
+        if not self.cache:
+            raise NotImplementedError("A cache must be set. Use .set_cache(host, port). "
+                             "Currently only Redis is supported.")
+
         if not self.analysis_operator:
-            raise ValueError("analysis operator must be set")
+            raise NotImplementedError("analysis operator must be set")
 
         # Count the number of failed brpop to end the 
         # process eventually

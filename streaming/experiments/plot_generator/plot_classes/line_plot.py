@@ -9,7 +9,7 @@ class LinePlot(Plot):
     def plot(self, value_arrs, xtick_labels, fmt=None,
              ind=None, rotation="horizontal", ncol=None,
              legends=None, legend_title=None, xticks_step=None,
-             yticks_step=None):
+             yticks_step=None, markersize=None):
         n_groups = len(value_arrs)
         self._n = len(value_arrs[0])
         assert n_groups <= len(self._c_list), "So far up to %d colors is supported" % len(self._c_list)
@@ -22,10 +22,10 @@ class LinePlot(Plot):
         line_handles = []
         for i in range(n_groups):
             if fmt:
-                p = ax.plot(ind, value_arrs[i], fmt, color=self._c_list[i])
+                p = ax.plot(ind, value_arrs[i], fmt[i], color=self._c_list[i], markersize=markersize)
                 line_handles.append(p[0])
             else:
-                p = ax.plot(ind, value_arrs[i], color=self._c_list[i])
+                p = ax.plot(ind, value_arrs[i], color=self._c_list[i], markersize=markersize)
                 line_handles.append(p[0])
 
         ax.set_xticks(ind)

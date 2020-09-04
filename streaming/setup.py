@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="Abdelrahman Elbashandy, Devarshi Ghoshal, Lavanya Ramakrishnan",
     author_email="AAelbashandy@lbl.gov, DGhoshal@lbl.gov, lramakrishnan@lbl.gov",
-    description="A Streaming analysis framework",
+    description="A framework for processing scientific data streams at scale",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/deduce-dev/dac-man/tree/streaming",

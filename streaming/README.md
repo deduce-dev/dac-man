@@ -1,117 +1,239 @@
-# Run Experiments
-# locally
-This is a small guide to show as a sample how we evaluated our streaming systems. Each component we used is packaged in this folder `streaming`.
+# Deduce-Stream
+A framework for processing scientific data streams at scale
 
-## services
-Each component and its code is packaged as a `docker service` in the `services` folder. A `Dockerfile` exists in each service folder to show how the `docker service image` was built.
+Deduce-Stream provides the right computing elements that allow:
+1. Streaming scientific data
+2. Real-time user-specified analysis processing to the data stream
 
-## compose
-A sample orchestration of the evaluation experiments is done using `docker-compose`. For each application, a `docker-compose.yml` file exists to demonstrate how the services were properly connected and evaluated.
-
-### To run a `MovingAverage` experiment
-Before we run an experiment using the provided `docker-compose.yml` files, we need to specify which directory we want the experiment results to be written to. We do this by setting this environment variable:
+Note: This branch was added to include all the code that we used for testing
+and performing benchmark experiments for Deduce-Stream:
 ```
-$ export SHARED_HOST_DIR=/your/path/choice/for/results
+cd experiments/
 ```
 
-Note that `Docker` and `docker-compose` are needed to complete the following steps:
-```
-$ cd compose/moving_average/
-$ docker-compose up
-```
+### Redis
 
-The experiment should be starting at this point and you should be seeing text in the standard output that looks like this:
-```
-$ docker-compose up
-Creating network "moving_average_default" with the default driver
-Creating moving_average_broker_1 ... done
-Creating moving_average_lathuile_1 ... done
-Creating moving_average_worker_1   ... done
-Creating moving_average_fluxnet_1  ... done
-Attaching to moving_average_broker_1, moving_average_worker_1, moving_average_fluxnet_1, moving_average_lathuile_1
-broker_1    | 1:C 21 Apr 2020 08:26:48.311 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
-broker_1    | 1:C 21 Apr 2020 08:26:48.311 # Redis version=5.0.1, bits=64, commit=00000000, modified=0, pid=1, just started
-broker_1    | 1:C 21 Apr 2020 08:26:48.311 # Configuration loaded
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 * Running mode=standalone, port=6379.
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 # Server initialized
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.
-broker_1    | 1:M 21 Apr 2020 08:26:48.312 * Ready to accept connections
-worker_1    | Host:2caa09e50b32-PID:1 is processing task: b"('task:f71b2568-8c48-4f5a-a1b0-eff67de07f2b', 'datablock:c1dba978-8394-498e-9875-49e7f2f4a494', 'datablock:3f38b3d2-b3a5-41af-b870-624938b35e98', 'custom')"
-worker_1    | 
-worker_1    | Host:2caa09e50b32-PID:1 is processing task: b"('task:1363a56c-9cfc-4092-a5b4-19128e414e0c', 'datablock:3248ddb0-cb44-4712-9bff-b04a2c060ea0', 'datablock:0401b52a-0618-4450-9d8a-90bac6c52eb7', 'custom')"
-worker_1    | 
-worker_1    | Host:2caa09e50b32-PID:1 is processing task: b"('task:4dfad5de-d90e-4a7f-bab8-2e58f5549250', 'datablock:e1e192a8-506e-4972-8b56-1201c6a46d62', 'datablock:c0504588-27e9-48a9-8369-3361e1e65c6a', 'custom')"
+A Redis-server is **needed and must be installed** to serve as a broker/cache for Deduce-Steam framework. The framework was tested on Redis server version=5.0.1, and redis-py 3.5.
+
+For installation, you can follow [The Redis quickstart documentation](https://redis.io/topics/quickstart)
+
+Redis could also be installed using the command line
+```sh
+$ apt-get install redis # ubuntu
+$ dnf install redis # fedora 
+$ brew install redis # osx
 ```
 
-### Scaling up workers
-To scale the number of workers processing tasks, run this command:
+To install Redis on Windows follow these [instructions](https://redislabs.com/blog/redis-on-windows-10).
+
+### Installation
+Deduce-Stream is implemented in Python 3.
+
 ```
-$ docker-compose up --scale worker=4
-```
-
-After the workers are done processing all streamed tasks, you will see results written in `${SHARED_HOST_DIR}/results`
-
-Wait for all workers to exit to fully see the results. However, you have to manually close the docker-compose run using `ctrl-c` because it won't exit on its own as the broker service will be still running as a `redis-server`.
-
-### Understanding results
-In this section, when we refer to data we are talking about timestamps that are saved in different stages in the experiment. This helps us evaluate the system performance.
-
-Under the `results` folder, we'll find two folders: `sources` & `workers`.
-
-#### sources
-`sources` folder has all the data saved by the streaming sources that streamed tasks to the broker
-
-#### workers
-`workers` folder has all the data saved by all workers that processed the streamed tasks
-
-## plot_generator
-This has the code that we used to generate all the figures used in the paper, including a `Dockerfile` for easy packaging.
-
-We have uploaded our original experiment results/logs to [zenodo](https://doi.org/10.5281/zenodo.3761785). To exactly replicate our figures, download the dataset and run the following scripts.
-
-To generate the graphs run this command:
-```
-$ cd plot_generator/
-$ python3 main.py -e /path/to/dataset/
+python3 setup.py install
 ```
 
-Note: You may need to change the path where the graphs will be generated in settings.py module.
+## Transforming Data Streams
+`deduce_stream` provides the capabilities to stream scientific data to a broker/cache (currently only Redis is supported)
+to be analyzed in real-time by processing units.
 
-Or to run it with docker:
+`deduce_stream` supports two sets of streaming applications:
+1. Independent streams - in which data analysis is performed on singular streams independently.
+2. Dependent streams - in which data analysis is performed on intercorrelated streams, where multiple streams are needed for an analysis task creation.
+
+### Independent streams - `StreamSrc`
+`deduce_stream` implemented a `StreamSrc` class for independent streams that don't have any correlation with each other,
+at least one single stream is required.
+
+```python
+from deduce_stream import StreamSrc
+
+stream_src = StreamSrc()
+stream_src.set_cache(host, port) # Redis host & port
 ```
-$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.2 python3 main.py -e /data
+
+### Dependent streams - `WindowedStreamSrc`
+This class is implemented for dependent intercorrelated streams.
+For example, if we have multiple data sensors from around the globe that measure temperature,
+and we need to analyze these measurements together, then `WindowedStreamSrc` would be the best option for this.
+At lease two streams are required for this option.
+
+We chose the concept of Windows because multiple streams could submit data records into the same window.
+And when a certain user-specified window size is reached, an analysis task is created within `deduce_stream`
+
+```python
+from deduce_stream import WindowedStreamSrc
+
+stream_src_1 = WindowedStreamSrc()
+stream_src_1.set_cache(host, port) # Redis host & port
+
+# window_key is the naming convention that all related streams should agree
+# on to submit data to. For example, timestamp could be a uniquely named Window
+# e.g key_name = 'timestamp', and the window name would be '1598899648' for example.
+stream_src_1.set_window_key(key_name)
+
+# Window size signals when the Window is full and a task needs to be created
+stream_src_1.set_window_size(window_size)
 ```
 
-We also can specify what figure number we need to plot using `-f` option:
+Another related source will be pushing to the same window to form interconnected analysis tasks (e.g comparing
+temperatures in two different locations where both sensors share the same timestamp/key_name ):
+
+```python
+from deduce_stream import WindowedStreamSrc
+
+stream_src_2 = WindowedStreamSrc()
+stream_src_2.set_cache(host, port) # Redis host & port
+stream_src_2.set_window_key(key_name)
+stream_src_2.set_window_size(window_size) # window_size = 2, if we have 2 sensors each sending 1 temperature value
 ```
-$ python3 main.py -e /path/to/dataset/ -f 4
+
+### Data Iterator
+Users have to specify data iterators for `deduce_stream`. This is the step where we connect
+the data source generator with the `*StreamSrc` APIs for stream handling.
+
+An example of a user defined `data_iterator`
+```python
+# streaming data from a dataset on disk
+def data_iterator(dataset):
+    df = pd.read_csv(dataset, comment='#', sep=',', na_filter=False, dtype='str')
+    dataset_len = len(df.index)
+    for i in range(1, dataset_len):
+        data_points = df.loc[i-1:i]
+        yield data_points.tolist()
+
+dataset = "path/to/csv_file.csv"
+
+stream_src = StreamSrc()
+stream_src.set_cache(host, port) # Redis host & port
+stream_src.set_dataset_iterator(data_iterator)
+stream_src.stream(dataset) # the arguments passed here is the arguments data_iterator expects
 ```
-or
+
+#### datablock
+
+The data iterator function should yield a list of datablocks needed to formulate an analysis task
+to be processed by workers. A **datablock** is our defined term to define a single processable
+unit that the user sees fit. A datablock could be in the form of `int`, `float`, `str`, or 
+any form that `redis-py` is able to convert to bytes (This might change in the future as we
+support other cache technologies other than Redis). But it is advised that the users convert
+their datablocks into bytes themselves if they have more complex datatypes, e.g `arrays` or
+`class objects`. These bytes will be streamed to and stored in the specified cache. The user
+is responsible to implement the
+[Analysis Operator](https://github.com/deduce-dev/deduce_stream#analysis-operator) (mentioned below)
+in a way that unpacks the datablock bytes into its original form for analysis.
+
+For example:
+```python
+# This is a mockup of a light source stream sending a
+# sequence of frames
+def transform_stream(n_frames=100, image_size=1000):
+    frameA = np.random.rand(image_size)
+
+    for i in range(1, n_frames):
+        frameB = np.random.rand(image_size)
+        yield [frameA.tobytes(), frameB.tobytes()]
+        frameA = frameB
+
+stream_src = StreamSrc()
+stream_src.set_cache(host, port) # Redis host & port
+stream_src.set_dataset_iterator(data_iterator)
+stream_src.stream()
 ```
-$ docker run -it --rm -v /path/to/dataset:/data aaelbashandy/plot_generator:0.1 python3 main.py -e /data -f 4
+
+In the above example the data iterator `transform_stream` yields two datablocks `frameA` & `frame2`.
+These two yielded datablocks formulate a task to be processed by a
+[worker](https://github.com/deduce-dev/deduce_stream#analysis-operator).
+
+
+## Real-time Analysis
+`deduce_stream` supports real-time analysis. Multiple processing units (workers) could be instantiated
+to perform data analysis tasks parallelly in real-time. These workers connect to the specified
+broker/cache (currently only Redis is supported) to pull tasks from. And the workers send back the results
+to the same cache after the analysis computation is done.
+
+### Workers - `StreamProcessingWorker`
+`StreamProcessingWorker` is `deduce_stream`'s main implementation for a worker. Initiating a worker is straightforward:
+
+```python
+from deduce_stream import StreamProcessingWorker
+
+worker = StreamProcessingWorker()
+worker.set_cache(host, port) # Redis host & port
 ```
 
-Note that `-f 0` will plot all the figures in the paper.
+### Analysis Operator
+To be able to perform the correct analysis, users have to specify an analysis operator
+to be performed by the workers.
 
-# On HPC
-Note: source data for streaming need to be downloaded from the specified websites.
+To continue the above light source example:
+```python
+# in this example, a task contains two datablocks (frameA & frameB) to be analyzed
+def image_analysis(frameA, frameB):
+    matrix1 = np.frombuffer(frameA)
+    matrix2 = np.frombuffer(frameB)
+    
+    # compute RMSE between the 2 input frames
+    rms = sqrt(mean_squared_error(matrix1, matrix2))
+    # logarithm of RMSE
+    rms_log = np.log(rms) 
 
-For running the experiments on HPC, users need to configure and launch the HPC containers. We used Shifter for running our experiments on Cori. Shifter is a software package that allows user-created docker images to run at Cori. Shifter has access to publicly published docker images on Docker Hub. We have 3 separate docker images that represent each component in our defined architecture: streaming source, Redis-server, application-worker. A streaming-source container reads a dataset that the user provides. A Redis-server container hosts Redis. A Worker can read tasks + datablocks from the specified Redis. In our experiments, we hosted the streaming source and Redis components on a standalone server and had the application-workers running on Cori. 
-As for Redis, the right ports need to be exposed for outer containers to be able to connect to it. Exposing ports in Docker allows containers to be connected to through these specified ports. For instance, the main port that Redis uses to listen to connections is "6379"; but in Docker this port isn't allowed to be seen outside the container unless we specifically expose this port. For example, this launches a Redis container with an exposed port  `docker run -p ${PORT}:6379 redis`.
+    t_test_t, t_test_p = stats.ttest_ind(matrix1, matrix2, equal_var=True)
+    
+    return np.asarray([rms_log, t_test_t, t_test_p]).tobytes()
 
-To be able to launch each of the mentioned components, we first must have Docker/Shifter pull each component image:
+worker = StreamProcessingWorker()
+worker.set_cache(host, port) # Redis host & port
+worker.set_analysis_operator(image_analysis)
+worker.process()
+```
 
-- Standalone Server: `docker pull repo-name/streaming-source:tag`
-- Standalone Server: `docker pull repo-name/redis:tag`
-- Cori: `shifterimg pull repo-name/app-worker:tag`
+The workers send the returned analysis results back to the cache (currently Redis) to be picked up by the users.
 
-Now we are ready to connect all components together:
-Note: Understandably, Streaming source is different based on each application.
+For example to look at a certain task result that was processed by a worker:
+```sh
+$ redis-cli -h <host> -p <port>
+127.0.0.1:6379> GET "task:bce28e8e-06ab-4a7b-8a55-9cd7f3b40de6" # task-id
+```
 
-- Standalone Server: To launch a Redis-server: `docker run -p ${PORT}:6379 redis`
-- Standalone Server: To launch a single streaming source: `docker run repo-name/streaming-source:tag python3 source.py ${REDIS_HOST} ${REDIS_PORT} ${DATASET} ${STREAMING_TIME} ${MAX_JOB_NUM} ${DATA_FRACTION} ${SOURCE_RESULTS_DIR}`
-- Cori: To run for example 10 worker instances on a single Node: `srun -N 1 -n 10 -C ${ARCHITECTURE} --qos=${QUEUE} shifter python3 worker.py ${REDIS_HOST} ${REDIS_PORT} ${TASK_QUEUE} ${WORKER_WAIT_TIME} ${WORKER_RESULTS_DIR}`
+## Interacting with Redis
 
-This of course assumes that the user will have access on the ip address of the newly created Redis-server `${REDIS_HOST}`. The setup needs to be configured properly.
+There's a Task Ordered list `job_ordered_list:<id>` (created on Redis) for the sole purpose of knowing the order of the tasks that were
+pushed to the Task Queue. So to get the results back in order, it is necessary to retrieve the task-id list:
+
+```sh
+$ redis-cli -h <host> -p <port>
+127.0.0.1:6379> KEYS job_ordered_list*
+1) "job_ordered_list:25b5ace4a8de734123e1d0e49dbde93ed6d2a0c9"
+127.0.0.1:6379> LLEN "job_ordered_list:25b5ace4a8de734123e1d0e49dbde93ed6d2a0c9"
+(integer) 198 # Total number of tasks that were sent by the streaming source(s)
+127.0.0.1:6379> lrange "job_ordered_list:25b5ace4a8de734123e1d0e49dbde93ed6d2a0c9" 0 -1 # 0 is the start, -1 is the end (Whole list in that case)
+  1) "task:bce28e8e-06ab-4a7b-8a55-9cd7f3b40de6"
+  2) "task:83e5fe28-9ce4-4587-b5de-44c7aea562b5"
+  3) "task:a472416a-e4d1-4d64-a314-c9fddb4be73c"
+  4) "task:2cc1dd3f-c9d2-4921-b86f-100412373b7d"
+  5) "task:a03836e7-8c67-4103-954c-8e65244d8a6c"
+  6) "task:024e47ff-dffc-444a-824c-f7028e1b5faf"
+  7) "task:9e759ea9-f6a3-43e8-bc73-fd5c85ff7869"
+  8) "task:c335e792-f464-4dcc-9ff2-3eadd6113f55"
+  9) "task:30e93489-e056-40ab-a912-c2d9454b34bb"
+ 10) "task:20fc577d-c3d9-4143-93eb-275f61b79f04"
+                        .
+                        .
+                        .
+196) "task:4e10d8de-b60e-4925-ae97-11090b1c28d5"
+197) "task:2be01e55-1f8d-4a1c-be42-82558b5ef2d5"
+198) "task:6d7748db-bdd2-4dbc-9bd1-eef3a1b7be10"
+```
+
+In order to control the naming conventions used (e.g `job_ordered_list` for the Task Ordered list), you can directly edit the variables
+in `deduce_stream/setting.py` before installing `deduce_stream`.
+
+`deduce_stream/setting.py`
+```python
+# Main naming convention
+DATABLOCK_PREFIX="datablock"
+TASK_PREFIX="task"
+TASK_QUEUE_NAME="task_queue"
+JOB_ORDERED_LIST="job_ordered_list"
+```
