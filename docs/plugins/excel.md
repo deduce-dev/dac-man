@@ -188,4 +188,4 @@ The possible values for `index` are:
 
 ### Other options
 
-For information on the `column_renames` and `dtype` options, refer to the corrisponding sections in the CSV plug-in API [documentation](../csv/api/#column_renames).
+For information on the `column_renames` and `dtype` options, refer to the corresponding sections in the CSV plug-in API [documentation](../csv/#column_renames).

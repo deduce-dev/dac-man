@@ -17,10 +17,10 @@ nav:
     # - Introduction: plugins/introduction.md
     - Installing plug-in dependencies: install/dependencies.md
     - Default: plugins/default.md
-    - CSV: plugins/csv/index.md
+    - CSV: plugins/csv.md
     - Excel: plugins/excel.md
     - HDF5: plugins/hdf5.md
-    - JSON: plugins/json/index.md
+    - JSON: plugins/json.md
   #- Examples:
     # - Using custom analysis scripts: examples/script.md
     # - Adapting the CSV plug-in to custom data: examples/csv-simple.md

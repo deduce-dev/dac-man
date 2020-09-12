@@ -116,7 +116,7 @@ We will repeat the analysis, tweaking the plug-in options based on our knowledge
 ## Creating a specialized comparator class
 
 !!! tip
-    This part of the example focuses on `MyCSVPlugin`, a simple extension of Dac-Man's included `CSVPlugin` comparator class and its options, described [here](../../plugins/csv/api/#csvplugin-main-options). A complete runnable analysis script is available at the end of this section.
+    This part of the example focuses on `MyCSVPlugin`, a simple extension of Dac-Man's included `CSVPlugin` comparator class and its options, described [here](../../plugins/csv#api). A complete runnable analysis script is available at the end of this section.
 
 !!! tip
     For more information about Dac-Man plug-ins, refer to the [Using plug-ins](../../use/plugins) and [Plug-in API](../../reference/plugins-api) sections.
