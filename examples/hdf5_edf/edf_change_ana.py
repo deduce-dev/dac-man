@@ -2,8 +2,8 @@
 """
 An example extension/customization of the Dac-Man HDF5 plugin for a specialized use case.
 
-Datasets to compare are tomography frames from an ALS beamline, saved in HDF5 file as .edf datasets.
-Reference files are:
+The datasets to compare are modeled after tomography frames from an ALS beamline, saved in HDF5 file as .edf datasets.
+The filenames of the original reference files are:
 
   - A: 20140905_191647_YL1031_.h5
   - B: 20160903_221332_FACS_140deg2_.h5
@@ -258,7 +258,7 @@ def main():
     args = parser.parse_args()
     DETAIL_LEVEL = 1
 
-    plugin.compare(args.path_a, args.path_b, obj_name=args.objects)
+    plugin.compare(args.path_a, args.path_b, obj_name=None)
 
     if DETAIL_LEVEL >= 0:
         print(f'Percent change: {plugin.percent_change():.2f}%')
