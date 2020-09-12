@@ -287,7 +287,7 @@ because of the rows being ordered differently in the sources.
 
 The values under `site_id` are a good choice for an index, since they are unique within each table, and are the same in both sources.
 
-To set the index, we set the value of `index` is `calc_options`:
+To set the index, we set the value of `index` in `calc_options`:
 
 ```py
 class MyCSVPlugin(CSVPlugin):

@@ -41,6 +41,8 @@ dacman diff a.json b.json --datachange
 
 ### Output
 
+The following is the output from the comparison.
+
 ```
 $ dacman diff a.json b.json --datachange
 [INFO] Runtime system = default
@@ -86,7 +88,6 @@ Level 0 detail:
 
 ### Interpreting the comparison output
 
-The following is the output from the comparison.
 The first couple of printouts are for informational purposes and the actual
 comparison output is printed after the line `[INFO] Comparing ... using JSONPlugin`.
 

@@ -26,7 +26,7 @@ functionality requires implementation that can be categorized as follows:
 
 - A simple custom analysis script using Dac-Man's API that will contain driver
   methods and the following 2 classes:
-	- A specuialized plug-in class: To be used by Dac-Man to compare files that have been detected as modified
+	- A specialized plug-in class: To be used by Dac-Man to compare files that have been detected as modified
 	- A specialized Adaptor class: This converts data from the specific file format to a Dac-Man Record
 
 ## Creating a custom analysis script
