@@ -71,13 +71,18 @@ def diff(new_file, old_file, *argv, comparator_plugin=None):
 
 
 def _external(plugin, new_file, old_file, *argv):
-    proc = subprocess.Popen([plugin, new_file, old_file, *argv],
+    try:
+        proc = subprocess.Popen([plugin, new_file, old_file, *argv],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=_get_env_with_added_to_PATH('./'),
                             # universal_newlines forces the output of communicate()
                             # to be returned as strings instead of bytes
                             universal_newlines=True
                             )
+    except FileNotFoundError as e:
+        logger.error('Plugin definition not found (please ensure that the path is correct and the script is executable).')
+        logger.error(e)
+        return None
     out, err = proc.communicate()
     if err:
         logger.error('Error analyzing changes:\n%s', err)
