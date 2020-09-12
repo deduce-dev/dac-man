@@ -1,30 +1,32 @@
 # The Dac-Man JSON plug-in
 
-## Introduction
-
-The Dac-Man JSON plug-in allows to detect, analyze, and display semantic
+The Dac-Man JSON plug-in allows users to detect, analyze, and display semantic
 changes in JSON (JavaScript Object Notation) files.
 
-The following differences are compared through this plugin:
- - If both keys are present at the same levels in the JSON, values between
+## Key concepts
+
+The following differences are compared through this plug-in:
+
+- If both keys are present at the same levels in the JSON, values between
    these keys are compared for differences.
- - If keys are present/absent in one but not the other, the differences
+- If keys are present/absent in one but not the other, the differences
    are listed.
 
 It is important to note that the computation here only applies to the semantic
-side of JSON, and any structrual comparison is not accounted for. The ordering
-of keys and values in a file are not taken into account by the plugin. For
+side of JSON, and any structural comparison is not accounted for. The ordering
+of keys and values in a file are not taken into account by the plug-in. For
 example, if both files contain the key `key1`, but have them at different
-lines of the file, this plugin will not treat that as a difference.
-
+lines of the file, this plug-in will not treat that as a difference.
 
 ## Usage
 
-### Dependencies
+### Requirements
+
 No additional dependencies.
 
 ### Using the JSON Plug-in
-As this is a built-in Dac-Man plug-in, the JSON plug-in will be used by default
+
+As this is an included Dac-Man plug-in, the JSON plug-in will be used by default
 when comparing JSON files.
 
 The [`examples/json/`](https://github.com/deduce-dev/dac-man/blob/master/examples/json/) directory of the Dac-Man source code repository contains two example JSON files.
@@ -36,7 +38,6 @@ followed by the `--datachange` option:
 cd examples/json
 dacman diff a.json b.json --datachange
 ```
-
 
 ### Output
 
@@ -84,6 +85,7 @@ Level 0 detail:
 ```
 
 ### Interpreting the comparison output
+
 The following is the output from the comparison.
 The first couple of printouts are for informational purposes and the actual
 comparison output is printed after the line `[INFO] Comparing ... using JSONPlugin`.
@@ -94,7 +96,7 @@ different from that in `a.json`
 
 At the end of the output, the reader will note the following message:
 `[INFO] --- No custom detail level specified, using default detail level.`
-It is possible to have the plugin output the differences in more detail.
+It is possible to have the plug-in output the differences in more detail.
 The default output level used here is level 0. The section titled
-"Extending built-in plug-ins" will cover aspects of how to have the plugin
+"Extending included plug-ins" will cover aspects of how to have the plug-in
 output in more detail.

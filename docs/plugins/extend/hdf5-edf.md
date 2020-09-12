@@ -1,6 +1,9 @@
 # Analyzing changes in multi-format HDF5 files
 
-This example illustrates how to extend the built-in HDF5 plug-in to analyze changes
+The capability of HDF5 files of storing arbitrary data within a complex structure means that the range of possible comparisons is effectively unlimited.
+Rather than trying to anticipate all possible use cases, the plug-in is designed so that it is possible for users to modify the default behavior, and extend it with more specialized functionality.
+
+This example illustrates how to extend the included HDF5 plug-in to analyze changes
 in a set of EDF image files stored inside a complex HDF5 file,
 customizing the HDF5 functionality to match the structure of the source data
 and adding custom change metric calculations.

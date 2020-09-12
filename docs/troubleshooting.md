@@ -21,7 +21,7 @@ When analyzing changes in files of type e.g. `csv`, the corresponding plug-in (e
 
 If this is not the case, make sure that all optional dependencies for that plug-in (e.g. for the CSV plug-in, the `pandas` library) are installed, as described [here](../install/dependencies/).
 
-## Errors when installing dependencies for built-in plug-ins individually in a Conda environment
+## Errors when installing dependencies for included plug-ins individually in a Conda environment
 
 Try to install dependencies in a single step, as described in [this section](../install/dependencies/#using-conda).
 

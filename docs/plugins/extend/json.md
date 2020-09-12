@@ -2,7 +2,7 @@
 
 The following example illustrates how to implement a change analysis for JSON
 files tailored to specific features of the data being analyzed,
-by creating a minimal extension of the built-in JSON plug-in
+by creating a minimal extension of the included JSON plug-in
 with a more detailed output.
 
 A complete runnable version of the entire script is available at the end of this section,
@@ -69,7 +69,7 @@ class MyJSONPlugin(JSONPlugin):
 
 ### Setting the output detail level from the header
 The only customization we are specifying here is varying the detail level
-for the outputs of the JSON plugin.
+for the outputs of the JSON plug-in.
 
 ## Creating a runnable change analysis script
 

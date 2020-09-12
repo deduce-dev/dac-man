@@ -1,9 +1,21 @@
-# Using Dac-Man
+# Dac-Man Commands and Output
+
 ## Command-line
 
-Dac-Man enables change capture and analysis in four simple steps,
-which provide flexibility to the users in identifying and capturing changes.
+Dac-Man enables change capture and analysis with four simple steps,
+providing users with flexibility when identifying and capturing changes.
 Dac-Man provides four command-line options to manage each of these steps separately.
+
+<!-- Set table widths so that CLI flags are not split over multiple lines -->
+<!-- adapted from: https://stackoverflow.com/a/58338258 -->
+<style>
+table th:first-of-type {
+    width: 35%;
+}
+table th:nth-of-type(2) {
+    width: 65%;
+}
+</style>
 
 ### `scan`
 
@@ -40,8 +52,7 @@ The options to this command are:
 
 ### `compare`
 
-This command compares two datapaths.
-It compares and calculates the different types of changes.
+This command examines and calculates the different types of changes between two datapaths.
 
 ```sh
 dacman <oldpath> <newpath> [-s STAGINGDIR]

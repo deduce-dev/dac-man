@@ -5,45 +5,37 @@ theme:
     primary: teal
 nav:
   - Introduction: index.md
-  - Installation:
-    - Installing Dac-Man: install/index.md
-    - Installing plug-in dependencies: install/dependencies.md
-    - Updating Dac-Man: install/update.md
-    - Testing the installation: install/test.md
+  - Installing Dac-Man: install/index.md
+  - Testing the Installation: testing.md
   - Quickstart: quickstart.md
-  - Using Dac-Man:
-    - General use: use/general.md
-    - Plug-ins: use/plugins.md
-    - On HPC clusters: use/hpc.md
+  - Extended Usage Scenarios:
+    - Running Custom Change Analyses: use/plugins.md
+    - Running in Parallel on HPC Clusters: use/hpc.md
     - Additional use cases: use/misc.md
-    - Customization: use/config.md
-  - API:
-      Dac-Man: api/dacman.md
-      Plug-ins: api/plugins.md
   - Dac-Man Plug-ins:
+    - Overview: plugins/overview.md
     # - Introduction: plugins/introduction.md
+    - Installing plug-in dependencies: install/dependencies.md
     - Default: plugins/default.md
-    - CSV:
-      - The CSV plug-in: plugins/csv/index.md
-      - API: plugins/csv/api.md
+    - CSV: plugins/csv.md
     - Excel: plugins/excel.md
     - HDF5: plugins/hdf5.md
-    - JSON: plugins/json/index.md
-    - Extending plug-ins: plugins/extend.md
+    - JSON: plugins/json.md
   #- Examples:
     # - Using custom analysis scripts: examples/script.md
     # - Adapting the CSV plug-in to custom data: examples/csv-simple.md
     # - HDF5 and EDF files: examples/hdf5-edf.md
     # - CSV files: examples/csv.md
     # - Excel files: examples/excel.md
-  - Plug-in documentation WIP:
-    - Extending built-in plug-ins:
-      - CSV: plugins-docs/extend/csv.md
-      - HDF5: plugins-docs/extend/hdf5-edf.md
-      - JSON: plugins-docs/extend/json.md
-    - Creating a plug-in from scratch: plugins-docs/from-scratch.md
-  - For developers:
-    - Running tests: develop/tests.md
+    - Extending an included plug-in:
+      - CSV: plugins/extend/csv.md
+      - HDF5: plugins/extend/hdf5-edf.md
+      - JSON: plugins/extend/json.md
+    - Creating a plug-in from scratch: plugins/from-scratch.md
+  - Reference:
+      Commands and Output: reference/commands.md
+      Dac-Man API: reference/dacman-api.md
+      Plug-ins API: reference/plugins-api.md
   - Troubleshooting: troubleshooting.md
   - License: license.md
 

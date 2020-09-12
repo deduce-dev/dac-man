@@ -15,12 +15,11 @@ For more information, refer to the CSV plug-in [documentation](../csv/).
 The `pandas` and `xlrd` packages are required as additional dependencies for this plug-in.
 
 !!! tip
-    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's built-in plug-ins in a single step.
+    These [instructions](../../install/dependencies) describe how to install dependencies for all of Dac-Man's included plug-ins in a single step.
 
 ### Using the Excel Plug-in
 
-As part of the built-in Dac-Man plug-ins, once its dependencies have been installed,
-the Excel plug-in will be used by default when comparing Excel files.
+The included Excel plug-in will be used by Dac-Man to compare Excel files when its dependencies are installed.
 
 The [`examples/plugin_test/`](https://github.com/deduce-dev/dac-man/blob/master/examples/plugin_test/) directory of the Dac-Man source code repository
 contains two example Excel files in the two sub-directories `v0` and `v1`.
@@ -189,4 +188,4 @@ The possible values for `index` are:
 
 ### Other options
 
-For information on the `column_renames` and `dtype` options, refer to the corrisponding sections in the CSV plug-in API [documentation](../csv/api/#column_renames).
+For information on the `column_renames` and `dtype` options, refer to the corresponding sections in the CSV plug-in API [documentation](../csv/#column_renames).
