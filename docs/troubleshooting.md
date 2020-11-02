@@ -1,11 +1,11 @@
 # Troubleshooting
 
-This section contains information about some of the issues that might arise while using Dac-Man.
+This section contains information about some of the issues that may arise while using Dac-Man.
 
 !!! important
-    If your issue is not addressed by this material, we encourage you to let us know, either by opening an issue on Dac-Man's [issue tracker](https://github.com/dghoshal-lbl/dac-man/issues), or by contacting us at dac-man at lbl dot gov.
+    If your issue is not addressed by this material, we encourage you to let us know, either by opening an issue on Dac-Man's [issue tracker](https://github.com/deduce-dev/dac-man/issues), or by contacting us at dac-man at lbl dot gov.
 
-## `dacman: command not found` error when invoking `dacman`
+## `dacman: command not found error when invoking dacman`
 
 Check that Dac-Man's environment is active before running the `dacman` command.
 
@@ -21,7 +21,7 @@ When analyzing changes in files of type e.g. `csv`, the corresponding plug-in (e
 
 If this is not the case, make sure that all optional dependencies for that plug-in (e.g. for the CSV plug-in, the `pandas` library) are installed, as described [here](../install/dependencies/).
 
-## Errors when installing dependencies for built-in plug-ins individually in a Conda environment
+## Errors when installing dependencies for included plug-ins individually in a Conda environment
 
 Try to install dependencies in a single step, as described in [this section](../install/dependencies/#using-conda).
 

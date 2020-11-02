@@ -4,7 +4,7 @@ A common use case for using plug-ins would be to add a comparison for a speciali
 The additional functionality can be added by minimally extending the main classes involved in the change analysis chain.
 
 As an example case study, we consider analyzing changes in images stored in HDF5 files in the EDF format.
-The complete code for this example can be found in [`examples/hdf5_edf/edf_change_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/hdf5_edf/edf_change_ana.py).
+The complete code for this example can be found in [`examples/hdf5_edf/edf_change_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/hdf5_edf/edf_change_ana.py).
 
 ## Installing extra dependencies
 

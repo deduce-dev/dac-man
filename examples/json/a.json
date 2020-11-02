@@ -1,0 +1,10 @@
+{
+    "name": "John Doe",
+    "age": "30",
+    "cars": {
+	"car1": {
+	    "brand": "Ford",
+	    "color": "white"
+	}
+    }
+}

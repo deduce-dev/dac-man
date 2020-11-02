@@ -1,9 +1,9 @@
 # Adapting Dac-Man's CSV plug-in to custom data
 
-This example illustrates how to implement a change analysis tailored to specific features of the data being analyzed, by creating a minimal extension of the built-in CSV plug-in.
+This example illustrates how to implement a change analysis tailored to specific features of the data being analyzed, by creating a minimal extension of the included CSV plug-in.
 
 A complete runnable version of the entire script is available at the end of this section,
-and in the [`examples/csv`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,
+and in the [`examples/csv`](https://github.com/deduce-dev/dac-man/blob/master/examples/csv/) directory of the Dac-Man source code repository,
 together with the example data (shown immediately below) as two separate CSV files.
 
 ## Test data
@@ -116,10 +116,10 @@ We will repeat the analysis, tweaking the plug-in options based on our knowledge
 ## Creating a specialized comparator class
 
 !!! tip
-    This part of the example focuses on `MyCSVPlugin`, a simple extension of Dac-Man's built-in `CSVPlugin` comparator class and its options, described [here](../../plugins/csv/api/#csvplugin-main-options). A complete runnable analysis script is available at the end of this section.
+    This part of the example focuses on `MyCSVPlugin`, a simple extension of Dac-Man's included `CSVPlugin` comparator class and its options, described [here](../../plugins/csv#api). A complete runnable analysis script is available at the end of this section.
 
 !!! tip
-    For more information about Dac-Man plug-ins, refer to the [Using plug-ins](../../use/plugins) and [Plug-in API](../../api/plugins) sections.
+    For more information about Dac-Man plug-ins, refer to the [Using plug-ins](../../use/plugins) and [Plug-in API](../../reference/plugins-api) sections.
 
 We start from creating the comparator class implementing our customizations by extending the `CSVPlugin` class:
 
@@ -287,7 +287,7 @@ because of the rows being ordered differently in the sources.
 
 The values under `site_id` are a good choice for an index, since they are unique within each table, and are the same in both sources.
 
-To set the index, we set the value of `index` is `calc_options`:
+To set the index, we set the value of `index` in `calc_options`:
 
 ```py
 class MyCSVPlugin(CSVPlugin):
@@ -779,7 +779,7 @@ such as `temperature`:
 
 ## Complete change analysis script
 
-Available at [`examples/csv/my_csv_ana.py`](https://github.com/dghoshal-lbl/dac-man/blob/master/examples/csv/my_csv_ana.py).
+Available at [`examples/csv/my_csv_ana.py`](https://github.com/deduce-dev/dac-man/blob/master/examples/csv/my_csv_ana.py).
 
 ```py
 #!/usr/bin/env python3
