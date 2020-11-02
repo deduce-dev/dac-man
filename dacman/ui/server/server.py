@@ -67,6 +67,16 @@ def run_fits_change_analysis():
 	comparator = FITSUIPlugin(metrics=req_data['metrics'])
 	res = comparator.compare(req_data['path']['A'], req_data['path']['B'])
 
+	res['outputs'] = []
+
+	for output in ['a.png', 'b.png', 'delta.png']:
+		path = Path(output)
+		output_data = {
+			'path_absolute': str(path.absolute),
+			'filename': path.name,
+			'filetype': path.suffix.replace('.', '', 1),
+		}
+
 	return json.jsonify(res)
 
 

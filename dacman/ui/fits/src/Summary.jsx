@@ -2,14 +2,15 @@ import React from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import {
-  HashRouter as Router,
   Link
 } from "react-router-dom";
 import { Box, makeStyles } from '@material-ui/core';
+
 import {
-  getSummary
-} from "./api";
-import { Workbench } from "./Layout";
+  Workbench,
+  PrettyPrinter,
+  WorkbenchCard,
+} from "./Layout";
 
 
 class ModifiedCharts extends React.Component {
@@ -253,6 +254,9 @@ function getPieChartBaseOptions () {
 
 function getPieChartOptions (data, key) {
   let opts = getPieChartBaseOptions();
+  console.log('[getPieChartOptions] data, key:')
+  console.log(data)
+  console.log(key)
 
   let count = data[key];
   let total = data['total'];
@@ -276,7 +280,7 @@ function getPieChartOptions (data, key) {
   }
 
   return opts;
-  
+
 }
 
 const useStyles = makeStyles(theme => ({
@@ -285,32 +289,37 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function PieSummary (countsData) {
+function PieSummary ({data: countsData, classes = {}, ...rest}) {
+  // let {countsData, ...rest} = props;
+  console.log('[PieSummary] countsData:')
   console.log(countsData);
+  console.log('[PieSummary] classes:')
+  console.log(classes);
   // let summaryData = getSummary();
   // console.log(summaryData);
   // at this point consider if this shouldn't rather be a map...
   // let countsData = summaryData.find(item => item.type === "counts").data;
-  
-  const classes = useStyles();
+
+  // const classes = useStyles();
 
   return (
-    // <div class="topsummary card">
+    // <div className="topsummary card">
     <Box className={classes.root}>
       <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "added")} />
       <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "deleted")} />
       <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "modified")} />
       <HighchartsReact highcharts={Highcharts} options={getPieChartOptions(countsData, "unchanged")} />
     </Box>
+    // </div>
   );
 }
 
 
-function ExternalPlot({url}) {
+function ExternalPlot({data, ...rest}) {
 
   return (
     <div>
-      <img src={url}/>
+      <img src={data.url}/>
     </div>
   )
 }
@@ -327,31 +336,50 @@ function getComponent(type) {
 }
 
 
-function getWorkbenchItem(datum) {
-  const getFallbackTitle = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-  return {
-    title: datum.title || getFallbackTitle(datum.type),
-    component: getComponent(datum.type),
-    props: datum.data,
+// function getWorkbenchItem(datum) {
+//   const getFallbackTitle = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+//   return {
+//     title: datum.title || getFallbackTitle(datum.type),
+//     component: getComponent(datum.type),
+//     props: datum.data,
+//   }
+// }
+
+// class Summary extends React.Component {
+
+//   render() {
+//     return (
+//       <div className="Summary">
+//         <Workbench items={getWorkbenchItems()} />
+//       </div>
+//     );
+//   }
+// }
+
+function getWorkbenchComponent(layer) {
+  switch(layer.type) {
+    case "counts":
+      return PieSummary;
+    case "heatmap":
+      return ExternalPlot;
+    default:
+      return PrettyPrinter;
   }
 }
 
+function Summary({comparison}) {
+  let results = comparison.results || [];
+  console.log(comparison);
+  console.log(results);
 
-function getWorkbenchItems() {
-  const data = getSummary();
-  return data.map(dataItem => getWorkbenchItem(dataItem));
-}
-
-
-class Summary extends React.Component {
-
-  render() {
-    return (
-      <div className="Summary">
-        <Workbench items={getWorkbenchItems()} />
-      </div>
-    );
-  }
+  return (
+    <div className="Summary">
+      <Workbench items={[comparison, ...results]} getComponent={getWorkbenchComponent} />
+      <WorkbenchCard>
+        <PrettyPrinter item={comparison} />
+      </WorkbenchCard>
+    </div>
+  );
 }
 
 export default Summary;
