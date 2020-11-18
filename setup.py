@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 
 def get_install_requires():
     install_deps = [
-        'numpy<=1.17',
+        #'numpy<=1.17',
+        'numpy>=1.17',
         'PyYAML>=4.2b1',
         'straight.plugin',
     ]

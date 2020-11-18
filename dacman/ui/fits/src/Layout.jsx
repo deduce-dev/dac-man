@@ -73,6 +73,9 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
     minWidth: 480,
   },
+  paddedFormControl: {
+    padding: theme.spacing(2),
+  },
 }));
 
 function WorkbenchCard({ children, title }) {

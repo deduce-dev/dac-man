@@ -4,16 +4,18 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.9.2",
-    "highcharts": "^8.0.0",
+    "@material-ui/icons": "^4.9.1",
+    "highcharts": "^8.2.2",
     "highcharts-react-official": "^2.2.2",
     "immutability-helper": "^3.1.1",
     "material-design-icons": "^3.0.1",
     "material-table": "^1.57.2",
+    "material-ui-icons": "^1.0.0-beta.36",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-keyed-file-browser": "^1.8.0",
     "react-router-dom": "^5.1.2",
-    "react-scripts": "3.2.0"
+    "react-scripts": "^4.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

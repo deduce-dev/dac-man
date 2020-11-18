@@ -7,6 +7,8 @@ import {
   Typography
 } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import Input from '@material-ui/core/Input';
+import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from "@material-ui/core/TextField";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
@@ -15,8 +17,15 @@ import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormGroup from "@material-ui/core/FormGroup";
 import Checkbox from "@material-ui/core/Checkbox";
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
 import MaterialTable from 'material-table';
+
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 
 import { useStyles, WorkbenchCard } from './Layout';
 import { 
@@ -137,6 +146,143 @@ function GenericSelector({ stage, dispatch, resource = 'resource' }) {
   );
 }
 
+function FileUploader({ stage, dispatch }) {
+  const classes = useStyles();
+
+  function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
+    return { datetime, WindDir, Windspeed_ms, temp_f, dewp_f };
+  }
+
+  const rows = [
+    createData('1/3/08 0:00', 330, 3.576, 81, 68),
+    createData('1/3/08 1:00', 340, 1.341, 79, 68),
+    createData('1/3/08 2:00', 'NA', 'NA', 'NA', 'NA'),
+    createData('1/3/08 3:00', 'NA', 'NA', 'NA', 'NA'),
+    createData('1/3/08 4:00', 'NA', 'NA', 'NA', 'NA'),
+  ];
+
+  return (
+    <main className={classes.content}>
+      <div className={classes.toolbar} />
+      <Container maxWidth="lg" className={classes.container}>
+        <Grid container spacing={3}>
+          <WorkbenchCard
+            key="card-initial"
+            title="Choose File for flagging"
+          >
+            <TextField
+              disabled
+              fullWidth
+              id="standard-disabled"
+              defaultValue="4_NGEE/Powell/PNM_WS/AirportData_2008-2019_v3.csv"
+              className={classes.textField}
+              margin="normal"
+            />
+            <input
+              accept="*.csv"
+              className={classes.input}
+              style={{ display: 'none' }}
+              id="raised-button-file"
+              type="file"
+            />
+            <br />
+            <label htmlFor="raised-button-file">
+              <Button
+                variant="raised"
+                component="span"
+                className={classes.button}
+                startIcon={<CloudUploadIcon />}
+              >
+                Upload File
+              </Button>
+            </label>
+          </WorkbenchCard>
+          <WorkbenchCard
+            key="card-1"
+            title="Preview"
+          >
+            <Table className={classes.table} aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell style={{ fontWeight: 'bold' }}>datetime</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>WindDir</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>Windspeed_ms</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>TEMP_F</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>DEWP_F</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.datetime}>
+                    <TableCell component="th" scope="row">
+                      {row.datetime}
+                    </TableCell>
+                    <TableCell align="right">{row.WindDir}</TableCell>
+                    <TableCell align="right">{row.Windspeed_ms}</TableCell>
+                    <TableCell align="right">{row.temp_f}</TableCell>
+                    <TableCell align="right">{row.dewp_f}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Button
+              variant="contained"
+              color="primary"
+            >
+              Next
+            </Button>
+          </WorkbenchCard>
+          <WorkbenchCard
+            key="card-2"
+          >
+            <CSVVariableSelector />
+            <Button
+              variant="contained"
+              color="primary"
+            >
+              Next
+            </Button>
+          </WorkbenchCard>
+          <WorkbenchCard
+            key="card-3"
+            title="TEMP_F"
+          >
+            <VariableFlaggingDetails dispatch={dispatch} />
+            <Button
+              variant="contained"
+              color="primary"
+            >
+              Next
+            </Button>
+          </WorkbenchCard>
+          <WorkbenchCard
+            key="card-4"
+            title="Review Flagging Steps"
+          >
+            <Typography variant="h7" gutterBottom>
+              Checking Null values for:
+            </Typography>
+            <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
+              - TEMP_F
+            </Typography>
+            <Typography variant="h7" gutterBottom>
+              Checking Duplicate values for:
+            </Typography>
+            <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
+              - TEMP_F
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+            >
+              Run
+            </Button>
+          </WorkbenchCard>
+        </Grid>
+      </Container>
+    </main>
+  )
+}
 
 function DirSelector({ stage, dispatch }) {
   // TODO: values are hardcoded, but should be taken from the stage
@@ -154,6 +300,138 @@ function DirSelector({ stage, dispatch }) {
         dispatch={dispatch}
       />
     </>
+  )
+}
+
+function CSVVariableSelector({ stage, dispatch }) {
+  let columnDefs = [
+    { title: 'Variables', field: 'variable_name' },
+    { title: 'Dimensions', field: 'dimensions' },
+    { title: 'Content Type', field: 'content_type' }
+  ];
+
+  let values= [
+    {
+        variable_name: 'datetime',
+        dimensions: '(1, 105192)',
+        content_type: 'String'
+    },
+    {
+        variable_name: 'WindDir',
+        dimensions: '(1, 105192)',
+        content_type: 'Integer'
+    },
+    {
+        variable_name: 'Windspeed_ms',
+        dimensions: '(1, 105192)',
+        content_type: 'Float'
+    },
+    {
+        variable_name: 'TEMP_F',
+        dimensions: '(1, 105192)',
+        content_type: 'Integer'
+    },
+    {
+        variable_name: 'DEWP_F',
+        dimensions: '(1, 105192)',
+        content_type: 'Integer'
+    },
+  ]
+
+  return (
+    <MaterialTable
+      columns={columnDefs}
+      title="Choose Variables to flag"
+      data={values}
+      options={{
+        selection: true
+      }}
+    />
+  )
+}
+
+function VariableFlaggingDetails({ stage, dispatch }) {
+  const classes = useStyles();
+
+  const [state, setState] = React.useState({
+    checkedA: true,
+    checkedB: true,
+    checkedC: false,
+    checkedD: false,
+    checkedE: false,
+  });
+
+  const handleChange = (event) => {
+    setState({ ...state, [event.target.name]: event.target.checked });
+  };
+
+  const handleValueChange = (prop) => (event) => {
+    setState({ ...state, [prop]: event.target.value });
+  };
+
+  return (
+    <FormControl component="fieldset" className={classes.formControl}>
+      <FormGroup>
+        <FormControlLabel
+          control={<Checkbox checked={state.checkedA} onChange={handleChange} name="checkedA" />}
+          label="Check Null values"
+        />
+        <FormControlLabel
+          control={<Checkbox checked={state.checkedB} onChange={handleChange} name="checkedB" />}
+          label="Check Duplicate values"
+        />
+        <FormGroup row className={classes.paddedFormControl}>
+          <FormControlLabel
+            control={<Checkbox checked={state.checkedC} onChange={handleChange} name="checkedC" />}
+            label="Find subsequent Duplicates"
+          />
+          <FormControl>
+            <TextField
+              id="subsequent_duplicates_n"
+              value={3}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">n =</InputAdornment>,
+              }}
+            />
+          </FormControl>
+        </FormGroup>
+        <FormControlLabel
+          control={<Checkbox checked={state.checkedD} onChange={handleChange} name="checkedD" />}
+          label="Check Bad values"
+        />
+        <FormGroup row className={classes.paddedFormControl}>
+          <FormControl>
+            <TextField
+              id="iqr_coef"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">Range</InputAdornment>,
+              }}
+            />
+            <TextField
+              id="iqr_coef"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">To</InputAdornment>,
+              }}
+            />
+          </FormControl>
+        </FormGroup>
+        <FormControlLabel
+          control={<Checkbox checked={state.checkedE} onChange={handleChange} name="checkedE" />}
+          label="Check Outlier values"
+        />
+        <FormGroup row className={classes.paddedFormControl}>
+          <FormControl>
+            <TextField
+              id="iqr_coef"
+              value={1.5}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">IQR Coefficient =</InputAdornment>,
+              }}
+            />
+          </FormControl>
+        </FormGroup>
+      </FormGroup>
+    </FormControl>
   )
 }
 
@@ -455,4 +733,5 @@ function TableSelector({ name, description, choices, dispatch, ...props }) {
 
 export {
   ComparisonBuilder,
+  FileUploader,
 }

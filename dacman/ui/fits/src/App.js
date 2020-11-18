@@ -37,7 +37,8 @@ import {
 } from './api'
 
 import {
-  ComparisonBuilder
+  ComparisonBuilder,
+  FileUploader,
 } from './Workbench'
 
 import {
@@ -108,6 +109,12 @@ function ShowWorkbench() {
   );
 }
 
+function ShowFlagWorkbench() {
+  return (
+    <CreateFlaggingView />
+  );
+}
+
 function WorkbenchArea() {
   const [comparisons, setComparisons] = useState([]);
   const [nextCid, setNextCid] = useState(0);
@@ -149,7 +156,7 @@ function CreateComparisonView() {
       <BuildContextProvider>
         <ComparisonBuilder
         state={comparisonWIP}
-        dispatch={dispatchBuild} 
+        dispatch={dispatchBuild}
         />
       </BuildContextProvider>
       <SimplerSidebar
@@ -174,6 +181,16 @@ function BuildComparisonView(props) {
           </StagesContextProvider>
         </WorkbenchContainer>
       </ParamsContextProvider>
+    </MainLayout>
+  );
+}
+
+function CreateFlaggingView() {
+  //const [state, dispatch] = useReducer(flaggingReducer, {});
+
+  return (
+    <MainLayout>
+      <FileUploader />
     </MainLayout>
   );
 }
@@ -206,6 +223,7 @@ class App extends React.Component {
             <Route path="/:cid/compare" render={(routeProps) => ShowCompare(this.state.comparisons, routeProps.match.params.cid)} />
             <Route path="/:cid/summary" render={(routeProps) => ShowSummary(this.state.comparisons, routeProps.match.params.cid)} />
             <Route path="/workbench" render={(routeProps) => ShowWorkbench()} />
+            <Route path="/flag" render={(routeProps) => ShowFlagWorkbench()} />
             <Route path="/build" render={(routeProps) => ShowBuildWorkbench()} />
             {/* <Route path="/workbench" render={(routeProps) => CreateComparisonView()} /> */}
           </Switch>
