@@ -53,14 +53,6 @@ import Summary from './Summary'
 import Compare from './Compare'
 
 
-function ShowMain(comparisons) {
-  return (
-    <MainLayout>
-      <Sidebar cardContentItems={comparisons}/>
-    </MainLayout>
-  )
-}
-
 function ShowCompare(comparisons, cid) {
   // let cid = useParams();
   // let cid = parseInt(useParams().cid);
@@ -102,9 +94,7 @@ function ShowSummary(comparisons, cid) {
 // WHY this intermediate component seems to be necessary to avoid the "invalid hook call" error
 // my guess is that it could be related to the fact that we're calling it through the react-router `render` prop
 function ShowWorkbench() {
-
   return (
-    // <WorkbenchArea />
     <CreateComparisonView />
   );
 }
@@ -112,33 +102,6 @@ function ShowWorkbench() {
 function ShowFlagWorkbench() {
   return (
     <CreateFlaggingView />
-  );
-}
-
-function WorkbenchArea() {
-  const [comparisons, setComparisons] = useState([]);
-  const [nextCid, setNextCid] = useState(0);
-
-  function createComparison(workbenchData) {
-    console.log('createComparison.workbenchData'); console.log(workbenchData);
-    const cid = nextCid;
-    setNextCid(cid + 1);
-    return {
-      comparisonID: cid,
-      ...workbenchData
-    }
-  }
-
-  function addComparison(workbenchData) {
-    console.log('addComparison.workbenchData'); console.log(workbenchData);
-      setComparisons([...comparisons, createComparison(workbenchData)]);
-  };
-
-  return (
-    <MainLayout>
-      <WorkbenchWithReducer runAction={addComparison}/>
-      <SimplerSidebar comparisons={comparisons}/>
-    </MainLayout>
   );
 }
 
