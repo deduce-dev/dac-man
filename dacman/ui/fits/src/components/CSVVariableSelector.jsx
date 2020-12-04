@@ -1,8 +1,26 @@
-import React from "react";
+import React, { useReducer } from "react";
 import MaterialTable from 'material-table';
 
+import { WorkbenchCard } from './WorkbenchCard';
+import Button from "@material-ui/core/Button";
 
-function CSVVariableSelector({ stage, dispatch }) {
+
+const initialState = {};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'CHECKBOX_CHANGE':
+      return {
+        ...state,
+        rows: action.payload 
+      };
+    default:
+      return state;
+  }
+}
+
+
+function CSVVariableSelector({ variables, parentdispatch }) {
   let columnDefs = [
     { title: 'Variables', field: 'variable_name' },
     { title: 'Dimensions', field: 'dimensions' },
@@ -37,15 +55,36 @@ function CSVVariableSelector({ stage, dispatch }) {
     },
   ]
 
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  function handleChange(rows) {
+    console.log(rows);
+    return {
+      type: 'CHECKBOX_CHANGE',
+      payload: rows
+    }
+  }
+
   return (
-    <MaterialTable
-      columns={columnDefs}
-      title="Choose Variables to flag"
-      data={values}
-      options={{
-        selection: true
-      }}
-    />
+    <WorkbenchCard
+      key="card-2"
+    >
+      <MaterialTable
+        columns={columnDefs}
+        title="Choose Variables to flag"
+        data={values}
+        options={{
+          selection: true
+        }}
+        onSelectionChange={(rows) => dispatch(handleChange(rows))}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+      >
+        Next
+      </Button>
+    </WorkbenchCard>
   )
 }
 

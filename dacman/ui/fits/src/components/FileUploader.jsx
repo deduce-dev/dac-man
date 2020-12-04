@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Typography, Container, Grid } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import Card from '@material-ui/core/Card';
 import TextField from "@material-ui/core/TextField";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -8,148 +9,136 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import { useDropzone } from 'react-dropzone';
 
 import { useStyles } from '../common/styles';
 import { CSVVariableSelector } from './CSVVariableSelector';
 import { VariableFlaggingDetails } from './VariableFlaggingDetails';
 import { WorkbenchCard } from './WorkbenchCard';
 
+import styled from 'styled-components';
 
-function FileUploader({ stage, dispatch }) {
-  const classes = useStyles();
 
-  function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
-    return { datetime, WindDir, Windspeed_ms, temp_f, dewp_f };
+function uploadFile() {
+  console.log("UPLOAD_FILE")
+  let dataReview = {
+    columns: [
+      { field: 'id', headerName: 'ID', width: 70 },
+      { field: 'firstName', headerName: 'First name', width: 130 },
+      { field: 'lastName', headerName: 'Last name', width: 130 },
+      {
+        field: 'age',
+        headerName: 'Age',
+        type: 'number',
+        width: 90,
+      },
+      {
+        field: 'fullName',
+        headerName: 'Full name',
+        description: 'This column has a value getter and is not sortable.',
+        sortable: false,
+        width: 160,
+        valueGetter: (params) =>
+          `${params.getValue('firstName') || ''} ${
+            params.getValue('lastName') || ''
+          }`,
+      },
+    ],
+    rows: [
+      { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
+      { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
+      { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
+      { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
+      { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
+      { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
+      { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
+      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
+      { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
+    ]
   }
 
-  const rows = [
-    createData('1/3/08 0:00', 330, 3.576, 81, 68),
-    createData('1/3/08 1:00', 340, 1.341, 79, 68),
-    createData('1/3/08 2:00', 'NA', 'NA', 'NA', 'NA'),
-    createData('1/3/08 3:00', 'NA', 'NA', 'NA', 'NA'),
-    createData('1/3/08 4:00', 'NA', 'NA', 'NA', 'NA'),
-  ];
+  return {
+    type: 'UPLOAD_FILE',
+    payload: dataReview
+  };
+}
+
+const getColor = (props) => {
+  if (props.isDragAccept) {
+      return '#00e676';
+  }
+  if (props.isDragReject) {
+      return '#ff1744';
+  }
+  if (props.isDragActive) {
+      return '#2196f3';
+  }
+  return '#eeeeee';
+}
+
+const FileUploaderContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-width: 2px;
+  border-radius: 2px;
+  border-color: ${props => getColor(props)};
+  border-style: dashed;
+  background-color: #fafafa;
+  color: #bdbdbd;
+  outline: none;
+  transition: border .24s ease-in-out;
+`;
+
+function FileUploader({ dispatch }) {
+  const classes = useStyles();
+
+  const onDrop = useCallback(acceptedFiles => {
+    // Do something with the files
+    dispatch(uploadFile());
+  }, [])
+
+  const {
+    acceptedFiles,
+    fileRejections,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject
+  } = useDropzone({
+    onDrop,   
+    maxFiles:1,
+    accept: '.csv'
+  });
+
+  const acceptedFileItems = acceptedFiles.map(file => (
+    <li key={file.path}>
+      {file.path} - {file.size} bytes
+    </li>
+  ));
 
   return (
-    <main className={classes.content}>
-      <div className={classes.toolbar} />
-      <Container maxWidth="lg" className={classes.container}>
-        <Grid container spacing={3}>
-          <WorkbenchCard
-            key="card-initial"
-            title="Choose File for flagging"
-          >
-            <TextField
-              disabled
-              fullWidth
-              id="standard-disabled"
-              defaultValue="4_NGEE/Powell/PNM_WS/AirportData_2008-2019_v3.csv"
-              className={classes.textField}
-              margin="normal"
-            />
-            <input
-              accept="*.csv"
-              className={classes.input}
-              style={{ display: 'none' }}
-              id="raised-button-file"
-              type="file"
-            />
-            <br />
-            <label htmlFor="raised-button-file">
-              <Button
-                variant="raised"
-                component="span"
-                className={classes.button}
-                startIcon={<CloudUploadIcon />}
-              >
-                Upload File
-              </Button>
-            </label>
-          </WorkbenchCard>
-          <WorkbenchCard
-            key="card-1"
-            title="Preview"
-          >
-            <Table className={classes.table} aria-label="simple table">
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ fontWeight: 'bold' }}>datetime</TableCell>
-                  <TableCell align="right" style={{ fontWeight: 'bold' }}>WindDir</TableCell>
-                  <TableCell align="right" style={{ fontWeight: 'bold' }}>Windspeed_ms</TableCell>
-                  <TableCell align="right" style={{ fontWeight: 'bold' }}>TEMP_F</TableCell>
-                  <TableCell align="right" style={{ fontWeight: 'bold' }}>DEWP_F</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.datetime}>
-                    <TableCell component="th" scope="row">
-                      {row.datetime}
-                    </TableCell>
-                    <TableCell align="right">{row.WindDir}</TableCell>
-                    <TableCell align="right">{row.Windspeed_ms}</TableCell>
-                    <TableCell align="right">{row.temp_f}</TableCell>
-                    <TableCell align="right">{row.dewp_f}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <Button
-              variant="contained"
-              color="primary"
-            >
-              Next
-            </Button>
-          </WorkbenchCard>
-          <WorkbenchCard
-            key="card-2"
-          >
-            <CSVVariableSelector />
-            <Button
-              variant="contained"
-              color="primary"
-            >
-              Next
-            </Button>
-          </WorkbenchCard>
-          <WorkbenchCard
-            key="card-3"
-            title="TEMP_F"
-          >
-            <VariableFlaggingDetails dispatch={dispatch} />
-            <Button
-              variant="contained"
-              color="primary"
-            >
-              Next
-            </Button>
-          </WorkbenchCard>
-          <WorkbenchCard
-            key="card-4"
-            title="Review Flagging Steps"
-          >
-            <Typography variant="h7" gutterBottom>
-              Checking Null values for:
-            </Typography>
-            <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
-              - TEMP_F
-            </Typography>
-            <Typography variant="h7" gutterBottom>
-              Checking Duplicate values for:
-            </Typography>
-            <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
-              - TEMP_F
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-            >
-              Run
-            </Button>
-          </WorkbenchCard>
-        </Grid>
-      </Container>
-    </main>
+    <WorkbenchCard
+      key="card-initial"
+      title="Choose File for flagging"
+    >
+      <div className="container">
+        <FileUploaderContainer {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
+            <input {...getInputProps()} />
+            <p>Drag & drop a file here, or click to select files</p>
+            <em>(Only 1 file can be dropped here)</em>
+        </FileUploaderContainer>
+      </div>
+      { acceptedFileItems.length > 0 && (
+        <aside>
+          <h4>File</h4>
+          <ul>{acceptedFileItems}</ul>
+        </aside>
+      )}
+    </WorkbenchCard>
   )
 }
 
