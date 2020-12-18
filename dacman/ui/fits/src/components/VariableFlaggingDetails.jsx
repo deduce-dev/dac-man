@@ -13,11 +13,27 @@ import { WorkbenchCard } from './WorkbenchCard';
 import { useStyles } from '../common/styles';
 
 const initialState = {
-  checkedA: true,
-  checkedB: true,
-  checkedC: false,
-  checkedD: false,
-  checkedE: false,
+  checkNull: true,
+  checkDuplicates: {
+    checked: true,
+    checkSubsequent: false,
+    subsequentNum: 3
+  },
+  checkBadVals: {
+    checked: false,
+    range: {
+      low: '',
+      high: ''
+    }
+  },
+  checkOutlierVals: {
+    checked: false,
+    iqrCoef: 1.5
+  },
+  checkExtremeVals: {
+    checked: false,
+    iqrCoef: 3
+  }
 };
 
 function reducer(state, action) {
@@ -25,7 +41,31 @@ function reducer(state, action) {
     case 'CHECKBOX_CHANGE':
       return {
         ...state,
-        [action.payload.name]: action.payload.checked 
+        [action.payload.name]: action.payload.checked
+      };
+    case 'DUPLICATES_CHECKBOX_CHANGE':
+      return {
+        ...state,
+        checkDuplicates: {
+          ...state.checkDuplicates,
+          checked: action.payload
+        }
+      };
+    case 'SUBSEQUENT_CHECKBOX_CHANGE':
+      return {
+        ...state,
+        checkDuplicates: {
+          ...state.checkDuplicates,
+          checkSubsequent: action.payload
+        }
+      };
+    case 'SUBSEQUENT_NUM_CHANGE':
+      return {
+        ...state,
+        checkDuplicates: {
+          ...state.checkDuplicates,
+          subsequentNum: action.payload
+        }
       };
     default:
       return state;
@@ -37,7 +77,7 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
 
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const handleChange = (event) => {
+  const basicCheckboxChange = (event) => {
     dispatch({
       type: 'CHECKBOX_CHANGE',
       payload: {
@@ -47,30 +87,52 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
     });
   };
 
+  const duplicatesCheckboxChange = (event) => {
+    dispatch({
+      type: 'DUPLICATES_CHECKBOX_CHANGE',
+      payload: event.target.checked
+    });
+  };
+
+  const subsequentCheckboxChange = (event) => {
+    dispatch({
+      type: 'SUBSEQUENT_CHECKBOX_CHANGE',
+      payload: event.target.checked
+    });
+  };
+
+  const subsequentNumChange = (event) => {
+    dispatch({
+      type: 'SUBSEQUENT_NUM_CHANGE',
+      payload: event.target.value
+    });
+  };
+
   return (
     <WorkbenchCard
-      key={`card-${index}`}
+      key={`card-${variable}`}
       title={variable}
     >
       <FormControl component="fieldset" className={classes.formControl}>
         <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkedA} onChange={handleChange} name="checkedA" />}
+            control={<Checkbox checked={state.checkNull} onChange={basicCheckboxChange} name="checkNull" />}
             label="Check Null values"
           />
           <FormControlLabel
-            control={<Checkbox checked={state.checkedB} onChange={handleChange} name="checkedB" />}
+            control={<Checkbox checked={state.checkDuplicates.checked} onChange={duplicatesCheckboxChange} name="checkDuplicates" />}
             label="Check Duplicate values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControlLabel
-              control={<Checkbox checked={state.checkedC} onChange={handleChange} name="checkedC" />}
+              control={<Checkbox checked={state.checkDuplicates.checkSubsequent} onChange={subsequentCheckboxChange} name="checkSubsequent" />}
               label="Find subsequent Duplicates"
             />
             <FormControl>
               <TextField
                 id="subsequent_duplicates_n"
-                value={3}
+                value={state.checkDuplicates.subsequentNum}
+                onChange={subsequentNumChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">n =</InputAdornment>,
                 }}
@@ -78,19 +140,21 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkedD} onChange={handleChange} name="checkedD" />}
+            control={<Checkbox checked={state.checkBadVals.checked} onChange={basicCheckboxChange} name="checkBadVals" />}
             label="Check Bad values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
                 id="iqr_coef"
+                onChange={subsequentNumChange}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">Range</InputAdornment>,
+                  startAdornment: <InputAdornment position="start">From</InputAdornment>,
                 }}
               />
               <TextField
                 id="iqr_coef"
+                onChange={subsequentNumChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">To</InputAdornment>,
                 }}
@@ -98,14 +162,31 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkedE} onChange={handleChange} name="checkedE" />}
+            control={<Checkbox checked={state.checkOutlierVals.checked} onChange={basicCheckboxChange} name="checkOutlierVals" />}
             label="Check Outlier values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
-                id="iqr_coef"
-                value={1.5}
+                id="outlier_iqr_coef"
+                value={state.checkOutlierVals.iqrCoef}
+                onChange={subsequentNumChange}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">IQR Coefficient =</InputAdornment>,
+                }}
+              />
+            </FormControl>
+          </FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={state.checkExtremeVals.checked} onChange={basicCheckboxChange} name="checkExtremeVals" />}
+            label="Check Extreme values"
+          />
+          <FormGroup row className={classes.paddedFormControl}>
+            <FormControl>
+              <TextField
+                id="extreme_iqr_coef"
+                value={state.checkExtremeVals.iqrCoef}
+                onChange={subsequentNumChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">IQR Coefficient =</InputAdornment>,
                 }}

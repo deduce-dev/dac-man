@@ -27,9 +27,9 @@ const initialState = {
   showCSVVariableSelector: false,
   dataReview: {
     columns: [],
-    rows: []
+    rows: [],
+    datasetVars:[]
   },
-  allDatasetVars: [],
   selectedVarsDetails: {
     atVar: -1,
     selectedVars: [],
@@ -48,28 +48,29 @@ function reducer(state, action) {
     case 'CHOOSE_VARS_TO_FLAG':
       return {
         ...state,
-        showCSVVariableSelector: true,
-        allDatasetVars: action.payload
+        showCSVVariableSelector: true
       };
     case 'SHOW_VARS_TO_FLAG':
       return {
         ...state,
-        showCSVVariableSelector: true,
-        allDatasetVars: action.payload
+        showCSVVariableSelector: true
       };
     case 'ADD_VARS_TO_FLAG':
+      console.log({
+        ...state,
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          atVar: 0,
+          selectedVars: action.payload.selectedVars,
+          showVarCard: action.payload.showVarCard
+        }});
       return {
         ...state,
         selectedVarsDetails: {
           ...state.selectedVarsDetails,
-          selectedVars: [
-            ...state.selectedVarsDetails.selectedVars,
-            action.payload.selectedVars
-          ],
-          showVarCard: [
-            ...state.selectedVarsDetails.showVarCard,
-            action.payload.showVarCard
-          ]
+          atVar: 0,
+          selectedVars: action.payload.selectedVars,
+          showVarCard: action.payload.showVarCard
         }
       };
     case 'MOVE_TO_NEXT_VAR':
@@ -85,12 +86,6 @@ function reducer(state, action) {
           atVar: atVar,
           showVarCard: showVarCard
         }
-      };
-    case 'REMOVE_VAR_TO_FLAG':
-      return {
-        ...state,
-        showCSVVariableSelector: true,
-        allDatasetVars: action.payload
       };
     default:
       return state;
@@ -112,31 +107,34 @@ function FlaggingView() {
               <DataReview
                 index={2}
                 rows={state.dataReview.rows}
-                columns={state.dataReview.columns} />
+                columns={state.dataReview.columns} 
+                dispatch={dispatch} />
             )}
             { state.showCSVVariableSelector && (
-              <CSVVariableSelector variables={state.datasetVariables} dispatch={dispatch} />
+              <CSVVariableSelector
+                variables={state.dataReview.datasetVars} 
+                dispatch={dispatch} />
             )}
-            { state.selectedVarsDetails.selectedVars.map( (variable, i) => {
+            { state.selectedVarsDetails.selectedVars.map( (variable, i) => (
                 state.selectedVarsDetails.showVarCard[i] && (
                   <VariableFlaggingDetails index={i} variable={variable} dispatch={dispatch} />
                 )
-              })
+              ))
             }
             <WorkbenchCard
               key="card-4"
               title="Review Flagging Steps"
             >
-              <Typography variant="h7" gutterBottom>
+              <Typography variant="body1" gutterBottom>
                 Checking Null values for:
               </Typography>
-              <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
+              <Typography variant="body1" className={classes.paddedFormControl} gutterBottom>
                 - TEMP_F
               </Typography>
-              <Typography variant="h7" gutterBottom>
+              <Typography variant="body1" gutterBottom>
                 Checking Duplicate values for:
               </Typography>
-              <Typography variant="h7" className={classes.paddedFormControl} gutterBottom>
+              <Typography variant="body1" className={classes.paddedFormControl} gutterBottom>
                 - TEMP_F
               </Typography>
               <Button

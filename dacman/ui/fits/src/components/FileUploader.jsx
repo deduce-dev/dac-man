@@ -21,39 +21,58 @@ import styled from 'styled-components';
 
 function uploadFile() {
   console.log("UPLOAD_FILE")
+
+  function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
+    return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F };
+  }
+
   let dataReview = {
     columns: [
       { field: 'id', headerName: 'ID', width: 70 },
-      { field: 'firstName', headerName: 'First name', width: 130 },
-      { field: 'lastName', headerName: 'Last name', width: 130 },
-      {
-        field: 'age',
-        headerName: 'Age',
-        type: 'number',
-        width: 90,
-      },
-      {
-        field: 'fullName',
-        headerName: 'Full name',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-        valueGetter: (params) =>
-          `${params.getValue('firstName') || ''} ${
-            params.getValue('lastName') || ''
-          }`,
-      },
+      { field: 'datetime', headerName: 'datetime', width: 130 },
+      { field: 'WindDir', headerName: 'WindDir', width: 90 },
+      { field: 'Windspeed_ms', headerName: 'Windspeed_ms', width: 90},
+      { field: 'TEMP_F', headerName: 'TEMP_F', width: 90 },
+      { field: 'DEWP_F', headerName: 'DEWP_F', width: 90 },
     ],
     rows: [
-      { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
-      { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-      { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-      { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-      { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-      { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-      { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-      { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
+      createData(1, '1/3/08 0:00', 330, 3.576, 81, 68),
+      createData(2, '1/3/08 1:00', 340, 1.341, 79, 68),
+      createData(3, '1/3/08 2:00', 'NA', 'NA', 'NA', 'NA'),
+      createData(4, '1/3/08 3:00', 'NA', 'NA', 'NA', 'NA'),
+      createData(5, '1/3/08 4:00', 'NA', 'NA', 'NA', 'NA'),
+    ],
+    datasetVarsTemplate: [
+      { title: 'Variables', field: 'varName' },
+      { title: 'Dimensions', field: 'dimensions' },
+      { title: 'Content Type', field: 'contentType' }
+    ],
+    datasetVars: [
+      {
+        varName: 'datetime',
+        dimensions: '(1, 105192)',
+        contentType: 'String'
+      },
+      {
+        varName: 'WindDir',
+        dimensions: '(1, 105192)',
+        contentType: 'Integer'
+      },
+      {
+        varName: 'Windspeed_ms',
+        dimensions: '(1, 105192)',
+        contentType: 'Float'
+      },
+      {
+        varName: 'TEMP_F',
+        dimensions: '(1, 105192)',
+        contentType: 'Integer'
+      },
+      {
+        varName: 'DEWP_F',
+        dimensions: '(1, 105192)',
+        contentType: 'Integer'
+      },
     ]
   }
 

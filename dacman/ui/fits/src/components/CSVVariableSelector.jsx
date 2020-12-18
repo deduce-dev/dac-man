@@ -5,22 +5,7 @@ import { WorkbenchCard } from './WorkbenchCard';
 import Button from "@material-ui/core/Button";
 
 
-const initialState = {};
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'CHECKBOX_CHANGE':
-      return {
-        ...state,
-        rows: action.payload 
-      };
-    default:
-      return state;
-  }
-}
-
-
-function CSVVariableSelector({ variables, parentdispatch }) {
+function CSVVariableSelector({ variables, dispatch }) {
   let columnDefs = [
     { title: 'Variables', field: 'variable_name' },
     { title: 'Dimensions', field: 'dimensions' },
@@ -54,15 +39,22 @@ function CSVVariableSelector({ variables, parentdispatch }) {
         content_type: 'Integer'
     },
   ]
+  //onSelectionChange={(rows) => dispatch(handleChange(rows))}
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  let varNames = []
 
-  function handleChange(rows) {
-    console.log(rows);
+  function addVariables(varNames) {
+    let showVars = new Array(varNames.length).fill(false);
+    if (showVars.length > 0) showVars[0] = true;
+    console.log(varNames);
+    console.log(showVars);
     return {
-      type: 'CHECKBOX_CHANGE',
-      payload: rows
-    }
+      type: 'ADD_VARS_TO_FLAG',
+      payload: {
+        selectedVars: varNames,
+        showVarCard: showVars
+      }
+    };
   }
 
   return (
@@ -70,17 +62,18 @@ function CSVVariableSelector({ variables, parentdispatch }) {
       key="card-2"
     >
       <MaterialTable
-        columns={columnDefs}
         title="Choose Variables to flag"
+        columns={columnDefs}
         data={values}
         options={{
           selection: true
         }}
-        onSelectionChange={(rows) => dispatch(handleChange(rows))}
+        onSelectionChange={(rows) => varNames = rows.map((row) => (row.variable_name))}
       />
       <Button
         variant="contained"
         color="primary"
+        onClick={() => { dispatch(addVariables(varNames)) }}
       >
         Next
       </Button>
