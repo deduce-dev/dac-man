@@ -23,17 +23,25 @@ function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
 }
 
 const initialState = {
-  showDataReview: false,
   showCSVVariableSelector: false,
   dataReview: {
+    show: false,
     columns: [],
     rows: [],
     datasetVars:[]
   },
   selectedVarsDetails: {
+    show: true,
     atVar: -1,
-    selectedVars: [],
+    varDetailsFinished: false,
+    varNames: [],
     showVarCard: [],
+    flaggingDetails: []
+  },
+  resultsReview: {
+    show: false,
+    columns: [],
+    rows: []
   }
 };
 
@@ -42,15 +50,9 @@ function reducer(state, action) {
     case 'UPLOAD_FILE':
       return {
         ...state,
-        showDataReview: true,
         dataReview: action.payload
       };
     case 'CHOOSE_VARS_TO_FLAG':
-      return {
-        ...state,
-        showCSVVariableSelector: true
-      };
-    case 'SHOW_VARS_TO_FLAG':
       return {
         ...state,
         showCSVVariableSelector: true
@@ -61,7 +63,7 @@ function reducer(state, action) {
         selectedVarsDetails: {
           ...state.selectedVarsDetails,
           atVar: 0,
-          selectedVars: action.payload.selectedVars,
+          varNames: action.payload.varNames,
           showVarCard: action.payload.showVarCard
         }});
       return {
@@ -69,7 +71,7 @@ function reducer(state, action) {
         selectedVarsDetails: {
           ...state.selectedVarsDetails,
           atVar: 0,
-          selectedVars: action.payload.selectedVars,
+          varNames: action.payload.varNames,
           showVarCard: action.payload.showVarCard
         }
       };
@@ -77,14 +79,43 @@ function reducer(state, action) {
       let atVar = state.selectedVarsDetails.atVar + 1;
       let showVarCard = state.selectedVarsDetails.showVarCard;
 
+      let varDetailsFinished = false;
+      if (atVar >= showVarCard.length) {
+        varDetailsFinished = true;
+      }
+      
       showVarCard[atVar] = true;
 
+      console.log({
+        ...state,
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          atVar: atVar,
+          varDetailsFinished: varDetailsFinished,
+          showVarCard: showVarCard,
+          flaggingDetails: action.payload.flaggingDetails
+        }
+      });
       return {
         ...state,
         selectedVarsDetails: {
           ...state.selectedVarsDetails,
           atVar: atVar,
-          showVarCard: showVarCard
+          varDetailsFinished: varDetailsFinished,
+          showVarCard: showVarCard,
+          flaggingDetails: action.payload.flaggingDetails
+        }
+      };
+    case 'RUN_FLAGGING':
+      //let temp = ;
+      return {
+        ...state,
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          show: false,
+        },
+        resultsReview: {
+          ...state.resultsReview
         }
       };
     default:
@@ -103,7 +134,7 @@ function FlaggingView() {
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
             <FileUploader dispatch={dispatch} />
-            { state.showDataReview && (
+            { state.dataReview.show && (
               <DataReview
                 index={2}
                 rows={state.dataReview.rows}
@@ -115,35 +146,23 @@ function FlaggingView() {
                 variables={state.dataReview.datasetVars} 
                 dispatch={dispatch} />
             )}
-            { state.selectedVarsDetails.selectedVars.map( (variable, i) => (
+            { state.selectedVarsDetails.show && state.selectedVarsDetails.varNames.map( (variable, i) => (
                 state.selectedVarsDetails.showVarCard[i] && (
-                  <VariableFlaggingDetails index={i} variable={variable} dispatch={dispatch} />
+                  <VariableFlaggingDetails
+                    index={i}
+                    variable={variable}
+                    parentDispatch={dispatch}
+                    isFinalVar={state.selectedVarsDetails.varDetailsFinished} />
                 )
               ))
             }
-            <WorkbenchCard
-              key="card-4"
-              title="Review Flagging Steps"
-            >
-              <Typography variant="body1" gutterBottom>
-                Checking Null values for:
-              </Typography>
-              <Typography variant="body1" className={classes.paddedFormControl} gutterBottom>
-                - TEMP_F
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Checking Duplicate values for:
-              </Typography>
-              <Typography variant="body1" className={classes.paddedFormControl} gutterBottom>
-                - TEMP_F
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-              >
-                Run
-              </Button>
-            </WorkbenchCard>
+            {/*
+            { state.selectedVarsDetails.varDetailsFinished && (
+                <FlaggingFinalReview
+                  variables={state.selectedVarsDetails.varNames}
+                  flaggingDetails={state.selectedVarsDetails.flaggingDetails} />
+            )}
+            */}
           </Grid>
         </Container>
       </main>

@@ -16,71 +16,10 @@ import { CSVVariableSelector } from './CSVVariableSelector';
 import { VariableFlaggingDetails } from './VariableFlaggingDetails';
 import { WorkbenchCard } from './WorkbenchCard';
 
+import axios from 'axios';
+
 import styled from 'styled-components';
 
-
-function uploadFile() {
-  console.log("UPLOAD_FILE")
-
-  function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
-    return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F };
-  }
-
-  let dataReview = {
-    columns: [
-      { field: 'id', headerName: 'ID', width: 70 },
-      { field: 'datetime', headerName: 'datetime', width: 130 },
-      { field: 'WindDir', headerName: 'WindDir', width: 90 },
-      { field: 'Windspeed_ms', headerName: 'Windspeed_ms', width: 90},
-      { field: 'TEMP_F', headerName: 'TEMP_F', width: 90 },
-      { field: 'DEWP_F', headerName: 'DEWP_F', width: 90 },
-    ],
-    rows: [
-      createData(1, '1/3/08 0:00', 330, 3.576, 81, 68),
-      createData(2, '1/3/08 1:00', 340, 1.341, 79, 68),
-      createData(3, '1/3/08 2:00', 'NA', 'NA', 'NA', 'NA'),
-      createData(4, '1/3/08 3:00', 'NA', 'NA', 'NA', 'NA'),
-      createData(5, '1/3/08 4:00', 'NA', 'NA', 'NA', 'NA'),
-    ],
-    datasetVarsTemplate: [
-      { title: 'Variables', field: 'varName' },
-      { title: 'Dimensions', field: 'dimensions' },
-      { title: 'Content Type', field: 'contentType' }
-    ],
-    datasetVars: [
-      {
-        varName: 'datetime',
-        dimensions: '(1, 105192)',
-        contentType: 'String'
-      },
-      {
-        varName: 'WindDir',
-        dimensions: '(1, 105192)',
-        contentType: 'Integer'
-      },
-      {
-        varName: 'Windspeed_ms',
-        dimensions: '(1, 105192)',
-        contentType: 'Float'
-      },
-      {
-        varName: 'TEMP_F',
-        dimensions: '(1, 105192)',
-        contentType: 'Integer'
-      },
-      {
-        varName: 'DEWP_F',
-        dimensions: '(1, 105192)',
-        contentType: 'Integer'
-      },
-    ]
-  }
-
-  return {
-    type: 'UPLOAD_FILE',
-    payload: dataReview
-  };
-}
 
 const getColor = (props) => {
   if (props.isDragAccept) {
@@ -114,10 +53,80 @@ const FileUploaderContainer = styled.div`
 function FileUploader({ dispatch }) {
   const classes = useStyles();
 
-  const onDrop = useCallback(acceptedFiles => {
+  function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
+    return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F};
+  }
+
+  /*
+  function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
+    return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F };
+  }
+
+  let dataReview = {
+    show: true,
+    columns: [
+      { field: 'id', headerName: 'ID', width: 70 },
+      { field: 'datetime', headerName: 'datetime', width: 130 },
+      { field: 'WindDir', headerName: 'WindDir', width: 90 },
+      { field: 'Windspeed_ms', headerName: 'Windspeed_ms', width: 90},
+      { field: 'TEMP_F', headerName: 'TEMP_F', width: 90 },
+      { field: 'DEWP_F', headerName: 'DEWP_F', width: 90 },
+    ],
+    rows: [
+      createData(1, '1/3/08 0:00', 330, 3.576, 81, 68),
+      createData(2, '1/3/08 1:00', 340, 1.341, 79, 68),
+      createData(3, '1/3/08 2:00', 'NA', 'NA', 'NA', 'NA'),
+      createData(4, '1/3/08 3:00', 'NA', 'NA', 'NA', 'NA'),
+      createData(5, '1/3/08 4:00', 'NA', 'NA', 'NA', 'NA'),
+    ],
+    datasetVarsTemplate: [
+      { title: 'Variables', field: 'varName' },
+      { title: 'Content Type', field: 'contentType' }
+    ],
+    datasetVars: [
+      {
+        varName: 'datetime',
+        contentType: 'String'
+      },
+      {
+        varName: 'WindDir',
+        contentType: 'Integer'
+      },
+      {
+        varName: 'Windspeed_ms',
+        contentType: 'Float'
+      },
+      {
+        varName: 'TEMP_F',
+        contentType: 'Integer'
+      },
+      {
+        varName: 'DEWP_F',
+        contentType: 'Integer'
+      },
+    ]
+  }
+  */
+
+  let dataReview = {
+    show: true,
+    datasetVarsTemplate: [
+      { title: 'Variables', field: 'varName' },
+      { title: 'Content Type', field: 'contentType' }
+    ]
+  }
+
+  const uploadFile = (data) => {
+    return {
+      type: 'UPLOAD_FILE',
+      payload: data
+    };
+  }
+
+  /*const onDrop = useCallback(acceptedFiles => {
     // Do something with the files
     dispatch(uploadFile());
-  }, [])
+  }, []) */
 
   const {
     acceptedFiles,
@@ -127,10 +136,37 @@ function FileUploader({ dispatch }) {
     isDragActive,
     isDragAccept,
     isDragReject
-  } = useDropzone({
-    onDrop,   
+  } = useDropzone({ 
     maxFiles:1,
-    accept: '.csv'
+    accept: '.csv',
+    onDropAccepted: (files) => {
+      var dataset = files[0]
+      var formData = new FormData();
+      formData.append("upload_dataset", dataset);
+      axios.post('/flagging/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+      })
+      .then((response) => {
+        //console.log(response.data);
+        //var resData = JSON.parse(JSON.stringify(response.data));
+        //var resData = JSON.parse(response.data);
+        var resData = response.data
+
+        dataReview = {
+          ...dataReview,
+          ...resData
+        }
+
+        //console.log(resData);
+        console.log(dataReview)
+        dispatch(uploadFile(dataReview));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
   });
 
   const acceptedFileItems = acceptedFiles.map(file => (

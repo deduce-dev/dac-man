@@ -51,7 +51,7 @@ function CSVVariableSelector({ variables, dispatch }) {
     return {
       type: 'ADD_VARS_TO_FLAG',
       payload: {
-        selectedVars: varNames,
+        varNames: varNames,
         showVarCard: showVars
       }
     };

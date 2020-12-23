@@ -67,12 +67,74 @@ function reducer(state, action) {
           subsequentNum: action.payload
         }
       };
+    case 'BAD_VALS_CHECKBOX_CHANGE':
+      return {
+        ...state,
+        checkBadVals: {
+          ...state.checkBadVals,
+          checked: action.payload
+        }
+      };
+    case 'BAD_VALS_FROM_INPUT_CHANGE':
+      return {
+        ...state,
+        checkBadVals: {
+          ...state.checkBadVals,
+          range: {
+            ...state.checkBadVals.range,
+            low: action.payload
+          }
+        }
+      };
+    case 'BAD_VALS_TO_INPUT_CHANGE':
+      return {
+        ...state,
+        checkBadVals: {
+          ...state.checkBadVals,
+          range: {
+            ...state.checkBadVals.range,
+            high: action.payload
+          }
+        }
+      };
+    case 'OUTLIER_CHECKBOX_CHANGE':
+      return {
+        ...state,
+        checkOutlierVals: {
+          ...state.checkOutlierVals,
+          checked: action.payload
+        }
+      };
+    case 'OUTLIER_IQR_VAL_CHANGE':
+      return {
+        ...state,
+        checkOutlierVals: {
+          ...state.checkOutlierVals,
+          iqrCoef: action.payload
+        }
+      };
+    case 'EXTREME_CHECKBOX_CHANGE':
+      return {
+        ...state,
+        checkExtremeVals: {
+          ...state.checkExtremeVals,
+          checked: action.payload
+        }
+      };
+    case 'EXTREME_IQR_VAL_CHANGE':
+      return {
+        ...state,
+        checkExtremeVals: {
+          ...state.checkExtremeVals,
+          iqrCoef: action.payload
+        }
+      };
     default:
       return state;
   }
 }
 
-function VariableFlaggingDetails({ index, variable, parentDispatch }) {
+function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }) {
   const classes = useStyles();
 
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -108,6 +170,75 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
     });
   };
 
+  const badValsCheckboxChange = (event) => {
+    dispatch({
+      type: 'BAD_VALS_CHECKBOX_CHANGE',
+      payload: event.target.checked
+    });
+  };
+
+  const badValsFromInputChange = (event) => {
+    dispatch({
+      type: 'BAD_VALS_FROM_INPUT_CHANGE',
+      payload: event.target.value
+    });
+  };
+
+  const badValsToInputChange = (event) => {
+    dispatch({
+      type: 'BAD_VALS_TO_INPUT_CHANGE',
+      payload: event.target.value
+    });
+  };
+
+  const outlierCheckboxChange = (event) => {
+    dispatch({
+      type: 'OUTLIER_CHECKBOX_CHANGE',
+      payload: event.target.checked
+    });
+  };
+
+  const outlierIqrValChange = (event) => {
+    dispatch({
+      type: 'OUTLIER_IQR_VAL_CHANGE',
+      payload: event.target.value
+    });
+  };
+
+  const extremeCheckboxChange = (event) => {
+    dispatch({
+      type: 'EXTREME_CHECKBOX_CHANGE',
+      payload: event.target.checked
+    });
+  };
+
+  const extremeIqrValChange = (event) => {
+    dispatch({
+      type: 'EXTREME_IQR_VAL_CHANGE',
+      payload: event.target.value
+    });
+  };
+
+  const moveToNextVar = () => {
+    parentDispatch({
+      type: "MOVE_TO_NEXT_VAR",
+      payload: {
+        variable: variable,
+        flaggingDetails: state
+      }
+    });
+  };
+
+  const runFlagging = () => {
+    parentDispatch({
+      type: "RUN_FLAGGING",
+      payload: {
+        variable: variable,
+        flaggingDetails: state
+      }
+    });
+  };
+
   return (
     <WorkbenchCard
       key={`card-${variable}`}
@@ -140,21 +271,23 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkBadVals.checked} onChange={basicCheckboxChange} name="checkBadVals" />}
+            control={<Checkbox checked={state.checkBadVals.checked} onChange={badValsCheckboxChange} name="checkBadVals" />}
             label="Check Bad values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
-                id="iqr_coef"
-                onChange={subsequentNumChange}
+                id="bad_vals_range_from"
+                value={state.checkBadVals.range.low}
+                onChange={badValsFromInputChange}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">From</InputAdornment>,
+                  startAdornment: <InputAdornment position="start">Range from</InputAdornment>,
                 }}
               />
               <TextField
-                id="iqr_coef"
-                onChange={subsequentNumChange}
+                id="bad_vals_range_to"
+                value={state.checkBadVals.range.high}
+                onChange={badValsToInputChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">To</InputAdornment>,
                 }}
@@ -162,7 +295,7 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkOutlierVals.checked} onChange={basicCheckboxChange} name="checkOutlierVals" />}
+            control={<Checkbox checked={state.checkOutlierVals.checked} onChange={outlierCheckboxChange} name="checkOutlierVals" />}
             label="Check Outlier values"
           />
           <FormGroup row className={classes.paddedFormControl}>
@@ -170,7 +303,7 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
               <TextField
                 id="outlier_iqr_coef"
                 value={state.checkOutlierVals.iqrCoef}
-                onChange={subsequentNumChange}
+                onChange={outlierIqrValChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">IQR Coefficient =</InputAdornment>,
                 }}
@@ -178,7 +311,7 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkExtremeVals.checked} onChange={basicCheckboxChange} name="checkExtremeVals" />}
+            control={<Checkbox checked={state.checkExtremeVals.checked} onChange={extremeCheckboxChange} name="checkExtremeVals" />}
             label="Check Extreme values"
           />
           <FormGroup row className={classes.paddedFormControl}>
@@ -186,7 +319,7 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
               <TextField
                 id="extreme_iqr_coef"
                 value={state.checkExtremeVals.iqrCoef}
-                onChange={subsequentNumChange}
+                onChange={extremeIqrValChange}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">IQR Coefficient =</InputAdornment>,
                 }}
@@ -195,12 +328,24 @@ function VariableFlaggingDetails({ index, variable, parentDispatch }) {
           </FormGroup>
         </FormGroup>
       </FormControl>
-      <Button
-        variant="contained"
-        color="primary"
-      >
-        Next
-      </Button>
+      { isFinalVar ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={runFlagging}
+          >
+            Run
+          </Button>
+        ) : (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={moveToNextVar}
+        >
+          Next
+        </Button>
+      )
+      }
     </WorkbenchCard>
   )
 }
