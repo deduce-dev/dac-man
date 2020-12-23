@@ -5,7 +5,8 @@ import { WorkbenchCard } from './WorkbenchCard';
 import Button from "@material-ui/core/Button";
 
 
-function CSVVariableSelector({ variables, dispatch }) {
+function CSVVariableSelector({ columns, data, dispatch }) {
+  /*
   let columnDefs = [
     { title: 'Variables', field: 'variable_name' },
     { title: 'Dimensions', field: 'dimensions' },
@@ -39,6 +40,7 @@ function CSVVariableSelector({ variables, dispatch }) {
         content_type: 'Integer'
     },
   ]
+  */
   //onSelectionChange={(rows) => dispatch(handleChange(rows))}
 
   let varNames = []
@@ -63,12 +65,12 @@ function CSVVariableSelector({ variables, dispatch }) {
     >
       <MaterialTable
         title="Choose Variables to flag"
-        columns={columnDefs}
-        data={values}
+        columns={columns}
+        data={data}
         options={{
           selection: true
         }}
-        onSelectionChange={(rows) => varNames = rows.map((row) => (row.variable_name))}
+        onSelectionChange={(rows) => varNames = rows.map((row) => (row.varName))}
       />
       <Button
         variant="contained"

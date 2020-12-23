@@ -28,7 +28,8 @@ const initialState = {
     show: false,
     columns: [],
     rows: [],
-    datasetVars:[]
+    datasetVars: [],
+    datasetVarsTemplate: []
   },
   selectedVarsDetails: {
     show: true,
@@ -80,7 +81,7 @@ function reducer(state, action) {
       let showVarCard = state.selectedVarsDetails.showVarCard;
 
       let varDetailsFinished = false;
-      if (atVar >= showVarCard.length) {
+      if (atVar >= showVarCard.length - 1) {
         varDetailsFinished = true;
       }
       
@@ -143,16 +144,25 @@ function FlaggingView() {
             )}
             { state.showCSVVariableSelector && (
               <CSVVariableSelector
-                variables={state.dataReview.datasetVars} 
+                columns={state.dataReview.datasetVarsTemplate}
+                data={state.dataReview.datasetVars} 
                 dispatch={dispatch} />
             )}
             { state.selectedVarsDetails.show && state.selectedVarsDetails.varNames.map( (variable, i) => (
                 state.selectedVarsDetails.showVarCard[i] && (
-                  <VariableFlaggingDetails
-                    index={i}
-                    variable={variable}
-                    parentDispatch={dispatch}
-                    isFinalVar={state.selectedVarsDetails.varDetailsFinished} />
+                  i >= state.selectedVarsDetails.varNames.length-1 ? (
+                    <VariableFlaggingDetails
+                      index={i}
+                      variable={variable}
+                      parentDispatch={dispatch}
+                      isFinalVar={true} />
+                  ) : (
+                    <VariableFlaggingDetails
+                      index={i}
+                      variable={variable}
+                      parentDispatch={dispatch}
+                      isFinalVar={false} />
+                  )
                 )
               ))
             }

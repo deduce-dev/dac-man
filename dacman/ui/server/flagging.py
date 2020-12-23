@@ -4,17 +4,21 @@ import pandas as pd
 def frontend_format(data):
     data_dict = data.to_dict(orient='split')
 
-    print(data_dict)
-    #return {'hello': 'hello'}
-
-    cols = [{'field': 'id', 'headerName': 'ID'}]
+    cols = []
     datasetVars = []
     for i, col in enumerate(data_dict['columns']):
-        cols.append({'field': col})
-        datasetVars.append({
-            'varName': col,
-            'contentType': 'string' if str(data.dtypes[i]) == 'object' else str(data.dtypes[i])
-        })
+        if str(data.dtypes[i]) == 'object':
+            cols.append({'field': col, 'width': 175})
+            datasetVars.append({
+                'varName': col,
+                'contentType': 'string'
+            })
+        else:
+            cols.append({'field': col})
+            datasetVars.append({
+                'varName': col,
+                'contentType': str(data.dtypes[i])
+            })
 
     rows = []
     for i, row in enumerate(data_dict['data'], start=1):
