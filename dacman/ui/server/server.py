@@ -9,7 +9,7 @@ import pandas as pd
 from dacman import Executor, DataDiffer
 import dacman
 from dacman.plugins.default import DefaultPlugin
-from flagging import read_csv
+from flagging.flagging import read_csv
 
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
