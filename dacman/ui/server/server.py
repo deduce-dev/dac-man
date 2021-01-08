@@ -133,12 +133,14 @@ def run_flagging():
 
     data = read_csv(output_csv_file)
 
+    '''
     print({
         'folder_id': output_csv_file.parent.name,
         'csv_filename': output_csv_file.name,
         'zip_filename': output_zip_file.name,
         'data': data
     })
+    '''
 
     return json.jsonify({
         'folder_id': output_csv_file.parent.name,
@@ -147,6 +149,17 @@ def run_flagging():
         'data': data
     })
 
+@app.route('/flagging/download/<folder_id>', methods=['POST'])
+def download(folder_id):
+    #folder_id = request.args.get('folder_id')
+    print(folder_id)
+    print(request.get_json())
+
+    folder_path = os.path.join(app.config['RESULTS_FOLDER'], folder_id)
+    return send_from_directory(
+        directory=folder_path,
+        filename='flagged_variables.zip'
+    )
 
 @app.route('/hello')
 def hello():

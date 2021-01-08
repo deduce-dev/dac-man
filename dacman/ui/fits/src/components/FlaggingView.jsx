@@ -46,8 +46,10 @@ const initialState = {
   },
   resultsReview: {
     show: false,
+    data_id: null, 
     columns: [],
-    rows: []
+    rows: [],
+    downloadClicked: false
   }
 };
 
@@ -56,7 +58,13 @@ function reducer(state, action) {
     case 'UPLOAD_FILE':
       return {
         ...state,
-        dataReview: action.payload
+        dataReview: action.payload,
+        selectedVarsDetails: {
+          ...initialState.selectedVarsDetails
+        },
+        resultsReview: {
+          ...initialState.resultsReview
+        }
       };
     case 'CHOOSE_VARS_TO_FLAG':
       return {
@@ -64,14 +72,6 @@ function reducer(state, action) {
         showCSVVariableSelector: true
       };
     case 'ADD_VARS_TO_FLAG':
-      console.log({
-        ...state,
-        selectedVarsDetails: {
-          ...state.selectedVarsDetails,
-          atVar: 0,
-          varNames: action.payload.varNames,
-          showVarCard: action.payload.showVarCard
-        }});
       return {
         ...state,
         selectedVarsDetails: {
@@ -92,19 +92,6 @@ function reducer(state, action) {
       
       showVarCard[atVar] = true;
 
-      console.log({
-        ...state,
-        selectedVarsDetails: {
-          ...state.selectedVarsDetails,
-          atVar: atVar,
-          varDetailsFinished: varDetailsFinished,
-          showVarCard: showVarCard,
-          flaggingDetails: [
-            ...state.selectedVarsDetails.flaggingDetails,
-            action.payload.flaggingDetails
-          ]
-        }
-      });
       return {
         ...state,
         selectedVarsDetails: {
@@ -136,28 +123,6 @@ function reducer(state, action) {
         }
       };
     case 'RUN_FLAGGING':
-      //let temp = ;
-      console.log("Hiiiiii333")
-      console.log(action.payload);
-      console.log({
-        ...state,
-        showFileUploader: false,
-        showCSVVariableSelector: false,
-        dataReview: {
-          ...state.dataReview,
-          show: false
-        },
-        selectedVarsDetails: {
-          ...state.selectedVarsDetails,
-          show: false
-        },
-        resultsReview: {
-          ...state.resultsReview,
-          show: true,
-          columns: action.payload.response.data.columns,
-          rows: action.payload.response.data.rows
-        }
-      });
       return {
         ...state,
         showFileUploader: false,
@@ -173,8 +138,19 @@ function reducer(state, action) {
         resultsReview: {
           ...state.resultsReview,
           show: true,
+          data_id: action.payload.response.folder_id,
           columns: action.payload.response.data.columns,
           rows: action.payload.response.data.rows
+        }
+      };
+    case 'DOWNLOAD_RESULTS':
+      return {
+        ...state,
+        showFileUploader: true,
+        resultsReview: {
+          ...state.resultsReview,
+          show: false,
+          downloadClicked: true
         }
       };
     default:
@@ -185,6 +161,27 @@ function reducer(state, action) {
 function FlaggingView() {
   const classes = useStyles();
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  if (state.resultsReview.downloadClicked && state.resultsReview.data_id != null) {
+    axios({
+      url: '/flagging/download/' + state.resultsReview.data_id,
+      method: 'POST',
+      responseType: 'blob', // important
+    })
+    .then((response) => {
+      const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/zip' }));
+      const link = document.createElement('a');
+
+      link.href = downloadUrl;
+      link.setAttribute('download', 'flagged_variables.zip'); //any other extension
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
 
   return (
     <MainLayout>
