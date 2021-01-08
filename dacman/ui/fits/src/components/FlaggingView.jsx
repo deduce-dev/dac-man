@@ -18,6 +18,9 @@ import { VariableFlaggingDetails } from './VariableFlaggingDetails';
 
 import { useStyles } from '../common/styles';
 
+import axios from 'axios';
+
+
 function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
   return { datetime, WindDir, Windspeed_ms, temp_f, dewp_f };
 }
@@ -26,6 +29,7 @@ const initialState = {
   showCSVVariableSelector: false,
   dataReview: {
     show: false,
+    dataset_name: null,
     columns: [],
     rows: [],
     datasetVars: [],
@@ -94,7 +98,10 @@ function reducer(state, action) {
           atVar: atVar,
           varDetailsFinished: varDetailsFinished,
           showVarCard: showVarCard,
-          flaggingDetails: action.payload.flaggingDetails
+          flaggingDetails: [
+            ...state.selectedVarsDetails.flaggingDetails,
+            action.payload.flaggingDetails
+          ]
         }
       });
       return {
@@ -104,17 +111,16 @@ function reducer(state, action) {
           atVar: atVar,
           varDetailsFinished: varDetailsFinished,
           showVarCard: showVarCard,
-          flaggingDetails: action.payload.flaggingDetails
+          flaggingDetails: [
+            ...state.selectedVarsDetails.flaggingDetails,
+            action.payload.flaggingDetails
+          ]
         }
       };
     case 'RUN_FLAGGING':
       //let temp = ;
       return {
         ...state,
-        selectedVarsDetails: {
-          ...state.selectedVarsDetails,
-          show: false,
-        },
         resultsReview: {
           ...state.resultsReview
         }
@@ -154,14 +160,20 @@ function FlaggingView() {
                     <VariableFlaggingDetails
                       index={i}
                       variable={variable}
-                      parentDispatch={dispatch}
-                      isFinalVar={true} />
+                      isFinalVar={true}
+                      varNames={state.selectedVarsDetails.varNames}
+                      flaggingDetails={state.selectedVarsDetails.flaggingDetails}
+                      dataset_name={state.dataReview.dataset_name}
+                      parentDispatch={dispatch} />
                   ) : (
                     <VariableFlaggingDetails
                       index={i}
                       variable={variable}
-                      parentDispatch={dispatch}
-                      isFinalVar={false} />
+                      isFinalVar={false}
+                      varNames={null}
+                      flaggingDetails={null}
+                      dataset_name={null}
+                      parentDispatch={dispatch} />
                   )
                 )
               ))

@@ -2,42 +2,103 @@ import React, { useReducer } from "react";
 import { Typography } from "@material-ui/core";
 import Input from '@material-ui/core/Input';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormGroup from "@material-ui/core/FormGroup";
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormLabel from '@material-ui/core/FormLabel';
 import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 
 import { WorkbenchCard } from './WorkbenchCard';
 import { useStyles } from '../common/styles';
 
+import axios from 'axios';
+
 const initialState = {
+  variable_type: 'numeric',
   checkNull: true,
   checkDuplicates: {
     checked: true,
-    checkSubsequent: false,
+    subsequentDisabled: false,
     subsequentNum: 3
   },
   checkBadVals: {
     checked: false,
+    disabled: false,
     range: {
       low: '',
       high: ''
     }
   },
   checkOutlierVals: {
-    checked: false,
+    checked: true,
+    disabled: false,
     iqrCoef: 1.5
   },
   checkExtremeVals: {
-    checked: false,
+    checked: true,
+    disabled: false,
     iqrCoef: 3
   }
 };
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'VARIABLE_TYPE_CHANGE':
+      let new_state = {
+        ...state,
+        variable_type: action.payload
+      };
+      if (action.payload == 'numeric') {
+        new_state = {
+          ...new_state,
+          checkDuplicates: {
+            ...new_state.checkDuplicates,
+            subsequentDisabled: false
+          },
+          checkBadVals: {
+            ...new_state.checkBadVals,
+            disabled: false
+          },
+          checkOutlierVals: {
+            ...new_state.checkOutlierVals,
+            disabled: false
+          },
+          checkExtremeVals: {
+            ...new_state.checkExtremeVals,
+            disabled: false
+          }
+        }
+      } else {
+        new_state = {
+          ...new_state,
+          checkDuplicates: {
+            ...new_state.checkDuplicates,
+            subsequentDisabled: true
+          },
+          checkBadVals: {
+            ...new_state.checkBadVals,
+            checked: false,
+            disabled: true
+          },
+          checkOutlierVals: {
+            ...new_state.checkOutlierVals,
+            checked: false,
+            disabled: true
+          },
+          checkExtremeVals: {
+            ...new_state.checkExtremeVals,
+            checked: false,
+            disabled: true
+          }
+        }
+      }
+
+      return new_state;
     case 'CHECKBOX_CHANGE':
       return {
         ...state,
@@ -49,14 +110,6 @@ function reducer(state, action) {
         checkDuplicates: {
           ...state.checkDuplicates,
           checked: action.payload
-        }
-      };
-    case 'SUBSEQUENT_CHECKBOX_CHANGE':
-      return {
-        ...state,
-        checkDuplicates: {
-          ...state.checkDuplicates,
-          checkSubsequent: action.payload
         }
       };
     case 'SUBSEQUENT_NUM_CHANGE':
@@ -134,10 +187,20 @@ function reducer(state, action) {
   }
 }
 
-function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }) {
+function VariableFlaggingDetails({
+    index, variable, isFinalVar, varNames,
+    flaggingDetails, dataset_name, parentDispatch }) {
+
   const classes = useStyles();
 
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const chooseVariableType = (event) => {
+    dispatch({
+      type: 'VARIABLE_TYPE_CHANGE',
+      payload: event.target.value
+    });
+  }
 
   const basicCheckboxChange = (event) => {
     dispatch({
@@ -152,13 +215,6 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
   const duplicatesCheckboxChange = (event) => {
     dispatch({
       type: 'DUPLICATES_CHECKBOX_CHANGE',
-      payload: event.target.checked
-    });
-  };
-
-  const subsequentCheckboxChange = (event) => {
-    dispatch({
-      type: 'SUBSEQUENT_CHECKBOX_CHANGE',
       payload: event.target.checked
     });
   };
@@ -230,6 +286,26 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
   };
 
   const runFlagging = () => {
+    console.log(flaggingDetails);
+    let varDetails = {
+      dataset_name: dataset_name,
+      varNames: [...varNames],
+      flaggingDetails: [
+        ...flaggingDetails,
+        state
+      ]
+    }
+    axios.post('/flagging/run', varDetails)
+    .then((response) => {
+      //console.log(response.data);
+      //var resData = JSON.parse(JSON.stringify(response.data));
+      //var resData = JSON.parse(response.data);
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
     parentDispatch({
       type: "RUN_FLAGGING",
       payload: {
@@ -246,22 +322,55 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
     >
       <FormControl component="fieldset" className={classes.formControl}>
         <FormGroup>
+          <FormHelperText>Variable Type</FormHelperText>
+          <RadioGroup row aria-label="variable_type" name="variable_type"
+            defaultValue="numeric" onChange={chooseVariableType}>
+            <FormControlLabel
+              value="numeric"
+              control={<Radio />}
+              label="Numeric"
+              labelPlacement="end"
+            />
+            <FormControlLabel
+              value="string"
+              control={<Radio />}
+              label="String"
+              labelPlacement="end"
+            />
+            <FormControlLabel
+              value="date"
+              control={<Radio />}
+              label="Date"
+              labelPlacement="end"
+            />
+          </RadioGroup>
+        </FormGroup>
+        <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkNull} onChange={basicCheckboxChange} name="checkNull" />}
+            control={
+              <Checkbox
+                checked={state.checkNull}
+                onChange={basicCheckboxChange}
+                name="checkNull" />
+            }
             label="Check Null values"
           />
           <FormControlLabel
-            control={<Checkbox checked={state.checkDuplicates.checked} onChange={duplicatesCheckboxChange} name="checkDuplicates" />}
+            control={
+              <Checkbox
+                checked={state.checkDuplicates.checked}
+                onChange={duplicatesCheckboxChange}
+                name="checkDuplicates" />
+            }
             label="Check Duplicate values"
           />
           <FormGroup row className={classes.paddedFormControl}>
-            <FormControlLabel
-              control={<Checkbox checked={state.checkDuplicates.checkSubsequent} onChange={subsequentCheckboxChange} name="checkSubsequent" />}
-              label="Find subsequent Duplicates"
-            />
             <FormControl>
               <TextField
                 id="subsequent_duplicates_n"
+                label="# of subsequent duplicates"
+                disabled={(state.checkDuplicates.subsequentDisabled || !state.checkDuplicates.checked)}
+                variant={(state.checkDuplicates.subsequentDisabled || !state.checkDuplicates.checked) ? 'filled' : 'outlined'}
                 value={state.checkDuplicates.subsequentNum}
                 onChange={subsequentNumChange}
                 InputProps={{
@@ -271,13 +380,21 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkBadVals.checked} onChange={badValsCheckboxChange} name="checkBadVals" />}
+            control={
+              <Checkbox
+                disabled={state.checkBadVals.disabled}
+                checked={state.checkBadVals.checked}
+                onChange={badValsCheckboxChange}
+                name="checkBadVals" />
+            }
             label="Check Bad values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
                 id="bad_vals_range_from"
+                disabled={!state.checkBadVals.checked}
+                variant={state.checkBadVals.checked ? 'outlined' : 'filled'}
                 value={state.checkBadVals.range.low}
                 onChange={badValsFromInputChange}
                 InputProps={{
@@ -286,6 +403,8 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
               />
               <TextField
                 id="bad_vals_range_to"
+                disabled={!state.checkBadVals.checked}
+                variant={state.checkBadVals.checked ? 'outlined' : 'filled'}
                 value={state.checkBadVals.range.high}
                 onChange={badValsToInputChange}
                 InputProps={{
@@ -295,13 +414,20 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkOutlierVals.checked} onChange={outlierCheckboxChange} name="checkOutlierVals" />}
+            control={
+              <Checkbox
+                disabled={state.checkOutlierVals.disabled}
+                checked={state.checkOutlierVals.checked}
+                onChange={outlierCheckboxChange} name="checkOutlierVals" />
+            }
             label="Check Outlier values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
                 id="outlier_iqr_coef"
+                disabled={!state.checkOutlierVals.checked}
+                variant={state.checkOutlierVals.checked ? 'outlined' : 'filled'}
                 value={state.checkOutlierVals.iqrCoef}
                 onChange={outlierIqrValChange}
                 InputProps={{
@@ -311,13 +437,21 @@ function VariableFlaggingDetails({ index, variable, isFinalVar, parentDispatch }
             </FormControl>
           </FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={state.checkExtremeVals.checked} onChange={extremeCheckboxChange} name="checkExtremeVals" />}
+            control={
+              <Checkbox
+                disabled={state.checkExtremeVals.disabled}
+                checked={state.checkExtremeVals.checked}
+                onChange={extremeCheckboxChange}
+                name="checkExtremeVals" />
+            }
             label="Check Extreme values"
           />
           <FormGroup row className={classes.paddedFormControl}>
             <FormControl>
               <TextField
                 id="extreme_iqr_coef"
+                disabled={!state.checkExtremeVals.checked}
+                variant={state.checkExtremeVals.checked ? 'outlined' : 'filled'}
                 value={state.checkExtremeVals.iqrCoef}
                 onChange={extremeIqrValChange}
                 InputProps={{

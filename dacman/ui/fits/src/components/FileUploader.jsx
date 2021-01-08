@@ -156,7 +156,8 @@ function FileUploader({ dispatch }) {
 
         dataReview = {
           ...dataReview,
-          ...resData
+          ...resData,
+          dataset_name: dataset.name
         }
 
         //console.log(resData);

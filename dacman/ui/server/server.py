@@ -9,14 +9,16 @@ import pandas as pd
 from dacman import Executor, DataDiffer
 import dacman
 from dacman.plugins.default import DefaultPlugin
-from flagging.flagging import read_csv
+from flagging.flagging import read_csv, qa_flagging_app_deploy
 
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
 
 UPLOAD_FOLDER = os.environ.get('DEDUCE_UPLOAD_FOLDER', '/Users/absho/workspace/lbnl/deduce/boris/ui/flask_uploads')
+RESULTS_FOLDER = os.environ.get('DEDUCE_RESULTS_FOLDER', '/Users/absho/workspace/lbnl/deduce/boris/ui/results')
 ALLOWED_EXTENSIONS = {'csv'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
 
 @app.route('/')
 def index():
@@ -114,6 +116,18 @@ def upload_file():
 
         data = read_csv(file_path)
         return json.jsonify(data)
+
+@app.route('/flagging/run', methods=['POST'])
+def run_flagging():
+    # check if the post request has the file part
+    variable_details = request.get_json()
+
+    dataset = os.path.join(app.config['UPLOAD_FOLDER'], variable_details['dataset_name'])
+    processing_folder = qa_flagging_app_deploy(dataset, variable_details, app.config['RESULTS_FOLDER'])
+
+    data = read_csv(os.path.join(processing_folder, "flagged_variables.csv"))
+
+    return json.jsonify(data)
 
 
 @app.route('/hello')
