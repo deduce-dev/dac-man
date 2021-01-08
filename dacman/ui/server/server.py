@@ -1,5 +1,6 @@
 # server.py
 import os
+from pathlib import Path
 from flask import Flask, flash, request, redirect
 from flask import render_template, json, send_from_directory
 from werkzeug.utils import secure_filename
@@ -9,7 +10,7 @@ import pandas as pd
 from dacman import Executor, DataDiffer
 import dacman
 from dacman.plugins.default import DefaultPlugin
-from flagging.flagging import read_csv, qa_flagging_app_deploy
+from flagging.flagging import read_csv, qa_flagging_app_deploy, combine_csv_files
 
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
@@ -125,9 +126,26 @@ def run_flagging():
     dataset = os.path.join(app.config['UPLOAD_FOLDER'], variable_details['dataset_name'])
     processing_folder = qa_flagging_app_deploy(dataset, variable_details, app.config['RESULTS_FOLDER'])
 
-    data = read_csv(os.path.join(processing_folder, "flagged_variables.csv"))
+    output_csv_file, output_zip_file = combine_csv_files(processing_folder)
 
-    return json.jsonify(data)
+    output_csv_file = Path(output_csv_file)
+    output_zip_file = Path(output_zip_file)
+
+    data = read_csv(output_csv_file)
+
+    print({
+        'folder_id': output_csv_file.parent.name,
+        'csv_filename': output_csv_file.name,
+        'zip_filename': output_zip_file.name,
+        'data': data
+    })
+
+    return json.jsonify({
+        'folder_id': output_csv_file.parent.name,
+        'csv_filename': output_csv_file.name,
+        'zip_filename': output_zip_file.name,
+        'data': data
+    })
 
 
 @app.route('/hello')

@@ -26,6 +26,7 @@ function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
 }
 
 const initialState = {
+  showFileUploader: true,
   showCSVVariableSelector: false,
   dataReview: {
     show: false,
@@ -117,12 +118,63 @@ function reducer(state, action) {
           ]
         }
       };
-    case 'RUN_FLAGGING':
-      //let temp = ;
+    case 'SENT_REQUEST':
       return {
         ...state,
+        showCSVVariableSelector: false,
+        dataReview: {
+          ...state.dataReview,
+          show: false
+        },
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          show: false
+        },
         resultsReview: {
-          ...state.resultsReview
+          ...state.resultsReview,
+          show: false
+        }
+      };
+    case 'RUN_FLAGGING':
+      //let temp = ;
+      console.log("Hiiiiii333")
+      console.log(action.payload);
+      console.log({
+        ...state,
+        showFileUploader: false,
+        showCSVVariableSelector: false,
+        dataReview: {
+          ...state.dataReview,
+          show: false
+        },
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          show: false
+        },
+        resultsReview: {
+          ...state.resultsReview,
+          show: true,
+          columns: action.payload.response.data.columns,
+          rows: action.payload.response.data.rows
+        }
+      });
+      return {
+        ...state,
+        showFileUploader: false,
+        showCSVVariableSelector: false,
+        dataReview: {
+          ...state.dataReview,
+          show: false
+        },
+        selectedVarsDetails: {
+          ...state.selectedVarsDetails,
+          show: false
+        },
+        resultsReview: {
+          ...state.resultsReview,
+          show: true,
+          columns: action.payload.response.data.columns,
+          rows: action.payload.response.data.rows
         }
       };
     default:
@@ -140,12 +192,17 @@ function FlaggingView() {
         <div className={classes.toolbar} />
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
-            <FileUploader dispatch={dispatch} />
+            { state.showFileUploader && (
+              <FileUploader dispatch={dispatch} />
+            )}
             { state.dataReview.show && (
               <DataReview
                 index={2}
+                title={'Data Review'}
                 rows={state.dataReview.rows}
-                columns={state.dataReview.columns} 
+                columns={state.dataReview.columns}
+                buttonText={'Next'}
+                actionType={'CHOOSE_VARS_TO_FLAG'}
                 dispatch={dispatch} />
             )}
             { state.showCSVVariableSelector && (
@@ -178,6 +235,16 @@ function FlaggingView() {
                 )
               ))
             }
+            { state.resultsReview.show && (
+              <DataReview
+                index={10}
+                title={'Flagged-Data Review'}
+                rows={state.resultsReview.rows}
+                columns={state.resultsReview.columns}
+                buttonText={'Download'}
+                actionType={'DOWNLOAD_RESULTS'}
+                dispatch={dispatch} />
+            )}
             {/*
             { state.selectedVarsDetails.varDetailsFinished && (
                 <FlaggingFinalReview

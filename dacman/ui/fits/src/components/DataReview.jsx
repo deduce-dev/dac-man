@@ -4,11 +4,11 @@ import { WorkbenchCard } from './WorkbenchCard';
 import { Button } from '@material-ui/core';
 
 
-function DataReview({index, columns, rows, dispatch}) {
+function DataReview({index, title, columns, rows, buttonText, actionType, dispatch}) {
   return (
     <WorkbenchCard
       key={`card-${index}`}
-      title="Data Review"
+      title={title}
     >
       <div style={{ height: 350, width: '100%' }}>
         <DataGrid columns={columns} rows={rows} pageSize={5} />
@@ -16,8 +16,8 @@ function DataReview({index, columns, rows, dispatch}) {
       <Button
         variant="contained"
         color="primary"
-        onClick={e => dispatch({type: 'CHOOSE_VARS_TO_FLAG'})}>
-        Next
+        onClick={e => dispatch({type: actionType})}>
+        {buttonText}
       </Button>
     </WorkbenchCard>
   );

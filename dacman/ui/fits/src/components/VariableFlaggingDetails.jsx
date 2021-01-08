@@ -295,23 +295,26 @@ function VariableFlaggingDetails({
         state
       ]
     }
-    axios.post('/flagging/run', varDetails)
-    .then((response) => {
+    let req = axios.post('/flagging/run', varDetails)
+
+    parentDispatch({type: "SENT_REQUEST" });
+
+    req.then((response) => {
       //console.log(response.data);
       //var resData = JSON.parse(JSON.stringify(response.data));
       //var resData = JSON.parse(response.data);
-      console.log(response);
+      console.log(response.data);
+      parentDispatch({
+        type: "RUN_FLAGGING",
+        payload: {
+          variable: variable,
+          flaggingDetails: state,
+          response: response.data
+        }
+      });
     })
     .catch((error) => {
       console.log(error);
-    });
-
-    parentDispatch({
-      type: "RUN_FLAGGING",
-      payload: {
-        variable: variable,
-        flaggingDetails: state
-      }
     });
   };
 

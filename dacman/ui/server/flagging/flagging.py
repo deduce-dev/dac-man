@@ -54,7 +54,7 @@ def read_csv(file_path):
 def qa_flagging_app_deploy(dataset, vars_details, results_folder):
     # Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
     
-    output_folder = os.path.join(results_folder, uuid.uuid4())
+    output_folder = os.path.join(results_folder, str(uuid.uuid4()))
     os.mkdir(output_folder)
 
     var_names = vars_details['varNames']
@@ -66,7 +66,7 @@ def qa_flagging_app_deploy(dataset, vars_details, results_folder):
             app_args.append('--is_numeric')
 
             if details['checkDuplicates']['checked']:
-                app_args.extend(['-s', details['checkDuplicates']['subsequentNum']])
+                app_args.extend(['-s', str(details['checkDuplicates']['subsequentNum'])])
             if details['checkBadVals']['checked']:
                 app_args.extend([
                     '-b',
@@ -76,9 +76,9 @@ def qa_flagging_app_deploy(dataset, vars_details, results_folder):
                     )
                 ])
             if details['checkOutlierVals']['checked']:
-                app_args.extend(['-t', details['checkOutlierVals']['iqrCoef']])
+                app_args.extend(['-t', str(details['checkOutlierVals']['iqrCoef'])])
             if details['checkExtremeVals']['checked']:
-                app_args.extend(['-e', details['checkExtremeVals']['iqrCoef']])
+                app_args.extend(['-e', str(details['checkExtremeVals']['iqrCoef'])])
         elif variable_type == 'date':
             app_args.append('--is_date')
 
@@ -91,19 +91,24 @@ def qa_flagging_app_deploy(dataset, vars_details, results_folder):
         output_file = '%d.csv' % i
         app_args.extend(['-o', str(os.path.join(output_folder, output_file))])
 
-        subprocess.run([
+        print(*app_args)
+        completedProcess = subprocess.run([
             "Rscript",
             "flagging/r_scripts/qa_n_s.R",
             "-f", dataset,
             "-v", var_names[i],
             *app_args
-        ])
+        ], capture_output=True)
+
+        print(completedProcess)
 
     return output_folder
 
 def combine_csv_files(csv_folder):
+    print("csv_folder", csv_folder)
     csv_files = glob.glob(os.path.join(csv_folder, "*.csv"))
     df_list = []
+    print(csv_files)
     for csv_file in csv_files:
         df = pd.read_csv(csv_file)
         df_list.append(df)
@@ -115,19 +120,20 @@ def combine_csv_files(csv_folder):
         archive_name='flagged_variables.csv'
     )
 
-    output_file = os.path.join(csv_folder, "flagged_variables.zip")
+    output_csv_file = os.path.join(csv_folder, "flagged_variables.csv")
+    output_zip_file = os.path.join(csv_folder, "flagged_variables.zip")
 
     df_all.to_csv(
-        'flagged_variables.csv',
+        output_csv_file,
         index=False
     )
     df_all.to_csv(
-        output_file,
+        output_zip_file,
         index=False,
         compression=compression_opts
     )
 
-    return output_file
+    return output_csv_file, output_zip_file
 
 def clean_up(folder):
     if os.path.exists(folder) and os.path.isdir(folder):
