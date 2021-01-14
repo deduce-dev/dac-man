@@ -46,7 +46,9 @@ def frontend_format(data):
     return formatted_data
 
 def read_csv(file_path):
-    data = pd.read_csv(file_path)
+    data = pd.read_csv(file_path, na_filter=False)
+    data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
+    print(data)
     formatted_data = frontend_format(data.head(10))
 
     return formatted_data
@@ -110,7 +112,7 @@ def combine_csv_files(csv_folder):
     df_list = []
     print(csv_files)
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(csv_file, na_filter=False)
         df_list.append(df)
 
     df_all = pd.concat(df_list, axis=1)
