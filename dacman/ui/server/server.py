@@ -158,7 +158,7 @@ def download(folder_id):
     folder_path = os.path.join(app.config['RESULTS_FOLDER'], folder_id)
     return send_from_directory(
         directory=folder_path,
-        filename='flagged_variables.zip'
+        filename='flagged_variables.csv.gz'
     )
 
 @app.route('/hello')
