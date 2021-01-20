@@ -1,5 +1,6 @@
 # server.py
 import os
+import uuid
 from pathlib import Path
 from flask import Flask, flash, request, redirect
 from flask import render_template, json, send_from_directory
@@ -10,13 +11,13 @@ import pandas as pd
 from dacman import Executor, DataDiffer
 import dacman
 from dacman.plugins.default import DefaultPlugin
-from flagging.flagging import read_csv, qa_flagging_app_deploy, combine_csv_files
+from flagging.flagging import read_csv, qa_flagging_app_deploy, combine_csv_files, clean_up
 
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
 
-UPLOAD_FOLDER = os.environ.get('DEDUCE_UPLOAD_FOLDER', '/Users/absho/workspace/lbnl/deduce/boris/ui/flask_uploads')
-RESULTS_FOLDER = os.environ.get('DEDUCE_RESULTS_FOLDER', '/Users/absho/workspace/lbnl/deduce/boris/ui/results')
+UPLOAD_FOLDER = os.environ.get('DEDUCE_UPLOAD_FOLDER', '/home/deduce/workspace/deduce_fs/uploads')
+RESULTS_FOLDER = os.environ.get('DEDUCE_RESULTS_FOLDER', '/home/deduce/workspace/deduce_fs/runs')
 ALLOWED_EXTENSIONS = {'csv'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULTS_FOLDER'] = RESULTS_FOLDER
@@ -112,19 +113,32 @@ def upload_file():
         return redirect(request.url)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        project_id = str(uuid.uuid4())
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], project_id)
+        os.mkdir(upload_path)
+        file_path = os.path.join(upload_path, filename)
         file.save(file_path)
 
         data = read_csv(file_path)
-        return json.jsonify(data)
+        return json.jsonify({'project_id': project_id, 'data': data})
 
-@app.route('/flagging/run', methods=['POST'])
-def run_flagging():
+@app.route('/flagging/run/<project_id>', methods=['POST'])
+def run_flagging(project_id):
     # check if the post request has the file part
     variable_details = request.get_json()
 
-    dataset = os.path.join(app.config['UPLOAD_FOLDER'], variable_details['dataset_name'])
-    processing_folder = qa_flagging_app_deploy(dataset, variable_details, app.config['RESULTS_FOLDER'])
+    dataset = os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        project_id,
+        variable_details['dataset_name']
+    )
+    processing_folder = qa_flagging_app_deploy(
+        project_id,
+        dataset,
+        variable_details,
+        app.config['RESULTS_FOLDER']
+    )
 
     output_csv_file, output_zip_file = combine_csv_files(processing_folder)
 
@@ -143,27 +157,32 @@ def run_flagging():
     '''
 
     return json.jsonify({
-        'folder_id': output_csv_file.parent.name,
         'csv_filename': output_csv_file.name,
         'zip_filename': output_zip_file.name,
         'data': data
     })
 
-@app.route('/flagging/download/<folder_id>', methods=['POST'])
-def download(folder_id):
-    #folder_id = request.args.get('folder_id')
-    print(folder_id)
-    print(request.get_json())
+@app.route('/flagging/download/<project_id>', methods=['POST'])
+def download(project_id):
+    #project_id = request.args.get('project_id')
+    print(project_id)
+    #print(request.get_json())
 
-    folder_path = os.path.join(app.config['RESULTS_FOLDER'], folder_id)
+    folder_path = os.path.join(app.config['RESULTS_FOLDER'], project_id)
     return send_from_directory(
         directory=folder_path,
         filename='flagged_variables.csv.gz'
     )
+
+@app.route('/flagging/clean/<project_id>', methods=['POST'])
+def clean(project_id):
+    clean_up(os.path.join(app.config['UPLOAD_FOLDER'], project_id))
+    clean_up(os.path.join(app.config['RESULTS_FOLDER'], project_id))
+    return "Data that belongs to project '%s' was deleted" % project_id
 
 @app.route('/hello')
 def hello():
     return 'Hello World!'
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

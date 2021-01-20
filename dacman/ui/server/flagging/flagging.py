@@ -3,7 +3,6 @@ import shutil
 import math
 import glob
 import subprocess
-import uuid
 import pandas as pd
 
 
@@ -53,10 +52,10 @@ def read_csv(file_path):
 
     return formatted_data
 
-def qa_flagging_app_deploy(dataset, vars_details, results_folder):
+def qa_flagging_app_deploy(project_id, dataset, vars_details, results_folder):
     # Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
     
-    output_folder = os.path.join(results_folder, str(uuid.uuid4()))
+    output_folder = os.path.join(results_folder, project_id)
     os.mkdir(output_folder)
 
     var_names = vars_details['varNames']
@@ -93,10 +92,18 @@ def qa_flagging_app_deploy(dataset, vars_details, results_folder):
         output_file = '%d.csv' % i
         app_args.extend(['-o', str(os.path.join(output_folder, output_file))])
 
-        print(*app_args)
+        #print(*app_args)
+
+        deduce_backend_path = os.environ.get(
+            'DEDUCE_BACKEND_PATH',
+            '/home/deduce/workspace'
+        )
+        r_script_path = os.path.join(deduce_backend_path,
+            'dac-man/dacman/ui/server/flagging/r_scripts/qa_n_s.R')
+
         completedProcess = subprocess.run([
             "Rscript",
-            "flagging/r_scripts/qa_n_s.R",
+            r_script_path,
             "-f", dataset,
             "-v", var_names[i],
             *app_args

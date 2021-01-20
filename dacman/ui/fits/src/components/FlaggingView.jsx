@@ -26,6 +26,7 @@ function createData(datetime, WindDir, Windspeed_ms, temp_f, dewp_f) {
 }
 
 const initialState = {
+  project_id: null,
   showFileUploader: true,
   showCSVVariableSelector: false,
   dataReview: {
@@ -46,7 +47,6 @@ const initialState = {
   },
   resultsReview: {
     show: false,
-    data_id: null, 
     columns: [],
     rows: [],
     downloadClicked: false
@@ -58,7 +58,8 @@ function reducer(state, action) {
     case 'UPLOAD_FILE':
       return {
         ...state,
-        dataReview: action.payload,
+        project_id: action.payload.project_id,
+        dataReview: action.payload.data,
         selectedVarsDetails: {
           ...initialState.selectedVarsDetails
         },
@@ -138,7 +139,6 @@ function reducer(state, action) {
         resultsReview: {
           ...state.resultsReview,
           show: true,
-          data_id: action.payload.response.folder_id,
           columns: action.payload.response.data.columns,
           rows: action.payload.response.data.rows
         }
@@ -162,9 +162,9 @@ function FlaggingView() {
   const classes = useStyles();
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  if (state.resultsReview.downloadClicked && state.resultsReview.data_id != null) {
+  if (state.resultsReview.downloadClicked && state.project_id != null) {
     axios({
-      url: '/flagging/download/' + state.resultsReview.data_id,
+      url: '/flagging/download/' + state.project_id,
       method: 'POST',
       responseType: 'blob', // important
     })
@@ -213,6 +213,7 @@ function FlaggingView() {
                   i >= state.selectedVarsDetails.varNames.length-1 ? (
                     <VariableFlaggingDetails
                       index={i}
+                      project_id={state.project_id}
                       variable={variable}
                       isFinalVar={true}
                       varNames={state.selectedVarsDetails.varNames}
@@ -222,6 +223,7 @@ function FlaggingView() {
                   ) : (
                     <VariableFlaggingDetails
                       index={i}
+                      project_id={state.project_id}
                       variable={variable}
                       isFinalVar={false}
                       varNames={null}

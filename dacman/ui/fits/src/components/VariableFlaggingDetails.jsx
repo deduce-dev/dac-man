@@ -188,7 +188,7 @@ function reducer(state, action) {
 }
 
 function VariableFlaggingDetails({
-    index, variable, isFinalVar, varNames,
+    index, project_id, variable, isFinalVar, varNames,
     flaggingDetails, dataset_name, parentDispatch }) {
 
   const classes = useStyles();
@@ -295,7 +295,7 @@ function VariableFlaggingDetails({
         state
       ]
     }
-    let req = axios.post('/flagging/run', varDetails)
+    let req = axios.post('/flagging/run/' + project_id, varDetails)
 
     parentDispatch({type: "SENT_REQUEST" });
 

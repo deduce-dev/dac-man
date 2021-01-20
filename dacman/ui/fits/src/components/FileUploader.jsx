@@ -116,10 +116,13 @@ function FileUploader({ dispatch }) {
     ]
   }
 
-  const uploadFile = (data) => {
+  const uploadFile = (project_id, data) => {
     return {
       type: 'UPLOAD_FILE',
-      payload: data
+      payload: {
+        project_id: project_id,
+        data: data
+      }
     };
   }
 
@@ -156,13 +159,13 @@ function FileUploader({ dispatch }) {
 
         dataReview = {
           ...dataReview,
-          ...resData,
+          ...resData.data,
           dataset_name: dataset.name
         }
 
         //console.log(resData);
         console.log(dataReview)
-        dispatch(uploadFile(dataReview));
+        dispatch(uploadFile(resData.project_id, dataReview));
       })
       .catch((error) => {
         console.log(error);
