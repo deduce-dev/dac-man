@@ -48,7 +48,7 @@ def frontend_format(data):
 def read_csv(file_path):
     data = pd.read_csv(file_path, na_filter=False)
     data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
-    print(data)
+
     formatted_data = frontend_format(data.head(10))
 
     return formatted_data
@@ -123,16 +123,24 @@ def combine_csv_files(csv_folder):
     )
 
     output_csv_file = os.path.join(csv_folder, "flagged_variables.csv")
-    output_zip_file = os.path.join(csv_folder, "flagged_variables.zip")
+    output_zip_file = os.path.join(csv_folder, "flagged_variables.csv.gz")
+    #output_zip_file = os.path.join(csv_folder, "flagged_variables.zip")
 
     df_all.to_csv(
         output_csv_file,
         index=False
     )
+
+    #df_all.to_csv(
+    #    output_zip_file,
+    #    index=False,
+    #    compression=compression_opts
+    #)
+
     df_all.to_csv(
         output_zip_file,
         index=False,
-        compression=compression_opts
+        compression='gzip'
     )
 
     return output_csv_file, output_zip_file
