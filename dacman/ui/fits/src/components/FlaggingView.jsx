@@ -169,11 +169,11 @@ function FlaggingView() {
       responseType: 'blob', // important
     })
     .then((response) => {
-      const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/zip' }));
+      const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/gzip' }));
       const link = document.createElement('a');
 
       link.href = downloadUrl;
-      link.setAttribute('download', 'flagged_variables.zip'); //any other extension
+      link.setAttribute('download', 'flagged_variables.csv.gz'); //any other extension
       document.body.appendChild(link);
       link.click();
       link.remove();
