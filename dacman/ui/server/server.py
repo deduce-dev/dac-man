@@ -156,6 +156,8 @@ def run_flagging(project_id):
     })
     '''
 
+    clean_up(os.path.join(app.config['UPLOAD_FOLDER'], project_id))
+
     return json.jsonify({
         'csv_filename': output_csv_file.name,
         'zip_filename': output_zip_file.name,
@@ -176,7 +178,7 @@ def download(project_id):
 
 @app.route('/flagging/clean/<project_id>', methods=['POST'])
 def clean(project_id):
-    clean_up(os.path.join(app.config['UPLOAD_FOLDER'], project_id))
+    #clean_up(os.path.join(app.config['UPLOAD_FOLDER'], project_id))
     clean_up(os.path.join(app.config['RESULTS_FOLDER'], project_id))
     return "Data that belongs to project '%s' was deleted" % project_id
 

@@ -177,6 +177,14 @@ function FlaggingView() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+
+      axios.post('/flagging/clean/' + state.project_id)
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     })
     .catch((error) => {
       console.log(error);
