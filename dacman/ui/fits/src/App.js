@@ -1,194 +1,40 @@
-import React, { useState, useReducer } from "react";
-import TextField from '@material-ui/core/TextField';
+import React, { useReducer } from "react";
 import {
   BrowserRouter as Router,
   Switch,
-  Route,
-  Link,
-  useRouteMatch,
-  useParams
+  Route
 } from "react-router-dom";
-import logo from './logo.svg';
-import deducelogo from './deducelogo.png';
+
 import './App.css';
-import Button from '@material-ui/core/Button'
-import AppBar from '@material-ui/core/AppBar'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
-import { makeStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper'
 
-import {
-  MainLayout,
-  Sidebar,
-  SimplerWorkbench,
-  WorkbenchWithReducer,
-  SimplerSidebar
-} from './Layout'
+import { FlaggingView } from './components/FlaggingView';
+import { DatadiffView } from "./components/DatadiffView";
 
-import {
-  getComparisonGeneric,
-  getComparisons,
-  buildComparisonReducer,
-  initBuildState,
-  comparisonsReducer,
-  BuildContextProvider,
-  getComparisonHDF5,
-} from './api'
-
-import {
-  ComparisonBuilder,
-  FileUploader,
-} from './Workbench'
-
-import {
-  WorkbenchContainer,
-  SlimComparisonBuilder,
-  StagesContextProvider,
-  ParamsContextProvider,
-} from './build';
-
-import MainMetaBuilder from './MainMetaBuilder';
-import Summary from './Summary'
-import Compare from './Compare'
-
-
-function ShowCompare(comparisons, cid) {
-  // let cid = useParams();
-  // let cid = parseInt(useParams().cid);
-  // let cid = parseInt(cid);
-  let comparison = comparisons.find(c => c.comparisonID === parseInt(cid));
-  return (
-    <MainLayout>
-      <Compare comparison={comparison}/>
-      <Sidebar cardContentItems={comparisons}/>
-    </MainLayout>
-  )
-}
-
-function ShowCompareNew(comparisons) {
-  let newID = comparisons.length + 1;
-  let newComparison = getComparisonGeneric(newID, "dat", [`final-v${newID}`, `final-v${newID}-FINAL`]);
-  comparisons.push(newComparison);
-  return (
-    <MainLayout>
-      <Compare comparison={newComparison}/>
-      <Sidebar cardContentItems={comparisons}/>
-    </MainLayout>
-  )
-}
-
-function ShowSummary(comparisons, cid) {
-  let comparison = comparisons.find(c => c.comparisonID === parseInt(cid)) || getComparisonHDF5();
-  let demoComparisonOldSchema = getComparisonHDF5();
-  comparison.results = comparison.results || demoComparisonOldSchema.results;
-
-  return (
-    <MainLayout>
-      <Summary comparison={comparison}/>
-      {/* <Sidebar cardContentItems={comparisons}/> */}
-    </MainLayout>
-  )
-}
 
 // WHY this intermediate component seems to be necessary to avoid the "invalid hook call" error
 // my guess is that it could be related to the fact that we're calling it through the react-router `render` prop
-function ShowWorkbench() {
-  return (
-    <CreateComparisonView />
-  );
-}
-
 function ShowFlagWorkbench() {
   return (
-    <CreateFlaggingView />
+    <FlaggingView />
   );
 }
 
-function CreateComparisonView() {
-  const [comparisons, dispatch] = useReducer(comparisonsReducer, []);
-  // const [comparisonWIP, dispatchBuild] = useReducer(buildComparisonReducer, null, getNewComparisonBuildState);
-  const [comparisonWIP, dispatchBuild] = useReducer(
-    buildComparisonReducer,
-    (formData) => {dispatch({type: 'addFromBuild', buildData: formData})},
-    initBuildState
-  );
-  // const [comparisonWIP, dispatch] = useState({});
+function ShowDatadiffWorkbench() {
   return (
-    <MainLayout>
-      <BuildContextProvider>
-        <ComparisonBuilder
-        state={comparisonWIP}
-        dispatch={dispatchBuild}
-        />
-      </BuildContextProvider>
-      <SimplerSidebar
-        comparisons={comparisons}
-        comparisonWIP={comparisonWIP}
-      />
-    </MainLayout>
-  )
-}
-
-function ShowBuildWorkbench() {
-  return <BuildComparisonView />
-}
-
-function BuildComparisonView(props) {
-  return (
-    <MainLayout>
-      <ParamsContextProvider>
-        <WorkbenchContainer>
-          <StagesContextProvider>
-            <SlimComparisonBuilder />
-          </StagesContextProvider>
-        </WorkbenchContainer>
-      </ParamsContextProvider>
-    </MainLayout>
-  );
-}
-
-function CreateFlaggingView() {
-  //const [state, dispatch] = useReducer(flaggingReducer, {});
-
-  return (
-    <MainLayout>
-      <FileUploader />
-    </MainLayout>
+    <DatadiffView />
   );
 }
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      comparisons: getComparisons()
-    };
-  }
-
-  // componentDidMount() {
-  //   this.state.comparisons = getComparisons();
-  // }
 
   render() {
     return (
       <Router>
         <div className="App">
           <Switch>
-            {/* <Route exact path="/" component={ShowMain} /> */}
-            {/* TODO "/meta" will not work as-is */}
-            {/* <Route path="/meta" component={MainMetaBuilder} />
-            <Route path="/:cid/compare" component={ShowCompare} />
-            <Route path="/:cid/summary" component={ShowSummary} /> */}
-            {/* <Route Route exact path="/" render={(routeProps) => ShowMain(this.state.comparisons)} /> */}
-            <Route Route exact path="/" render={(routeProps) => ShowWorkbench()} />
-            <Route Route exact path="/compare" render={(routeProps) => ShowCompareNew(this.state.comparisons)} />
-            <Route path="/:cid/compare" render={(routeProps) => ShowCompare(this.state.comparisons, routeProps.match.params.cid)} />
-            <Route path="/:cid/summary" render={(routeProps) => ShowSummary(this.state.comparisons, routeProps.match.params.cid)} />
-            <Route path="/workbench" render={(routeProps) => ShowWorkbench()} />
+            {/* <Route Route exact path="/" render={(routeProps) => ShowWorkbench()} /> */}
             <Route path="/flag" render={(routeProps) => ShowFlagWorkbench()} />
-            <Route path="/build" render={(routeProps) => ShowBuildWorkbench()} />
-            {/* <Route path="/workbench" render={(routeProps) => CreateComparisonView()} /> */}
+            <Route path="/datadiff" render={(routeProps) => ShowDatadiffWorkbench()} />
           </Switch>
         </div>
       </Router>
