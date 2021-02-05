@@ -18,21 +18,19 @@ import { PrettyPrinter } from "./PrettyPrinter";
 
 export function Sidebar({ comparisons, buildData }) {
     const classes = useStyles();
-    function renderComparison(comparison, index) {
+    function renderComparison(cmp, index) {
         const cid = index;
+        const resultsURL = 'http://localhost:5000' + cmp.results_url;
         return (
             <Grid key={cid} item xs={12}>
                 <Paper elevation={5} className={classes.paper}>
                     <div>
-                        <Typography variant="h6">
-                            Comparison ID: {cid}
+                        <Typography>
+                            Comparison ID: {cmp.comparison_id}
                         </Typography>
                         {/* <PrettyPrinter item={comparison} /> */}
-                        <Typography variant="h6">
-                            {comparison.data.file.A} -&gt; {comparison.data.file.B}
-                        </Typography>
-                        <Button color="primary">Edit</Button>
-                        <Button color="primary">Summary</Button>
+                        {/* <Button color="primary">Edit</Button> */}
+                        <Button color="primary" href={resultsURL} target="_blank">Results</Button>
                     </div>
                 </Paper>
             </Grid>
