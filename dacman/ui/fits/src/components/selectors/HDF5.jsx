@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { 
     FormGroup,
@@ -15,15 +15,15 @@ import { ChoiceSelector } from "./Base";
 import { SAMPLE } from '../../data'
 
 
-function FieldBrowser({ field, setFormData, formData }) {
+function FieldBrowser({ field, setFormData, formData, fieldValuesData }) {
     const fieldKey = "fields";
     const selFieldItems = formData[fieldKey];
-    const fieldVals = SAMPLE.values;
+
     function setFieldItems(event, newItems) {
         setFormData({target: {name: fieldKey, value: newItems}});
     }
     function FieldItemToggle(f) {
-        const displayVal = fieldVals[f];
+        const displayVal = fieldValuesData[f];
         return (
             <ToggleButton
                 value={f}
@@ -36,7 +36,7 @@ function FieldBrowser({ field, setFormData, formData }) {
         )
     }
 
-    const data = Object.keys(fieldVals);
+    const data = Object.keys(fieldValuesData);
     return (
         <Box maxHeight={120}>
 
@@ -58,8 +58,8 @@ function FieldBrowser({ field, setFormData, formData }) {
 }
 
 
-export function FileBrowser({ fields, setField }) {
-    const data = [...SAMPLE.fields];
+export function FileBrowser({ fields, setField, fieldData }) {
+
     return (
 
         <MaterialTable
@@ -84,25 +84,51 @@ export function FileBrowser({ fields, setField }) {
                     field: "type",
                 }
             ]}
-            data={data}
+            data={fieldData}
         />
     );
 }
 
 
 export function SelectFields({ setFormData, formData }) {
+    const {dir, sample_file } = formData;
     const [selField, setSelField] = useState("");
+    const [sampleData, setSampleData] = useState({});
+    const params = {
+        dir: dir.A,
+        file: sample_file,
+    };
+    const request = new Request('http://localhost:5000/datadiff/content/h5?' + new URLSearchParams(params),
+        {
+            mode: 'cors',
+        }
+    );
+
+    useEffect( () => {
+        fetch(request)
+        .then( (res) => res.json() )
+        .then( (data) => {
+            console.log('SelectFile::sampleData'); console.log(sampleData);
+            console.log('SelectFile::data'); console.log(data);
+            setSampleData(data);
+        })
+        .catch( (err) => {
+            alert(JSON.stringify(err));
+        })
+    }, [dir.A, sample_file]); 
     
     return (
         <FormGroup row={true}>
             <FileBrowser
                 setField={setSelField}
+                fieldData={sampleData.fields}
             />
             {selField && 
                 <FieldBrowser
                     field={selField}
                     formData={formData}
                     setFormData={setFormData}
+                    fieldValuesData={sampleData.values}
                 />
             }
         </FormGroup>
@@ -112,7 +138,15 @@ export function SelectFields({ setFormData, formData }) {
 
 export function SelectAnalysisParams({ setFormData, formData }) {
     const { analysis_type, visualization_type } = formData;
-    const choices = SAMPLE.choices;
+    // TODO fetch from backend (OTOH it's not essential)
+    const choices = {
+        analysis_type: [
+            'new - base'
+        ],
+        visualization_type: [
+            'histogram'
+        ]
+    };
     return (
         <>
             <FormGroup column="true">
