@@ -12,7 +12,6 @@ import {
 } from "@material-ui/lab"
 import MaterialTable from "material-table";
 import { ChoiceSelector } from "./Base";
-import { SAMPLE } from '../../data'
 
 
 function FieldBrowser({ field, setFormData, formData, fieldValuesData }) {
