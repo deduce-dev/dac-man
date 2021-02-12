@@ -2,6 +2,8 @@ import os
 import shutil
 import math
 import glob
+import zipfile
+#import gzip
 import subprocess
 import pandas as pd
 
@@ -44,15 +46,15 @@ def frontend_format(data):
 
     return formatted_data
 
-def read_csv(file_path):
+def sample_data(file_path, n=100):
     data = pd.read_csv(file_path, na_filter=False)
     data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
 
-    formatted_data = frontend_format(data.head(10))
+    formatted_data = frontend_format(data.head(n))
 
-    return formatted_data
+    return formatted_data, data.shape
 
-def qa_flagging_app_deploy(project_id, dataset, vars_details, results_folder):
+def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folder):
     # Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
     
     output_folder = os.path.join(results_folder, project_id)
@@ -89,9 +91,6 @@ def qa_flagging_app_deploy(project_id, dataset, vars_details, results_folder):
         if details['checkDuplicates']['checked']:
             app_args.append('-d')
 
-        output_file = '%d.csv' % i
-        app_args.extend(['-o', str(os.path.join(output_folder, output_file))])
-
         #print(*app_args)
 
         deduce_backend_path = os.environ.get(
@@ -101,54 +100,98 @@ def qa_flagging_app_deploy(project_id, dataset, vars_details, results_folder):
         r_script_path = os.path.join(deduce_backend_path,
             'dac-man/dacman/ui/server/flagging/r_scripts/qa_n_s.R')
 
-        completedProcess = subprocess.run([
-            "Rscript",
-            r_script_path,
-            "-f", dataset,
-            "-v", var_names[i],
-            *app_args
-        ], capture_output=True)
+        dataset_files = []
+        for f in os.listdir(datasets_dir):
+            if os.path.isfile(os.path.join(datasets_dir, f)):
+                dataset_files.append(f)
+        
+        output_file = '%d.csv' % i
+        app_args.extend(['-o', 'x'])
 
-        print(completedProcess)
+        for dataset_name in dataset_files:
+            # x -> replaced with the new output flagging file
+            dataset_name_no_ext = os.path.splitext(dataset_name)[0]
+            dataset_output_path = str(os.path.join(output_folder, dataset_name_no_ext))
+            if not os.path.exists(dataset_output_path):
+                os.mkdir(dataset_output_path)
+
+            app_args[-1] = str(os.path.join(dataset_output_path, output_file))
+            completedProcess = subprocess.run([
+                "Rscript",
+                r_script_path,
+                "-f", str(os.path.join(datasets_dir, dataset_name)),
+                "-v", var_names[i],
+                *app_args
+            ], capture_output=True)
+
+            print(completedProcess)
 
     return output_folder
 
 def combine_csv_files(csv_folder):
     print("csv_folder", csv_folder)
-    csv_files = glob.glob(os.path.join(csv_folder, "*.csv"))
-    df_list = []
-    print(csv_files)
-    for csv_file in csv_files:
-        df = pd.read_csv(csv_file, na_filter=False)
-        df_list.append(df)
 
-    df_all = pd.concat(df_list, axis=1)
+    dataset_dirs = next(os.walk(csv_folder))[1]
 
-    compression_opts = dict(
-        method='zip',
-        archive_name='flagged_variables.csv'
-    )
+    assert len(dataset_dirs) != 0, "No dataset folders to process"
 
-    output_csv_file = os.path.join(csv_folder, "flagged_variables.csv")
-    output_zip_file = os.path.join(csv_folder, "flagged_variables.csv.gz")
-    #output_zip_file = os.path.join(csv_folder, "flagged_variables.zip")
+    first_dataset_name = None
+    for dataset_dir in dataset_dirs:
+        if first_dataset_name is None:
+            first_dataset_name = dataset_dir
+        dataset_name = dataset_dir
+        csv_files = glob.glob(os.path.join(csv_folder, dataset_name, "*.csv"))
+        df_list = []
+        print("dataset_name:", dataset_name, "csv_files:", csv_files)
+        for csv_file in csv_files:
+            df = pd.read_csv(csv_file, na_filter=False)
+            df_list.append(df)
 
-    df_all.to_csv(
-        output_csv_file,
-        index=False
-    )
+        df_all = pd.concat(df_list, axis=1)
 
-    #df_all.to_csv(
-    #    output_zip_file,
-    #    index=False,
-    #    compression=compression_opts
-    #)
+        #compression_opts = dict(
+        #    method='zip',
+        #    archive_name='flagged_variables.csv'
+        #)
 
-    df_all.to_csv(
-        output_zip_file,
-        index=False,
-        compression='gzip'
-    )
+        output_csv_file = os.path.join(csv_folder, dataset_name + ".csv")
+        #output_zip_file = os.path.join(csv_folder, "flagged_variables.csv.gz")
+
+        #### old
+        #output_zip_file = os.path.join(csv_folder, "flagged_variables.zip")
+
+        df_all.to_csv(
+            output_csv_file,
+            index=False
+        )
+
+        #df_all.to_csv(
+        #    output_zip_file,
+        #    index=False,
+        #    compression=compression_opts
+        #)
+
+        #df_all.to_csv(
+        #    output_zip_file,
+        #    index=False,
+        #    compression='gzip'
+        #)
+
+    csv_unifed_files = glob.glob(os.path.join(csv_folder, "*.csv"))
+
+    output_csv_file = os.path.join(csv_folder, first_dataset_name + '.csv')
+
+    #output_zip_file = os.path.join(csv_folder, first_dataset_name + '.csv.gz')
+    output_zip_file = os.path.join(csv_folder, first_dataset_name + '.zip')
+
+    #with gzip.open(output_zip_file, 'wb') as f_out:
+    #    for file in csv_unifed_files:
+    #        with open(file, 'rb') as f_in:
+    #            f_out.writelines(f_in)
+
+    with zipfile.ZipFile(output_zip_file, 'w') as zf:
+        for file in csv_unifed_files:
+            zf.write(file, os.path.basename(file), compress_type=zipfile.ZIP_DEFLATED)
 
     return output_csv_file, output_zip_file
 

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useReducer } from "react";
 import { Typography, Container, Grid } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Card from '@material-ui/core/Card';
@@ -19,6 +19,8 @@ import { WorkbenchCard } from './WorkbenchCard';
 import axios from 'axios';
 
 import styled from 'styled-components';
+
+import './css/components.scss';
 
 
 const getColor = (props) => {
@@ -50,8 +52,37 @@ const FileUploaderContainer = styled.div`
   transition: border .24s ease-in-out;
 `;
 
-function FileUploader({ dispatch }) {
+const initialState = {
+  files: [],
+  uploaded: []
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'CHOSE_FILES_TO_UPLOAD':
+      return {
+        ...state,
+        files: action.payload,
+        uploaded: Array.from(action.payload, x => false)
+      };
+    case 'UPLOADED_FILE':
+      var new_uploaded = state.uploaded;
+      new_uploaded[action.payload] = true;
+      return {
+        ...state,
+        uploaded: new_uploaded
+      };
+    default:
+      return state;
+  }
+}
+
+
+
+function FileUploader({ parentDispatch }) {
   const classes = useStyles();
+
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
     return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F};
@@ -116,14 +147,40 @@ function FileUploader({ dispatch }) {
     ]
   }
 
-  const uploadFile = (project_id, data) => {
+  const choseFilesToUpload = (files) => {
     return {
-      type: 'UPLOAD_FILE',
+      type: 'CHOSE_FILES_TO_UPLOAD',
+      payload: files
+    };
+  }
+
+  const uploadedFile = (index) => {
+    return {
+      type: 'UPLOADED_FILE',
+      payload: index
+    };
+  }
+
+  const loadSample = (project_id, data) => {
+    return {
+      type: 'LOAD_SAMPLE',
       payload: {
         project_id: project_id,
         data: data
       }
     };
+  }
+
+  const formatBytes = (bytes, decimals = 2) => {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
   /*const onDrop = useCallback(acceptedFiles => {
@@ -140,60 +197,109 @@ function FileUploader({ dispatch }) {
     isDragAccept,
     isDragReject
   } = useDropzone({ 
-    maxFiles:1,
+    maxFiles: 0,
     accept: '.csv',
     onDropAccepted: (files) => {
-      var dataset = files[0]
-      var formData = new FormData();
-      formData.append("upload_dataset", dataset);
-      axios.post('/flagging/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-      })
-      .then((response) => {
-        //console.log(response.data);
-        //var resData = JSON.parse(JSON.stringify(response.data));
-        //var resData = JSON.parse(response.data);
-        var resData = response.data
+      dispatch(choseFilesToUpload(files));
 
-        dataReview = {
-          ...dataReview,
-          ...resData.data,
-          dataset_name: dataset.name
+      console.log("Accepted Files")
+
+      let upload_start = async () => {
+        let project_id_req = await axios.get('/flagging/id');
+
+        let project_id = project_id_req.data.project_id;
+        console.log("project_id");
+        console.log(project_id);
+
+        for (var i = 0; i < files.length; i++) {
+          var dataset = files[i];
+          var formData = new FormData();
+          formData.append("upload_dataset", dataset);
+
+          let req = axios.post('/flagging/upload/' + project_id,
+            formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+
+          dispatch(uploadedFile(i));
+
+          var resData = null;
+          req.then((response) => {
+            //console.log(response.data);
+            //var resData = JSON.parse(JSON.stringify(response.data));
+            //var resData = JSON.parse(response.data);
+            if (resData === null) {
+              resData = response.data;
+              dataReview = {
+                ...dataReview,
+                ...resData.data,
+                dataset_name: dataset.name,
+                dataset_shape: [...resData.data_total_shape]
+              }
+
+              console.log(resData);
+              console.log(dataReview);
+
+              parentDispatch(
+                loadSample(
+                  resData.project_id,
+                  dataReview
+                )
+              );
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
         }
-
-        //console.log(resData);
-        console.log(dataReview)
-        dispatch(uploadFile(resData.project_id, dataReview));
-      })
+      }
+      upload_start()
+      .then(res => console.log(res))
       .catch((error) => {
         console.log(error);
       });
     }
   });
 
-  const acceptedFileItems = acceptedFiles.map(file => (
-    <li key={file.path}>
-      {file.path} - {file.size} bytes
+  const acceptedFileItems = acceptedFiles.map((file, i) => (
+    <li key={file.path} className={classes.uploadFileList}>
+    <Grid container spacing={3}>
+      <Grid item xs={8}>
+        <div>{file.path}</div>
+      </Grid>
+      <Grid item xs={1}>
+        { state.uploaded[i] ? (
+            <div className={classes.uploadedBG}><span>Uploaded</span></div>
+          ) : (
+            <div className={"uploading"}>uploading<span>.</span><span>.</span><span>.</span></div>
+          )
+        }
+      </Grid>
+      <Grid item xs={2}>
+        <div style={{marginLeft: "1em"}}>{formatBytes(file.size)}</div>
+      </Grid>
+    </Grid>
     </li>
   ));
 
   return (
     <WorkbenchCard
       key="card-initial"
-      title="Choose File for flagging"
+      title="Upload Files for Flagging"
     >
       <div className="container">
         <FileUploaderContainer {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
             <input {...getInputProps()} />
-            <p>Drag & drop a file here, or click to select files</p>
-            <em>(Only 1 file can be dropped here)</em>
+            <p>Drag & drop files here, or click to select files</p>
+            <em>(Only .csv files are supported)</em>
         </FileUploaderContainer>
       </div>
       { acceptedFileItems.length > 0 && (
         <aside>
-          <h4>File</h4>
+          <h4>Files</h4>
           <ul>{acceptedFileItems}</ul>
         </aside>
       )}

@@ -46,6 +46,19 @@ const useStyles = makeStyles(theme => ({
   paddedFormControl: {
     padding: theme.spacing(2),
   },
+  uploadFileList: {
+    display: "grid",
+    padding: theme.spacing(1),
+    "& span": {
+      color: "green",
+      "font-weight": "bold",
+      "font-size": "90%",
+    }
+  },
+  uploadedBG: {
+    backgroundColor: "#D3E8D0",
+    "text-align": "center",
+  },
 }));
 
 

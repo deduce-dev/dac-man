@@ -32,6 +32,7 @@ const initialState = {
   dataReview: {
     show: false,
     dataset_name: null,
+    dataset_shape: [],
     columns: [],
     rows: [],
     datasetVars: [],
@@ -49,13 +50,14 @@ const initialState = {
     show: false,
     columns: [],
     rows: [],
+    zip_filename: null,
     downloadClicked: false
   }
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'UPLOAD_FILE':
+    case 'LOAD_SAMPLE':
       return {
         ...state,
         project_id: action.payload.project_id,
@@ -140,7 +142,8 @@ function reducer(state, action) {
           ...state.resultsReview,
           show: true,
           columns: action.payload.response.data.columns,
-          rows: action.payload.response.data.rows
+          rows: action.payload.response.data.rows,
+          zip_filename: action.payload.response.zip_filename
         }
       };
     case 'DOWNLOAD_RESULTS':
@@ -169,22 +172,25 @@ function FlaggingView() {
       responseType: 'blob', // important
     })
     .then((response) => {
-      const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/gzip' }));
+      //const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/gzip' }));
+      const downloadUrl = window.URL.createObjectURL(new Blob([response.data] , { type: 'application/zip' }));
       const link = document.createElement('a');
 
       link.href = downloadUrl;
-      link.setAttribute('download', 'flagged_variables.csv.gz'); //any other extension
+      //link.setAttribute('download', 'flagged_variables.csv.gz'); //any other extension
+      link.setAttribute('download', state.resultsReview.zip_filename); //any other extension
       document.body.appendChild(link);
       link.click();
       link.remove();
 
+      /*
       axios.post('/flagging/clean/' + state.project_id)
       .then((response) => {
         console.log(response.data);
       })
       .catch((error) => {
         console.log(error);
-      });
+      });*/
     })
     .catch((error) => {
       console.log(error);
@@ -198,12 +204,14 @@ function FlaggingView() {
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
             { state.showFileUploader && (
-              <FileUploader dispatch={dispatch} />
+              <FileUploader parentDispatch={dispatch} />
             )}
             { state.dataReview.show && (
               <DataReview
                 index={2}
-                title={'Data Review'}
+                title={'Data Preview'}
+                dataset_name={state.dataReview.dataset_name}
+                dataset_shape={state.dataReview.dataset_shape}
                 rows={state.dataReview.rows}
                 columns={state.dataReview.columns}
                 buttonText={'Next'}
@@ -246,6 +254,8 @@ function FlaggingView() {
               <DataReview
                 index={10}
                 title={'Flagged-Data Review'}
+                dataset_name={state.dataReview.dataset_name}
+                dataset_shape={state.dataReview.dataset_shape}
                 rows={state.resultsReview.rows}
                 columns={state.resultsReview.columns}
                 buttonText={'Download'}
