@@ -15,6 +15,7 @@ import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 
 import { CSVVariableSelector } from './CSVVariableSelector';
 import { VariableFlaggingDetails } from './VariableFlaggingDetails';
+import { ProcessingCue } from './ProcessingCue';
 
 import { useStyles } from '../common/styles';
 
@@ -29,6 +30,8 @@ const initialState = {
   project_id: null,
   showFileUploader: true,
   showCSVVariableSelector: false,
+  showProcessingCue: false,
+  files_to_upload: [],
   dataReview: {
     show: false,
     dataset_name: null,
@@ -57,6 +60,11 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'CHOSE_FILES_TO_UPLOAD':
+      return {
+        ...state,
+        files_to_upload: action.payload
+      };
     case 'LOAD_SAMPLE':
       return {
         ...state,
@@ -111,6 +119,8 @@ function reducer(state, action) {
     case 'SENT_REQUEST':
       return {
         ...state,
+        showProcessingCue: true,
+        showFileUploader: false,
         showCSVVariableSelector: false,
         dataReview: {
           ...state.dataReview,
@@ -128,6 +138,7 @@ function reducer(state, action) {
     case 'RUN_FLAGGING':
       return {
         ...state,
+        showProcessingCue: false,
         showFileUploader: false,
         showCSVVariableSelector: false,
         dataReview: {
@@ -150,6 +161,7 @@ function reducer(state, action) {
       return {
         ...state,
         showFileUploader: true,
+        files_to_upload: [],
         resultsReview: {
           ...state.resultsReview,
           show: false,
@@ -178,7 +190,11 @@ function FlaggingView() {
 
       link.href = downloadUrl;
       //link.setAttribute('download', 'flagged_variables.csv.gz'); //any other extension
-      link.setAttribute('download', state.resultsReview.zip_filename); //any other extension
+      if (state.resultsReview.zip_filename != null) {
+        link.setAttribute('download', state.resultsReview.zip_filename); //any other extension
+      } else {
+        link.setAttribute('download', 'flagged_variables.zip'); //any other extension
+      }
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -203,8 +219,15 @@ function FlaggingView() {
         <div className={classes.toolbar} />
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
+            { state.showProcessingCue && (
+              <ProcessingCue
+                title="QA/QC - Flagging"
+                file_list={state.files_to_upload} />
+            )}
             { state.showFileUploader && (
-              <FileUploader parentDispatch={dispatch} />
+              <FileUploader
+                parentDispatch={dispatch}
+                file_list={state.files_to_upload} />
             )}
             { state.dataReview.show && (
               <DataReview

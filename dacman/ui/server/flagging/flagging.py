@@ -54,6 +54,10 @@ def sample_data(file_path, n=100):
 
     return formatted_data, data.shape
 
+def check_if_similar_vars(datasets_dir):
+    csv_files = glob.glob(os.path.join(datasets_dir, "*.csv"))
+
+
 def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folder):
     # Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
     

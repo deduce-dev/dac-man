@@ -52,9 +52,8 @@ const FileUploaderContainer = styled.div`
   transition: border .24s ease-in-out;
 `;
 
-const initialState = {
-  files: [],
-  uploaded: []
+const init = (file_list) => {
+  return { uploaded: Array.from(file_list, x => false) }
 };
 
 function reducer(state, action) {
@@ -79,10 +78,10 @@ function reducer(state, action) {
 
 
 
-function FileUploader({ parentDispatch }) {
+function FileUploader({ parentDispatch, file_list }) {
   const classes = useStyles();
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, file_list, init);
 
   function createData(id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F) {
     return {id, datetime, WindDir, Windspeed_ms, TEMP_F, DEWP_F};
@@ -200,7 +199,7 @@ function FileUploader({ parentDispatch }) {
     maxFiles: 0,
     accept: '.csv',
     onDropAccepted: (files) => {
-      dispatch(choseFilesToUpload(files));
+      parentDispatch(choseFilesToUpload(files));
 
       console.log("Accepted Files")
 
@@ -264,7 +263,7 @@ function FileUploader({ parentDispatch }) {
     }
   });
 
-  const acceptedFileItems = acceptedFiles.map((file, i) => (
+  const styled_file_list = file_list.map((file, i) => (
     <li key={file.path} className={classes.uploadFileList}>
     <Grid container spacing={3}>
       <Grid item xs={8}>
@@ -297,10 +296,10 @@ function FileUploader({ parentDispatch }) {
             <em>(Only .csv files are supported)</em>
         </FileUploaderContainer>
       </div>
-      { acceptedFileItems.length > 0 && (
+      { styled_file_list.length > 0 && (
         <aside>
           <h4>Files</h4>
-          <ul>{acceptedFileItems}</ul>
+          <ul>{styled_file_list}</ul>
         </aside>
       )}
     </WorkbenchCard>
