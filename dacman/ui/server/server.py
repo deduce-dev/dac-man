@@ -105,8 +105,8 @@ def generate_project_id():
     project_id = str(uuid.uuid4())
     return json.jsonify({ 'project_id': project_id })
 
-@app.route('/flagging/upload/<project_id>', methods=['POST'])
-def upload_file(project_id):
+@app.route('/flagging/upload/<project_id>/<file_index>', methods=['POST'])
+def upload_file(project_id, file_index):
     # check if the post request has the file part
     if 'upload_dataset' not in request.files:
         flash('No file part')
@@ -131,6 +131,7 @@ def upload_file(project_id):
         data, data_total_shape = sample_data(file_path)
         return json.jsonify(
             {
+                'file_index': file_index,
                 'project_id': project_id,
                 'data_total_shape': list(data_total_shape),
                 'data': data
@@ -147,6 +148,7 @@ def run_flagging(project_id):
     )
 
     # TODO - check if all variables exist in all uploaded files
+
 
     processing_folder = qa_flagging_app_deploy(
         project_id,

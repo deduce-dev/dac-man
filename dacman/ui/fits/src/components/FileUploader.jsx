@@ -215,7 +215,7 @@ function FileUploader({ parentDispatch, file_list }) {
           var formData = new FormData();
           formData.append("upload_dataset", dataset);
 
-          let req = axios.post('/flagging/upload/' + project_id,
+          let req = axios.post('/flagging/upload/' + project_id + '/' + i,
             formData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
@@ -223,15 +223,16 @@ function FileUploader({ parentDispatch, file_list }) {
             }
           );
 
-          dispatch(uploadedFile(i));
-
           var resData = null;
           req.then((response) => {
+            dispatch(uploadedFile(response.data.file_index));
             //console.log(response.data);
             //var resData = JSON.parse(JSON.stringify(response.data));
             //var resData = JSON.parse(response.data);
+
             if (resData === null) {
               resData = response.data;
+
               dataReview = {
                 ...dataReview,
                 ...resData.data,

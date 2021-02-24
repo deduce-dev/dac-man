@@ -44,3 +44,6 @@ diff_*.yml
 
 # mkdocs
 site/
+
+# npm
+.eslintcache
