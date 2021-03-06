@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from "react";
 
+import { useParams, useHistory, Route } from "react-router-dom";
 import { useForm } from "react-hooks-helper";
+import { VegaLite } from 'react-vega';
 
 import { MainLayout } from './Layout';
-import { WorkbenchContainer } from "./Workbench";
+import { WorkbenchContainer, WorkbenchCard } from "./Workbench";
 import { Sidebar } from './Sidebar';
 import { Builder } from './Builder';
+import { Loading, SubmittedComparison, } from "./Display";
+import { useBackendData, useBackendDispatch } from "./api";
+import { FileUploaderContainer } from "./FileUploader"
+import { Typography } from "@material-ui/core";
+import { DatasetUpload } from "./selectors/Dataset";
 
 
 const BUILD_DATA = {
-    dir: {
-        A: '',
-        B: '',
-    },
+    base: '',
+    new: '',
     sample_file: '',
     fields: [],
     analysis_type: '',
     visualization_type: '',
-    processing_status: null,
+    uploaded_datasets: [],
 };
 
-const COMPARISONS = [];
 
 
 export function DatadiffView() {
@@ -37,58 +41,53 @@ export function DatadiffView() {
     ),
   }
 
-  useEffect( () => {
-      fetch(requests.getComparisons)
-      .then( (res) => res.json() )
-      .then( (data) => {
-          setComparisons(data);
-      })
-      .catch( (err) => {
-          alert(JSON.stringify(err));
-      })
-  }, [completed]); 
-  
-  function runComparison() {
-    const pendingComparison = {
-      ...buildData,
-      processing_status: pending
-    };
-    setPending([pendingComparison]);
-    const req = new Request('http://localhost:5000/datadiff/comparison',
-      {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...buildData,
-          paths: [
-            buildData.dir.A,
-            buildData.dir.B
-          ],
-        })
-      }
-    );
 
-    fetch(req)
-    .then( (res) => res.json() )
-    .then( (data) => {
-        setPending([]);
-        setCompleted(completed + 1);
-        setBuildData({});
-    })
-    .catch( (err) => {
-        alert(JSON.stringify(err));
-    })
-  }
+function RunComparison(buildData) {
+  const {data, status} = useBackendDispatch(
+    '/comparisons',
+    buildData
+  );
+  return (
+    <>
+      {status.OK ? <SubmittedComparison {...data}/> : <Loading/>}
+    </>
+  );
+}
+
+export function BuildComparisonView() {
+  const [buildData, setBuildData] = useForm(BUILD_DATA);
+  const history = useHistory();
 
   return (
     <MainLayout>
       <WorkbenchContainer>
-        <Builder formData={buildData} setFormData={setBuildData} dispatch={runComparison}/>
+        <DatasetsUpload formData={buildData} setFormData={setBuildData}/>
+        <Builder formData={buildData} setFormData={setBuildData} dispatch={() => history.push('/datadiff/build/run')}/>
+        <Route path='/datadiff/build/run'>
+          <RunComparison {...buildData}/>
+        </Route>
       </WorkbenchContainer>
-      <Sidebar comparisons={comparisons} buildData={buildData} />
+      <Sidebar buildData={buildData}/>
+    </MainLayout>
+  );
+}
+
+
+export function ShowResultsView() {
+  const { cid } = useParams();
+  const {status, data: specData} = useBackendData(`/comparisons/${cid}/results`);
+
+  return (
+    <MainLayout>
+      <WorkbenchContainer>
+        <WorkbenchCard>
+          <Typography variant="h6" display="inline">
+            Comparison <kbd>{cid}</kbd>
+          </Typography>
+          {status.OK ? <VegaLite spec={specData}/> : <Loading/>}
+        </WorkbenchCard>
+      </WorkbenchContainer>
+      <Sidebar buildData={{}}/>
     </MainLayout>
   );
 }

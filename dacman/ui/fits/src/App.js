@@ -8,7 +8,9 @@ import {
 import './App.css';
 
 import { FlaggingView } from './components/FlaggingView';
-import { DatadiffView } from "./components/DatadiffView";
+import { BuildComparisonView, ShowResultsView } from "./components/DatadiffView";
+import { Sidebar } from './components/Sidebar';
+import { MainLayout } from './components/Layout'
 
 
 // WHY this intermediate component seems to be necessary to avoid the "invalid hook call" error
@@ -21,7 +23,19 @@ function ShowFlagWorkbench() {
 
 function ShowDatadiffWorkbench() {
   return (
-    <DatadiffView />
+    <>
+      <Route exact path="/datadiff">
+        <MainLayout>
+          <Sidebar/>
+        </MainLayout>
+      </Route>
+      <Route path="/datadiff/build">
+        <BuildComparisonView/>
+      </Route>
+      <Route path="/datadiff/comparisons/:cid/results">
+        <ShowResultsView/>
+      </Route>
+    </>
   );
 }
 
@@ -32,7 +46,6 @@ class App extends React.Component {
       <Router>
         <div className="App">
           <Switch>
-            {/* <Route Route exact path="/" render={(routeProps) => ShowWorkbench()} /> */}
             <Route path="/flag" render={(routeProps) => ShowFlagWorkbench()} />
             <Route path="/datadiff" render={(routeProps) => ShowDatadiffWorkbench()} />
           </Switch>

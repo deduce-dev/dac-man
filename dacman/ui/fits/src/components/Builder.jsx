@@ -11,7 +11,14 @@ import { WorkbenchCard } from "./Workbench";
 import { 
     SelectDir,
     SelectSampleFile
- } from "./selectors/File";
+} from "./selectors/File";
+
+import {
+    SelectDataset,
+    SelectDatasetFile,
+    SelectH5Object
+} from "./selectors/Dataset";
+
 import {
     SelectFields,
     SelectAnalysisParams
@@ -21,21 +28,21 @@ import {
 const STEPS = [
     {
         action: "select",
-        resource: "dir",
-        title: "Select directories to compare",
-        component: SelectDir
+        resource: "dataset",
+        title: "Select dataset to compare",
+        component: SelectDataset
     },
     {
         action: "select",
         resource: "sample_file",
         title: "Select sample file",
-        component: SelectSampleFile
+        component: SelectDatasetFile
     },
     {
         action: "select",
         resource: "fields",
         title: "Select HDF5 variables to compare",
-        component: SelectFields
+        component: SelectH5Object
     },
     {
         action: "select",

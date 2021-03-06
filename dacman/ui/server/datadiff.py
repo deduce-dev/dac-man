@@ -2,6 +2,7 @@
 Analyze differences between output files of ED2 models.
 """
 
+import datetime as dt
 from dataclasses import dataclass
 import logging
 import os
@@ -20,22 +21,27 @@ import tqdm
 
 from flask import Flask, flash, request, redirect
 from flask import render_template, json, send_from_directory, send_file, url_for
-from flask_cors import CORS
 
 from dacman.compare import base
 
 
 app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
-CORS(app, supports_credentials=True)
+
 app.config['JSON_SORT_KEYS'] = False
 
 _logger = app.logger
 
 
-class Options(BaseModel):
-    sample_fields: t.List[str] = []
-    max_n_files: int = -1
+class ExtendedEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, BaseModel):
+            return obj.dict()
+        if isinstance(obj, os.PathLike):
+            return os.fspath(obj)
+        return super().default(obj)
 
+
+app.json_encoder = ExtendedEncoder
 
 app.config['DATASETS_DIR'] = Path('/tmp/deduce/datasets')
 app.config['COMPARISONS_DIR'] = Path('/tmp/deduce/comparisons')
@@ -155,88 +161,292 @@ def get_options():
         data = json.load()
     return data
 
+class BaseResource(BaseModel):
+    resource_key: str = None
+    class Config:
+        json_encoders = {
+            dt.datetime: dt.datetime.isoformat,
+        }
 
-@app.route('/datadiff/content/<resource>')
-def api_get_sample_info(resource):
-    data = request.args
-    if resource == 'dir':
-        datasets = [str(p) for p in app.config['DATASETS_DIR'].glob('*') if p.is_dir()]
-        content = datasets
-    if resource == 'file':
-        dir_ = data.get('dir')
-        limit = int(data.get('limit', 100))
-        all_paths = [str(p.name) for p in sorted(Path(dir_).glob('*.h5'))]
-        content = all_paths
-        try:
-            content = all_paths[:limit]
-        except IndexError:
-            pass
-        print(f'content={content}')
-    if resource == 'h5':
-        dir_ = data.get('dir')
-        file_name = data.get('file')
-        # path = Path("/home/ludo/lbl/nosync/deduce/tlpowell/ED2/test68") / "BCI_Xu-E-1300-01-00-000000-g01.h5"
-        sample_file_path = Path(dir_) / file_name
-        app.logger.info(f'sample_file_path={sample_file_path}')
-        content = get_sample_info(sample_file_path)
-    resp = json.jsonify(content)
-    return resp
+    @classmethod
+    def all(cls, *args, **kwargs):
+        raise NotImplementedError
 
-    # sample_info = get_sample_info(path)
+    @classmethod
+    def get(cls, resource_key, *args, **kwargs):
+        by_key = {obj.resource_key: obj for obj in cls.all(*args, **kwargs)}
+        return by_key[resource_key]
+
+class Dataset(BaseResource):
+    label: str = None
+    created_at: dt.datetime = None
+    path: Path = None
+
+    base_dir: t.ClassVar[Path] = None
+    metadata_file_name: t.ClassVar[str] = 'dataset.json'
+
+    @classmethod
+    def create(cls, key: t.Optional[str] = None, **kwargs):
+        # TODO make extension stripping more robust if other formats are needed
+        key = key.replace('.tar.gz', '') if key else str(uuid.uuid4())
+
+        new = cls(
+            resource_key=key,
+            path=cls.base_dir / key,
+            **kwargs,
+        )
+        new.path.mkdir(parents=True, exist_ok=False)
+        new._write_metadata()
+
+        return new
+
+    def _write_metadata(self, file_name=None):
+        file_name = file_name or type(self).metadata_file_name
+        fields_inferred_from_path = {'resource_key', 'path', 'created_at'}
+        (self.path / file_name).write_text(
+            self.json(exclude=fields_inferred_from_path)
+        )
+
+    @classmethod
+    def _from_metadata_file(cls, path: Path):
+        obj = cls.parse_file(path)
+        obj.path = path.parent.absolute()
+        obj.resource_key = path.parent.name
+        obj.created_at = dt.datetime.fromtimestamp(path.stat().st_ctime, dt.timezone.utc)
+        return obj
+
+    @classmethod
+    def all(cls):
+        return [
+            cls._from_metadata_file(md_file_path)
+            for md_file_path in sorted(
+                cls.base_dir.rglob(cls.metadata_file_name)
+            )
+        ]
+
+Dataset.base_dir = app.config['DATASETS_DIR']
+
+class DatasetFile(BaseResource):
+    path: Path = None
+    extension: t.ClassVar[str] = 'h5'
+
+    @classmethod
+    def from_path(cls, path: Path):
+        return cls(
+            path=path,
+            resource_key=path.name
+        )
+
+    @classmethod
+    def all(cls, dataset: Dataset) -> t.List['DatasetFile']:
+        paths = sorted(
+            dataset.path.glob(f'*.{cls.extension}')
+        )
+        return (
+            cls.from_path(path)
+            for path in paths
+        )
+
+    @property
+    def fields(self) -> t.List[str]:
+        with h5py.File(self.path, 'r') as f:
+            return get_h5_fields_metadata(f)
+
+    @property
+    def values(self) -> t.Mapping[t.Union[str, CompositeFieldKey], float]:
+        with h5py.File(self.path, 'r') as f:
+            return get_h5_values_data(f)
 
 
-@app.route('/datadiff/comparison', methods=['POST'])
+class H5Object(BaseResource):
+    h5_type: str = None
+    ndim: int = None
+    shape: tuple = None
+    dtype: str = None
+
+    @classmethod
+    def all(cls, file: DatasetFile):
+        with h5py.File(file.path, 'r') as f:
+            keys = f.keys()
+            for key in f.keys():
+                obj = f[key]
+                yield cls(
+                    resource_key=key,
+                    h5_type=obj.__class__.__name__,
+                    ndim=obj.ndim,
+                    shape=obj.shape,
+                    dtype=obj.dtype.str
+                )
+
+    def get_values(self, file: DatasetFile) -> t.Mapping[t.Union[str, CompositeFieldKey], float]:
+        with h5py.File(file.path, 'r') as f:
+            composite_keys = extract_keys(f, field=self.resource_key)
+            return get_h5_values_data(f, keys=composite_keys)
+
+class Comparison(BaseResource):
+    path: Path = None
+
+    base: t.Union[str, Dataset] = None
+    new: t.Union[str, Dataset] = None
+
+    options: t.Mapping[str, t.Any] = None
+    label: str = None
+
+    created_at: dt.datetime = None
+    submitted_at: dt.datetime = None
+    completed_at: dt.datetime = None
+    status: str = None
+    outcome: str = None
+
+    base_dir: t.ClassVar[Path] = None
+    metadata_file_name: t.ClassVar[str] = 'comparison.json'
+
+    @classmethod
+    def create(cls, **kwargs):
+        key =str(uuid.uuid4()) 
+
+        new = cls(
+            resource_key=key,
+            path=cls.base_dir / key,
+            created_at=dt.datetime.utcnow(),
+            **kwargs,
+        )
+        new.path.mkdir(parents=True, exist_ok=False)
+        new._write_metadata()
+
+        return new
+
+    def _write_metadata(self, file_name=None):
+        file_name = file_name or type(self).metadata_file_name
+        fields_inferred_from_path = {'resource_key', 'path'}
+        (self.path / file_name).write_text(
+            self.json(exclude=fields_inferred_from_path)
+        )
+
+    def save(self, **kwargs):
+        self._write_metadata(**kwargs)
+
+    @classmethod
+    def _from_metadata_file(cls, path: Path):
+        obj = cls.parse_file(path)
+        obj.path = path.parent.absolute()
+        obj.resource_key = path.parent.name
+
+        return obj
+
+    @classmethod
+    def all(cls):
+        return [
+            cls._from_metadata_file(md_file_path)
+            for md_file_path in sorted(
+                cls.base_dir.rglob(cls.metadata_file_name)
+            )
+        ]
+
+Comparison.base_dir = app.config['COMPARISONS_DIR']
+
+
+@app.route('/datadiff/contents/datasets')
+def get_datasets():
+    datasets = list(Dataset.all())
+
+    return json.jsonify(datasets)
+
+
+@app.route('/datadiff/contents/datasets/<key>')
+def get_dataset(key):
+    dataset = Dataset.get(key)
+    return json.jsonify(dataset)
+
+
+@app.route('/datadiff/contents/datasets/<key>/files')
+def get_dataset_files(key, limit=50):
+    dataset = Dataset.get(key)
+    files = list(DatasetFile.all(dataset))[:limit]
+    return json.jsonify(files)
+
+
+@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5')
+def get_dataset_file_h5_objects(dataset_key, file_key):
+    dataset = Dataset.get(dataset_key)
+    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
+    h5_content = list(H5Object.all(file=file))
+    return json.jsonify(h5_content)
+
+
+@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5/<h5_key>')
+def get_dataset_file_h5_object(dataset_key, file_key, h5_key):
+    dataset = Dataset.get(dataset_key)
+    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
+    h5_obj = H5Object.get(resource_key=h5_key, file=file)
+    return json.jsonify(h5_obj)
+
+
+@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5/<h5_key>/values')
+def get_dataset_file_h5_object_values(dataset_key, file_key, h5_key):
+    dataset = Dataset.get(dataset_key)
+    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
+    h5_obj = H5Object.get(resource_key=h5_key, file=file)
+    obj_content = h5_obj.get_values(file)
+    return json.jsonify(obj_content)
+
+
+@app.route('/datadiff/comparisons', methods=['POST'])
 def api_run_comparison():
-    comparison_id = str(uuid.uuid4())
-    output_dir = app.config['COMPARISONS_DIR'] / comparison_id
-    print(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    print(request)
+    app.logger.info(f'Received request: {request}')
     options = request.get_json()
-    print(options)
-    path_v1, path_v2 = [Path(p) for p in options['paths']]
-    resp_data = dict(
-        outcome=None,
-        comparison_id=None,
-    ) 
+    app.logger.info(f'Request options: {options}')
+
+    comparison = Comparison.create(
+       options=options
+    )
+    comparison.base = Dataset.get(options['base'])
+    comparison.new = Dataset.get(options['new'])
+
+    app.logger.info(f'Created new comparison: {comparison}')
+
     try:
-        comparator = ModelOutputComparator(options, output_dir=output_dir)
-        comparator.compare(path_v1, path_v2)
+        comparison.submitted_at = dt.datetime.utcnow()
+        comparison.status = 'started'
+        comparator = ModelOutputComparator(
+            options,
+            output_dir=comparison.path
+        )
+        comparator.compare(
+            comparison.base.path,
+            comparison.new.path
+        )
     except Exception as e:
         app.logger.critical('Could not run the comparison')
         app.logger.exception(e)
-        resp_data.update(outcome='error')
+        comparison.outcome = 'error'
     else:
-        resp_data.update(
-            outcome='success',
-            comparison_id=comparison_id
-        )
-        # return send_from_directory(output_dir, 'chart.html')
-    resp = json.jsonify(resp_data)
-    return resp
+        app.logger.info(f'Comparison {comparison.resource_key} completed successfully')
+        comparison.outcome = 'success'
+    finally:
+        comparison.status = 'completed'
+        comparison.completed_at = dt.datetime.utcnow()
+        comparison.save()
+
+    return json.jsonify(comparison)
 
 
-@app.route('/datadiff/comparison/', methods=['GET'])
+@app.route('/datadiff/comparisons', methods=['GET'])
 def get_comparisons():
-    cmp_dir = app.config['COMPARISONS_DIR']
-    ids = [p.name for p in cmp_dir.glob('*')]
-    data = [
-        {
-            'comparison_id': id_,
-            'results_url': url_for('get_comparison', comparison_id=id_),
-            # TODO save and add other comparison metadata
-        }
-        for id_ in ids
-    ]
-    resp = json.jsonify(data)
-    return resp
+    comparisons = list(Comparison.all())
+    return json.jsonify(comparisons)
 
 
-@app.route('/datadiff/comparison/<comparison_id>', methods=['GET'])
-def get_comparison(comparison_id):
-    cmp_dir = app.config['COMPARISONS_DIR'] / comparison_id
-    resp = send_file(cmp_dir / 'chart.html')
-    return resp
+@app.route('/datadiff/comparisons/<key>', methods=['GET'])
+def get_comparison(key):
+    return json.jsonify(Comparison.get(key))
+
+
+@app.route('/datadiff/comparisons/<key>/results', methods=['GET'])
+def get_comparison_results(key):
+    comparison = Comparison.get(key)
+    chart_path = comparison.path / 'chart.json'
+    return chart_path.read_text()
 
 
 def untar(src_path: Path, dst_path: Path):
@@ -264,19 +474,22 @@ def write_stream(stream, dst_path: Path, chunksize=16384):
         return read_total
 
 
+@app.route('/datadiff/contents/datasets', methods=['POST'])
 @app.route('/datadiff/upload', methods=['POST'])
 def process_upload():
     tmp_path = Path('/tmp/uploaded_file')
 
-    dataset_id = uuid.uuid4()
-    base_dir = app.config['DATASETS_DIR']
-    base_dir.mkdir(parents=True, exist_ok=True)
+    app.logger.info("request:")
+    app.logger.info(request.headers)
 
-    final_dir = base_dir / str(dataset_id)
+    key = request.headers.get('X-File-Name', None)
+    dataset = Dataset.create(key=key)
+    final_dir = dataset.path
+
     try:
         app.logger.info(f'Starting to save uploaded stream to {tmp_path}')
         write_stream(request.stream, tmp_path)
-        app.logger.info(f'size=({tmp_path.stat().st_size}')
+        app.logger.info(f'size={tmp_path.stat().st_size}')
         app.logger.info(f'Trying to untar the uploaded file into {final_dir}')
         untar(tmp_path, final_dir)
         app.logger.info(f'Removing temporary file')
@@ -285,8 +498,8 @@ def process_upload():
         app.logger.error('Operation failed')
         app.logger.exception(e)
     else:
-        app.logger.info(f'Operation complete')
-        return 'OK'
+        app.logger.info(f'Operation complete. Dataset: {dataset.resource_key}')
+        return json.jsonify(dataset)
 
 
 class ModelOutputFileData:
@@ -528,10 +741,12 @@ class ModelOutputComparator(base.Comparator):
         hists = self.get_hist_chart(data, selection).properties(**self.chart_properties)
         return (lines & hists)
 
-    def save(self, chart: alt.Chart, file_name='chart.html') -> Path:
-        path = self.output_dir / file_name
-        chart.save(str(path))
-        return path
+    def save(self, chart: alt.Chart, file_name='chart', formats=None) -> Path:
+        formats = formats or ['json', 'html']
+        for fmt in formats:
+            ext = f'.{fmt}'
+            path = (self.output_dir / file_name).with_suffix(ext)
+            chart.save(str(path))
 
 
 def main():
