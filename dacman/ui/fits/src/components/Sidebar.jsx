@@ -41,8 +41,8 @@ export function Sidebar({ buildData, ...other }) {
                   </div>
               </Paper>
           </Grid>
-        )
-    };
+      )
+  };
   return (
     <Drawer
       className={classes.drawer}
@@ -77,7 +77,7 @@ function SidebarCard({ buildData }) {
         <Paper elevation={5} className={classes.paper}>
           <div>
             <Typography variant="h6">
-              Comparison parameters:
+              Comparison build parameters
             </Typography>
             <PrettyPrinter item={buildData} />
           </div>

@@ -40,8 +40,12 @@ export function ChoiceSelector({ value, setValue, resource, choices, ...props })
                 name={resource}
             >
                 {
-                    choices.map( (c) => {
-                        return <MenuItem value={c}>{c}</MenuItem>
+                    choices.map( (c, i) => {
+                        return (
+                            <MenuItem key={i} value={c}>
+                                {c}
+                            </MenuItem>
+                        )
                     })
                 }
             </Select>
