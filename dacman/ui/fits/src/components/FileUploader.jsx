@@ -202,5 +202,6 @@ function FileUploader({ dispatch }) {
 }
 
 export {
-  FileUploader
+  FileUploader,
+  FileUploaderContainer
 }

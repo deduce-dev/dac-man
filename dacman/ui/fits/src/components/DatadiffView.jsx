@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useHistory, Route } from "react-router-dom";
 import { useForm } from "react-hooks-helper";
 import { VegaLite } from 'react-vega';
+import { useDropzone } from "react-dropzone";
 
 import { MainLayout } from './Layout';
 import { WorkbenchContainer, WorkbenchCard } from "./Workbench";
@@ -26,20 +27,53 @@ const BUILD_DATA = {
 };
 
 
+function DatasetsUpload({ formData, setFormData }) {
+  const [beingUploaded, setBeingUploaded] = useState([]);
 
-export function DatadiffView() {
-  const [buildData, setBuildData] = useForm(BUILD_DATA);
-  const [comparisons, setComparisons] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [completed, setCompleted] = useState(0);
+  const {
+    acceptedFiles,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject
+  } = useDropzone({ 
+    maxFiles:1,
+    accept: '.tar.gz',
+    onDropAccepted: (files) => {
+      setBeingUploaded([...beingUploaded, ...files]);
+    }
+  });
+  const markSuccessfulUpload = (resKey) => {
+    const {uploaded_datasets: uploaded} = formData;
+    setFormData({target: {name: "uploaded_datasets", value: [...uploaded, resKey]}});
+  };
 
-  const requests = {
-    getComparisons: new Request('http://localhost:5000/datadiff/comparison',
-      {
-          mode: 'cors',
-      }
-    ),
-  }
+  return (
+    <WorkbenchCard
+      key="card-initial"
+      title="Choose dataset file (tar.gz archive) to upload"
+    >
+      <div className="container">
+        <FileUploaderContainer {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
+            <input {...getInputProps()} />
+            <Typography>
+              Drag and drop a file here, or click to select file
+              <br/><em>(Only 1 file can be selected at a time)</em>
+            </Typography>
+        </FileUploaderContainer>
+      </div>
+        {beingUploaded.map(
+          (file, idx) => {
+            console.log(file);
+            console.log(idx);
+            console.log(beingUploaded);
+            return (<DatasetUpload key={idx} file={file} onSuccess={markSuccessfulUpload}/>);
+          }
+        )}
+    </WorkbenchCard>
+  )
+}
 
 
 function RunComparison(buildData) {
