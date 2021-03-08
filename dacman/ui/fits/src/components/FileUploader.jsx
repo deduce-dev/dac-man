@@ -308,5 +308,6 @@ function FileUploader({ parentDispatch, file_list }) {
 }
 
 export {
-  FileUploader
+  FileUploader,
+  FileUploaderContainer
 }

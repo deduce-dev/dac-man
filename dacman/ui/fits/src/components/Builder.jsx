@@ -11,44 +11,53 @@ import { WorkbenchCard } from "./Workbench";
 import { 
     SelectDir,
     SelectSampleFile
- } from "./selectors/File";
+} from "./selectors/File";
+
+import {
+    SelectDataset,
+    SelectDatasetFile,
+    SelectH5Object
+} from "./selectors/Dataset";
+
 import {
     SelectFields,
     SelectAnalysisParams
 } from "./selectors/HDF5";
 
-import { SAMPLE } from "../data";
 
 const STEPS = [
     {
         action: "select",
-        resource: "dir",
-        title: "Select directories to compare",
-        component: SelectDir
+        resource: "dataset",
+        title: "Select dataset to compare",
+        component: SelectDataset
     },
     {
         action: "select",
         resource: "sample_file",
         title: "Select sample file",
-        component: SelectSampleFile
+        component: SelectDatasetFile
     },
     {
         action: "select",
         resource: "fields",
         title: "Select HDF5 variables to compare",
-        component: SelectFields
+        component: SelectH5Object
     },
     {
         action: "select",
         resource: "analysis_params",
         title: "Set analysis parameters",
         component: SelectAnalysisParams
-    }
+    },
 ];
 
 
-export function Builder ({ formData, setFormData }) {
+export function Builder ({ formData, setFormData, dispatch }) {
     const { index, step, navigation } = useStep({ initialStep: 0, steps: STEPS });
+    const indexLast = STEPS.length - 1;
+    const isBuilding = index < indexLast;
+    console.log(`isBuilding=${isBuilding} (index=${index}, indexLast=${indexLast})`);
     const { previous, next } = navigation;
     const stepProps = { formData, setFormData };
     const Selector = PrettyPrinter;
@@ -71,14 +80,14 @@ export function Builder ({ formData, setFormData }) {
                 color="primary"
                 onClick={previous}
             >
-                Prev
+                {isBuilding ? "Prev" : "Back to Editing"}
             </Button>
             <Button
                 variant="contained"
                 color="primary"
-                onClick={next}
+                onClick={isBuilding ? next: dispatch}
             >
-                Next
+                {isBuilding ? "Next" : "Run Comparison"}
             </Button>
         </>
     )
