@@ -1,0 +1,11 @@
+# backend dependencies
+flask
+
+# common to both flagging and datadiff
+pandas
+
+# specific to datadiff
+h5py
+pydantic
+altair
+tqdm
