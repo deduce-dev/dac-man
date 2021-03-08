@@ -3,48 +3,26 @@ Analyze differences between output files of ED2 models.
 """
 
 import datetime as dt
-from dataclasses import dataclass
 import logging
+import json
 import os
 import uuid
 from pathlib import Path
 import re
-import tarfile
 import typing as t
 
-from pydantic  import BaseModel
+from pydantic import BaseModel
 import numpy as np
 import pandas as pd
 import h5py
 import altair as alt
 import tqdm
 
-from flask import Flask, flash, request, redirect
-from flask import render_template, json, send_from_directory, send_file, url_for
 
 from dacman.compare import base
 
 
-app = Flask(__name__, static_folder='../fits/build/static', template_folder='../fits/build')
-
-app.config['JSON_SORT_KEYS'] = False
-
-_logger = app.logger
-
-
-class ExtendedEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, BaseModel):
-            return obj.dict()
-        if isinstance(obj, os.PathLike):
-            return os.fspath(obj)
-        return super().default(obj)
-
-
-app.json_encoder = ExtendedEncoder
-
-app.config['DATASETS_DIR'] = Path('/tmp/deduce/datasets')
-app.config['COMPARISONS_DIR'] = Path('/tmp/deduce/comparisons')
+_logger = logging.getLogger(__name__)
 
 
 class CompositeFieldKey:
@@ -158,8 +136,9 @@ def get_sample_info(path: Path):
 def get_options():
     import json
     with Path('options.json').open() as f:
-        data = json.load()
+        data = json.load(f)
     return data
+
 
 class BaseResource(BaseModel):
     resource_key: str = None
@@ -224,7 +203,6 @@ class Dataset(BaseResource):
             )
         ]
 
-Dataset.base_dir = app.config['DATASETS_DIR']
 
 class DatasetFile(BaseResource):
     path: Path = None
@@ -342,164 +320,6 @@ class Comparison(BaseResource):
                 cls.base_dir.rglob(cls.metadata_file_name)
             )
         ]
-
-Comparison.base_dir = app.config['COMPARISONS_DIR']
-
-
-@app.route('/datadiff/contents/datasets')
-def get_datasets():
-    datasets = list(Dataset.all())
-
-    return json.jsonify(datasets)
-
-
-@app.route('/datadiff/contents/datasets/<key>')
-def get_dataset(key):
-    dataset = Dataset.get(key)
-    return json.jsonify(dataset)
-
-
-@app.route('/datadiff/contents/datasets/<key>/files')
-def get_dataset_files(key, limit=50):
-    dataset = Dataset.get(key)
-    files = list(DatasetFile.all(dataset))[:limit]
-    return json.jsonify(files)
-
-
-@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5')
-def get_dataset_file_h5_objects(dataset_key, file_key):
-    dataset = Dataset.get(dataset_key)
-    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
-    h5_content = list(H5Object.all(file=file))
-    return json.jsonify(h5_content)
-
-
-@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5/<h5_key>')
-def get_dataset_file_h5_object(dataset_key, file_key, h5_key):
-    dataset = Dataset.get(dataset_key)
-    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
-    h5_obj = H5Object.get(resource_key=h5_key, file=file)
-    return json.jsonify(h5_obj)
-
-
-@app.route('/datadiff/contents/datasets/<dataset_key>/files/<file_key>/h5/<h5_key>/values')
-def get_dataset_file_h5_object_values(dataset_key, file_key, h5_key):
-    dataset = Dataset.get(dataset_key)
-    file = DatasetFile.get(resource_key=file_key, dataset=dataset)
-    h5_obj = H5Object.get(resource_key=h5_key, file=file)
-    obj_content = h5_obj.get_values(file)
-    return json.jsonify(obj_content)
-
-
-@app.route('/datadiff/comparisons', methods=['POST'])
-def api_run_comparison():
-    app.logger.info(f'Received request: {request}')
-    options = request.get_json()
-    app.logger.info(f'Request options: {options}')
-
-    comparison = Comparison.create(
-       options=options
-    )
-    comparison.base = Dataset.get(options['base'])
-    comparison.new = Dataset.get(options['new'])
-
-    app.logger.info(f'Created new comparison: {comparison}')
-
-    try:
-        comparison.submitted_at = dt.datetime.utcnow()
-        comparison.status = 'started'
-        comparator = ModelOutputComparator(
-            options,
-            output_dir=comparison.path
-        )
-        comparator.compare(
-            comparison.base.path,
-            comparison.new.path
-        )
-    except Exception as e:
-        app.logger.critical('Could not run the comparison')
-        app.logger.exception(e)
-        comparison.outcome = 'error'
-    else:
-        app.logger.info(f'Comparison {comparison.resource_key} completed successfully')
-        comparison.outcome = 'success'
-    finally:
-        comparison.status = 'completed'
-        comparison.completed_at = dt.datetime.utcnow()
-        comparison.save()
-
-    return json.jsonify(comparison)
-
-
-@app.route('/datadiff/comparisons', methods=['GET'])
-def get_comparisons():
-    comparisons = list(Comparison.all())
-    return json.jsonify(comparisons)
-
-
-@app.route('/datadiff/comparisons/<key>', methods=['GET'])
-def get_comparison(key):
-    return json.jsonify(Comparison.get(key))
-
-
-@app.route('/datadiff/comparisons/<key>/results', methods=['GET'])
-def get_comparison_results(key):
-    comparison = Comparison.get(key)
-    chart_path = comparison.path / 'chart.json'
-    return chart_path.read_text()
-
-
-def untar(src_path: Path, dst_path: Path):
-    assert src_path.exists, "The source path should exist"
-    # TODO what should we do with dst_path? how should we deal with it if e.g. it already exists?
-    try:
-        with tarfile.open(src_path, 'r') as tf:
-            tf.extractall(path=dst_path)
-    except Exception as e:
-        _logger.error(f'Could not untar file {src_path} into destination directory {dst_path}')
-        _logger.exception(e)
-    else:
-        _logger.info(f'File {src_path} extracted successfully into {dst_path}')
-
-
-def write_stream(stream, dst_path: Path, chunksize=16384):
-    read_chunk_size = None
-    read_total = 0
-    with dst_path.open('bw') as f:
-        while read_chunk_size != 0:
-            read_chunk = stream.read(chunksize)
-            read_chunk_size = len(read_chunk)
-            f.write(read_chunk)
-            read_total += read_chunk_size
-        return read_total
-
-
-@app.route('/datadiff/contents/datasets', methods=['POST'])
-@app.route('/datadiff/upload', methods=['POST'])
-def process_upload():
-    tmp_path = Path('/tmp/uploaded_file')
-
-    app.logger.info("request:")
-    app.logger.info(request.headers)
-
-    key = request.headers.get('X-File-Name', None)
-    dataset = Dataset.create(key=key)
-    final_dir = dataset.path
-
-    try:
-        app.logger.info(f'Starting to save uploaded stream to {tmp_path}')
-        write_stream(request.stream, tmp_path)
-        app.logger.info(f'size={tmp_path.stat().st_size}')
-        app.logger.info(f'Trying to untar the uploaded file into {final_dir}')
-        untar(tmp_path, final_dir)
-        app.logger.info(f'Removing temporary file')
-        tmp_path.unlink()
-    except Exception as e:
-        app.logger.error('Operation failed')
-        app.logger.exception(e)
-    else:
-        app.logger.info(f'Operation complete. Dataset: {dataset.resource_key}')
-        return json.jsonify(dataset)
 
 
 class ModelOutputFileData:
