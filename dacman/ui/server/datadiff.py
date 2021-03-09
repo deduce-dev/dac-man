@@ -326,7 +326,7 @@ class ModelOutputFileData:
     """
     Represent data to compare for a single model output file.
     """
-    name_regex_pattern = 'BCI_Xu-E-(?:(?P<year>\d{4})-(?P<month>\d{2})-\d{2}-\d{6})-g01'
+    name_regex_pattern = r'BCI_Xu-E-(?:(?P<year>\d{4})-(?P<month>\d{2})-\d{2}-\d{6})-g01'
 
     def __init__(self,
             file: h5py.File,
