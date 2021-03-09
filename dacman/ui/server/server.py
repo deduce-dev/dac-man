@@ -34,8 +34,8 @@ app = Flask(__name__, static_folder='../fits/build/static', template_folder='../
 app.config['JSON_SORT_KEYS'] = False
 app.json_encoder = ExtendedEncoder
 
-UPLOAD_FOLDER = os.environ.get('DEDUCE_UPLOAD_FOLDER', '/home/deduce/workspace/deduce_fs/uploads')
-RESULTS_FOLDER = os.environ.get('DEDUCE_RESULTS_FOLDER', '/home/deduce/workspace/deduce_fs/runs')
+UPLOAD_FOLDER = os.environ.get('DEDUCE_UPLOAD_FOLDER', '/data/deduce/uploads')
+RESULTS_FOLDER = os.environ.get('DEDUCE_RESULTS_FOLDER', '/data/deduce/runs')
  
 ALLOWED_EXTENSIONS = {'csv'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
