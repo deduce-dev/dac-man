@@ -4,6 +4,7 @@ import os
 import uuid
 import glob
 from pathlib import Path
+import tarfile
 
 from flask import Flask, flash, request, redirect
 from flask import render_template, json, send_from_directory
