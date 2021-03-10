@@ -200,7 +200,7 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_")
+                        paste("flag_null_dupl", var_name, sep = "_")
                     )
     } else if (is.null(flag_var) && is.null(flag_bad)) {
         df = data.frame(var, flag_outl, flag_extr)
@@ -227,21 +227,21 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var, flag_extr)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_extr", var_name, sep = "_")
                     )
     } else if (is.null(flag_bad) && is.null(flag_extr)) {
         df = data.frame(var, flag_var, flag_outl)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_outl", var_name, sep = "_")
                     )
     } else if (is.null(flag_outl) && is.null(flag_extr)) {
         df = data.frame(var, flag_var, flag_bad)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_bad", var_name, sep = "_")
                     )
     } else if (is.null(flag_var)) {
@@ -256,7 +256,7 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var, flag_outl, flag_extr)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_outl", var_name, sep = "_"),
                         paste("flag_extr", var_name, sep = "_")
                     )
@@ -264,7 +264,7 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var, flag_bad, flag_extr)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_bad", var_name, sep = "_"),
                         paste("flag_extr", var_name, sep = "_")
                     )
@@ -272,7 +272,7 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var, flag_bad, flag_outl)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_bad", var_name, sep = "_"),
                         paste("flag_outl", var_name, sep = "_")
                     )
@@ -280,7 +280,7 @@ save_file <- function(var_name, var, flag_var, flag_bad, flag_outl, flag_extr, o
         df = data.frame(var, flag_var, flag_bad, flag_outl, flag_extr)
         names(df) <- c(
                         var_name,
-                        paste("flag", var_name, sep = "_"),
+                        paste("flag_null_dupl", var_name, sep = "_"),
                         paste("flag_bad", var_name, sep = "_"),
                         paste("flag_outl", var_name, sep = "_"),
                         paste("flag_extr", var_name, sep = "_")
