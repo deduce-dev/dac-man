@@ -133,7 +133,7 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
     return output_folder
 
 def combine_csv_files(csv_folder):
-    print("csv_folder", csv_folder)
+    print("csv_folder:", csv_folder)
 
     dataset_dirs = next(os.walk(csv_folder))[1]
 

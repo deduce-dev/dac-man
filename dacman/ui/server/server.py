@@ -148,10 +148,8 @@ def download(project_id):
     print(glob.glob(os.path.join(folder_path, "*.csv.gz")))
     file_to_download = glob.glob(os.path.join(folder_path, "*.zip"))[0]
     file_to_download = os.path.basename(file_to_download)
-    return send_from_directory(
-        directory=folder_path,
-        filename=file_to_download
-    )
+    print("file_to_download:", file_to_download)
+    return send_from_directory(folder_path, file_to_download)
 
 @app.route('/flagging/clean/<project_id>', methods=['POST'])
 def clean(project_id):
