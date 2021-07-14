@@ -21,6 +21,7 @@ import axios from 'axios';
 const initialState = {
   variable_type: 'numeric',
   checkNull: true,
+  nullValues: [],
   checkDuplicates: {
     checked: true,
     subsequentDisabled: false,

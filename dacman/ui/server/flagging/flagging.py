@@ -1,4 +1,5 @@
 import os
+from posixpath import join
 import shutil
 import math
 import glob
@@ -91,6 +92,13 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
 
         if details['checkNull']:
             app_args.append('-n')
+
+        if details['nullValues']:
+            app_args.append('-u')
+            app_args.extend([
+                '-u',
+                ','.join(details['nullValues'])
+            ])
 
         if details['checkDuplicates']['checked']:
             app_args.append('-d')

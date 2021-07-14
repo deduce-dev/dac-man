@@ -24,7 +24,9 @@ option_list = list(
     make_option(c("--is_date"), action = "store_true", default = FALSE,
               help="Check if the variable is date [default= %default]"),
     make_option(c("-n", "--check_null"), action = "store_true", default = FALSE,
-              help="Check NULL values [default= %default]"),
+              help="Check for NULL values [default= %default]"),
+    make_option(c("-u", "--null_values"), default = NULL,
+              help="NULL values to expect [default= %default]"),
     make_option(c("-d", "--check_dupl"), action = "store_true", default = FALSE,
               help="Check duplicate values"),
     make_option(c("-s", "--subsequent"), type = "integer", default = 3,
@@ -53,6 +55,21 @@ read_variable <- function(dataset, var_name, is_numeric=TRUE) {
     }
     
     return(var)
+}
+
+unify_nulls <- function(dataset, val) {
+    # remove -999 from the original datasets ----
+    val_len = lengths(val)
+    data <- dataset
+    for (i in 1:val_len) {
+        if (!is.na(as.numeric(val[[1]][i]))) {
+            data = ifelse(data == as.numeric(val[[1]][i]), NA, data)
+        }
+        else {
+            data = ifelse(data == val[[1]][i], NA, data)
+        }
+    }
+    return(data)
 }
 
 format_date <- function(dataset, date_col, date_format='%m/%d/%Y %H:%M:%S') {
@@ -331,6 +348,17 @@ if (opt$is_numeric) {
     Var <- read_variable(input_file, var_name, is_numeric=FALSE)
 }
 
+###############################
+# Check for custom null values
+###############################
+
+null_vals <- NULL
+
+if (!is.null(opt$null_values)) {
+    null_vals <- strsplit(opt$null_values, ",")
+    Var <- unify_nulls(Var, null_vals)
+}
+
 ########################
 # FLAGGING OF VARIABLES
 ########################
@@ -351,7 +379,7 @@ if (opt$check_null && opt$check_dupl && opt$is_numeric) {
 
 flag_bad <- NULL
 
-if (!is.null(bad_vals_range)) {
+if (!is.null(bad_vals_range)) {/
     flag_bad = ifelse(Var < bad_vals_start, 1, ifelse(Var > bad_vals_end, 2, 0))
 }
 
