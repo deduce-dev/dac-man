@@ -98,9 +98,12 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
 
             for val in details['nullValues']:
                 if val[0] == '-':
-                    val[0] = '*'
-                null_values.append(val)
-
+                    # Only the changing the first occurrence so we can pass
+                    # it as an argument to the bash command
+                    null_values.append(val.replace('-', '*', 1))
+                else:
+                    null_values.append(val)
+            print("null_values:", null_values)
             app_args.extend([
                 '-u',
                 ','.join(null_values)
