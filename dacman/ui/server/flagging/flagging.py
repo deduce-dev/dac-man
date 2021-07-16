@@ -94,10 +94,16 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
             app_args.append('-n')
 
         if details['nullValues']:
-            app_args.append('-u')
+            null_values = []
+
+            for val in details['nullValues']:
+                if val[0] == '-':
+                    val[0] = '*'
+                null_values.append(val)
+
             app_args.extend([
                 '-u',
-                ','.join(details['nullValues'])
+                ','.join(null_values)
             ])
 
         if details['checkDuplicates']['checked']:

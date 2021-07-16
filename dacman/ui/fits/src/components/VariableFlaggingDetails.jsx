@@ -1,6 +1,12 @@
 import React, { useReducer } from "react";
-import { Typography } from "@material-ui/core";
-import Input from '@material-ui/core/Input';
+import Grid from '@material-ui/core/Grid';
+import List from '@material-ui/core/List';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import Divider from '@material-ui/core/Divider';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -183,6 +189,20 @@ function reducer(state, action) {
           iqrCoef: action.payload
         }
       };
+    case 'ADD_NULL_VALUE':
+      let newNullValues = new Set(state.nullValues);
+      newNullValues.add(action.payload);
+      return {
+        ...state,
+        nullValues: Array.from(newNullValues)
+      };
+    case 'DELETE_NULL_VALUE':
+      let currentNullValues = new Set(state.nullValues);
+      currentNullValues.delete(action.payload);
+      return {
+        ...state,
+        nullValues: Array.from(currentNullValues)
+      };
     default:
       return state;
   }
@@ -195,6 +215,8 @@ function VariableFlaggingDetails({
   const classes = useStyles();
 
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const nullInput = React.useRef(null);
 
   const chooseVariableType = (event) => {
     dispatch({
@@ -286,6 +308,22 @@ function VariableFlaggingDetails({
     });
   };
 
+  const handleCustomNullValue = () => {
+    if (nullInput.current.value) {
+      dispatch({
+        type: 'ADD_NULL_VALUE',
+        payload: nullInput.current.value
+      });
+    }
+  };
+
+  const handleNullValueClick = (event) => {
+    dispatch({
+      type: 'DELETE_NULL_VALUE',
+      payload: event.target.innerText
+    });
+  }
+
   const runFlagging = () => {
     console.log(flaggingDetails);
     let varDetails = {
@@ -358,6 +396,57 @@ function VariableFlaggingDetails({
                 name="checkNull" />
             }
             label="Check Null values"
+          />
+          <FormControlLabel
+            control={
+              <Grid
+                container
+                spacing={2}
+                justifyContent="center"
+                alignItems="center">
+                <Grid item>
+                  <TextField
+                    inputRef={nullInput}
+                    id="null_input"
+                    label="Custom Null Value"
+                    placeholder="e.g -999"
+                    variant="outlined" />
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleCustomNullValue}
+                    //disabled={!nullInput.current || !nullInput.current.value}
+                    aria-label="move all right"
+                  >
+                    &gt;
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Card>
+                    <CardHeader
+                      titleTypographyProps={{variant:'subtitle1' }}
+                      title='Null Values'
+                    />
+                    <Divider />
+                    <List dense component="div" role="list">
+                      {state.nullValues.map((value) => {
+                        const labelId = `transfer_list_item_${value}_label`;
+
+                        //<ListItem key={value} role="listitem" button >
+                        return (
+                          <ListItem key={value} role="listitem" button onClick={handleNullValueClick}>
+                            <ListItemText id={labelId} primary={value} />
+                          </ListItem>
+                        );
+                      })}
+                      <ListItem />
+                    </List>
+                  </Card>
+                </Grid>
+              </Grid>
+            }
           />
           <FormControlLabel
             control={

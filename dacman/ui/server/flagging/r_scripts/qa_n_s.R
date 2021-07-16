@@ -9,7 +9,8 @@ rm (list = ls())
 # DOWNLOAD PACKAGES  ----
 library (vctrs)
 library (rstatix)
-library(optparse)
+library (optparse)
+library (stringr)
 
 
 option_list = list(
@@ -62,11 +63,12 @@ unify_nulls <- function(dataset, val) {
     val_len = lengths(val)
     data <- dataset
     for (i in 1:val_len) {
+        temp_val = chartr(old = "*", new = "-", val[[1]][i])
         if (!is.na(as.numeric(val[[1]][i]))) {
-            data = ifelse(data == as.numeric(val[[1]][i]), NA, data)
+            data = ifelse(data == as.numeric(temp_val), NA, data)
         }
         else {
-            data = ifelse(data == val[[1]][i], NA, data)
+            data = ifelse(data == temp_val, NA, data)
         }
     }
     return(data)
@@ -379,7 +381,7 @@ if (opt$check_null && opt$check_dupl && opt$is_numeric) {
 
 flag_bad <- NULL
 
-if (!is.null(bad_vals_range)) {/
+if (!is.null(bad_vals_range)) {
     flag_bad = ifelse(Var < bad_vals_start, 1, ifelse(Var > bad_vals_end, 2, 0))
 }
 
