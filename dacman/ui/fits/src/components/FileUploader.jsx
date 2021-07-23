@@ -139,11 +139,14 @@ function FileUploader({ parentDispatch, file_list }) {
   */
 
   let dataReview = {
-    show: true,
+    show: false,
     datasetVarsTemplate: [
       { title: 'Variables', field: 'varName' },
       { title: 'Content Type', field: 'contentType' }
-    ]
+    ],
+    datasets_names: [],
+    datasets_shapes: [],
+    datasetVars: []
   }
 
   const choseFilesToUpload = (files) => {
@@ -225,29 +228,63 @@ function FileUploader({ parentDispatch, file_list }) {
 
           var resData = null;
           req.then((response) => {
+            let file_index = response.data.file_index;
+            console.log("typeof file_index:", typeof file_index);
+            console.log("file_index:", file_index);
             dispatch(uploadedFile(response.data.file_index));
             //console.log(response.data);
             //var resData = JSON.parse(JSON.stringify(response.data));
             //var resData = JSON.parse(response.data);
 
-            if (resData === null) {
-              resData = response.data;
+            resData = response.data;
+            console.log("resData:", resData);
+            // console.log("resData.data:", resData.data);
+            // console.log("resData.data.datasetVars:", resData.data.datasetVars);
+            // console.log("resData.data.datasetVars.length:", resData.data.datasetVars.length);
 
-              dataReview = {
-                ...dataReview,
-                ...resData.data,
-                dataset_name: dataset.name,
-                dataset_shape: [...resData.data_total_shape]
+            // console.log("dataReview:", resData.data);
+            // console.log("dataReview.datasetVars:", resData.data.datasetVars);
+            // console.log("dataReview.datasetVars.length:", resData.data.datasetVars.length);
+
+            // Avoiding duplicate variables
+            let clean_datasetVars = dataReview.datasetVars;
+            for (let j = 0; j < resData.data.datasetVars.length; j++) {
+              let found_var = false;
+              for (let k = 0; k < dataReview.datasetVars.length; k++) {
+                if (resData.data.datasetVars[j].varName == dataReview.datasetVars[k].varName) {
+                  found_var = true;
+                  break;
+                }
               }
+              if (found_var == false) {
+                clean_datasetVars.push(resData.data.datasetVars[j]);
+              }
+            }
 
-              console.log(resData);
-              console.log(dataReview);
+            dataReview = {
+              ...dataReview,
+              ...resData.data,
+              datasets_names: [
+                ...dataReview.datasets_names,
+                dataset.name
+              ],
+              datasets_shapes: [
+                ...dataReview.datasets_shapes,
+                resData.data_total_shape
+              ],
+              datasetVars: clean_datasetVars
+            }
 
+            console.log("dataReview:", dataReview);
+            if (file_index == files.length-1) {
               parentDispatch(
                 loadSample(
-                  resData.project_id,
+                  project_id,
                   dataReview
                 )
+              );
+              parentDispatch(
+                { type: "CHOOSE_VARS_TO_FLAG" }
               );
             }
           })
@@ -255,9 +292,14 @@ function FileUploader({ parentDispatch, file_list }) {
             console.log(error);
           });
         }
+
+        // finished uploading all files
+        
       }
       upload_start()
-      .then(res => console.log(res))
+      .then((res) => {
+        console.log("res:", res);
+      })
       .catch((error) => {
         console.log(error);
       });

@@ -85,6 +85,15 @@ def upload_file(project_id, file_index):
         file_path = os.path.join(upload_path, filename)
         file.save(file_path)
 
+        # TODO: The disparate variable feature will be implemented here
+        # To be precise, the metadata of the variables will be saved here.
+        # Such metadata will include the files that has the accompanying
+        # variable. I guess we can start with having the variables having
+        # matching names to be processed in different variables.
+        #
+        # The metadata needs to be saved to be loaded by later at the data
+        # processing phase.
+
         data, data_total_shape = sample_data(file_path)
         return json.jsonify(
             {
@@ -105,8 +114,13 @@ def run_flagging(project_id):
     )
 
     # TODO - check if all variables exist in all uploaded files
+    # Update July 2021: Because of the disparate variables feature, the files could have
+    # different variables!
 
+    # 
 
+    # run the R script on the files, and return the folder where the
+    # processing happened
     processing_folder = qa_flagging_app_deploy(
         project_id,
         datasets_dir,

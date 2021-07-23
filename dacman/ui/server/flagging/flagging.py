@@ -55,6 +55,10 @@ def sample_data(file_path, n=100):
 
     return formatted_data, data.shape
 
+#def match_vars_with_files():
+#    """Iterate through each file and save their accompanied files."""
+    
+
 def check_if_similar_vars(datasets_dir):
     csv_files = glob.glob(os.path.join(datasets_dir, "*.csv"))
 
@@ -68,6 +72,7 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
     var_names = vars_details['varNames']
     flagging_details = vars_details['flaggingDetails']
     for i, details in enumerate(flagging_details):
+        # Build the Rscript command-line
         app_args = []
         variable_type = details['variable_type']
         if variable_type == 'numeric':
@@ -121,6 +126,13 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
         r_script_path = os.path.join(deduce_backend_path,
             'dac-man/dacman/ui/server/flagging/r_scripts/qa_n_s.R')
 
+        # TODO: Here we iterate through the variables and their accompanied
+        # files.
+
+        # Find the related files that need to be processed.
+        # Update: This used to process all the files that were uploaded. Now
+        # we will only include the files that have the current variable (or
+        # `var_name[i]`)
         dataset_files = []
         for f in os.listdir(datasets_dir):
             if os.path.isfile(os.path.join(datasets_dir, f)):
@@ -128,7 +140,8 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
         
         output_file = '%d.csv' % i
         app_args.extend(['-o', 'x'])
-
+        
+        # Iterate through the files
         for dataset_name in dataset_files:
             # x -> replaced with the new output flagging file
             dataset_name_no_ext = os.path.splitext(dataset_name)[0]

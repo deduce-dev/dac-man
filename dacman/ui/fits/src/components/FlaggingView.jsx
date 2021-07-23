@@ -34,8 +34,8 @@ const initialState = {
   files_to_upload: [],
   dataReview: {
     show: false,
-    dataset_name: null,
-    dataset_shape: [],
+    datasets_names: [],
+    datasets_shapes: [],
     columns: [],
     rows: [],
     datasetVars: [],
@@ -233,8 +233,8 @@ function FlaggingView() {
               <DataReview
                 index={2}
                 title={'Data Preview'}
-                dataset_name={state.dataReview.dataset_name}
-                dataset_shape={state.dataReview.dataset_shape}
+                datasets_names={state.dataReview.datasets_names}
+                datasets_shapes={state.dataReview.datasets_shapes}
                 rows={state.dataReview.rows}
                 columns={state.dataReview.columns}
                 buttonText={'Next'}
@@ -257,7 +257,7 @@ function FlaggingView() {
                       isFinalVar={true}
                       varNames={state.selectedVarsDetails.varNames}
                       flaggingDetails={state.selectedVarsDetails.flaggingDetails}
-                      dataset_name={state.dataReview.dataset_name}
+                      datasets_names={state.dataReview.datasets_names}
                       parentDispatch={dispatch} />
                   ) : (
                     <VariableFlaggingDetails
@@ -277,8 +277,8 @@ function FlaggingView() {
               <DataReview
                 index={10}
                 title={'Flagged-Data Review'}
-                dataset_name={state.dataReview.dataset_name}
-                dataset_shape={state.dataReview.dataset_shape}
+                datasets_names={state.dataReview.datasets_names}
+                datasets_shapes={state.dataReview.datasets_shapes}
                 rows={state.resultsReview.rows}
                 columns={state.resultsReview.columns}
                 buttonText={'Download'}

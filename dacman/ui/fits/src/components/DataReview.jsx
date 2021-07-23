@@ -5,16 +5,28 @@ import { Button } from '@material-ui/core';
 
 
 function DataReview({
-    index, title, dataset_name, dataset_shape, columns, rows,
+    index, title, datasets_names, datasets_shapes, columns, rows,
     buttonText, actionType, dispatch}) {
 
-  let n_samples = 100;
+  console.log("DataReview - datasets_names:", datasets_names);
+  console.log("DataReview - datasets_shapes:", datasets_shapes);
 
-  var short_description = (
-    <span className="short_description">
-      <span>{dataset_name}</span><span>rows 1-{n_samples} of {dataset_shape[0]}</span>
-    </span>
-  );
+  var short_description = null;
+
+  if (datasets_names.length > 1) {
+    short_description = (
+      <span className="short_description">
+        <span>{datasets_names[0]}, and other files</span>
+      </span>
+    );
+  } else {
+    let n_samples = Math.min(datasets_shapes[0][0], 100);
+    short_description = (
+      <span className="short_description">
+        <span>{datasets_names[0]}</span><span>rows 1-{n_samples} of {datasets_shapes[0][0]}</span>
+      </span>
+    );
+  }
 
   return (
     <WorkbenchCard
