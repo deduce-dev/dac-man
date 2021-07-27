@@ -97,7 +97,11 @@ def load_all_metadata(pickle_folder):
             # to the value unpickled
             curr_metadata = unpickler.load()
             print("curr_metadata:", curr_metadata)
-            metadata.update(curr_metadata)
+            for k, v in curr_metadata.items():
+                if len(metadata[k]) == 0:
+                    metadata[k] = v
+                else:
+                    metadata[k] = metadata[k].union(v)
 
     return metadata
 
@@ -140,7 +144,7 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
     pickle_folder = os.path.join(datasets_dir, "metadata")
     metadata = load_all_metadata(pickle_folder)
 
-    print("metadata:", metadata)
+    print("all metadata:", metadata)
 
     output_folder = os.path.join(results_folder, project_id)
     os.mkdir(output_folder)
@@ -278,7 +282,7 @@ def combine_csv_files(csv_folder):
         #    archive_name='flagged_variables.csv'
         #)
 
-        output_csv_file = os.path.join(csv_folder, dataset_name + ".csv")
+        output_csv_file = os.path.join(csv_folder, dataset_name + "_flagged.csv")
         #output_zip_file = os.path.join(csv_folder, "flagged_variables.csv.gz")
 
         #### old
@@ -294,7 +298,7 @@ def combine_csv_files(csv_folder):
     print("csv_unifed_files:", csv_unifed_files)
 
     combined_datasets_name = '_'.join(dataset_dirs)[:50]
-    output_csv_file = os.path.join(csv_folder, first_dataset_name + '.csv')
+    output_csv_file = os.path.join(csv_folder, first_dataset_name + '_flagged.csv')
 
     #output_zip_file = os.path.join(csv_folder, first_dataset_name + '.zip')
     output_zip_file = os.path.join(csv_folder, combined_datasets_name + '.zip')
