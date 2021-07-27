@@ -151,7 +151,7 @@ function reducer(state, action) {
         },
         resultsReview: {
           ...state.resultsReview,
-          show: true,
+          show: false, // it used to be true but now we stopped showing the results until we decide what we are going to show
           columns: action.payload.response.data.columns,
           rows: action.payload.response.data.rows,
           zip_filename: action.payload.response.zip_filename

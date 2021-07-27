@@ -1,31 +1,41 @@
 import os
-from posixpath import join
 import shutil
 import math
 import glob
+import uuid
 import zipfile
-#import gzip
+import pickle
 import subprocess
 import pandas as pd
+from collections import defaultdict
+from posixpath import join
+from pathlib import Path
 
 
 def frontend_format(data):
+    #print("frontend_format.data:", data)
+    #print("frontend_format.data['datetime']:", data['datetime'])
     data_dict = data.to_dict(orient='split')
+
+    #print("frontend_format.data_dict:", data_dict)
 
     cols = []
     datasetVars = []
     for i, col in enumerate(data_dict['columns']):
-        if str(data.dtypes[i]) == 'object':
+        #print("data.dtypes[i]:", data.dtypes[i])
+        #print("col:", col, "- is_numeric:", data[col].str.isnumeric().any())
+        #if str(data.dtypes[i]) == 'object':
+        if data[col].astype(str).str.isnumeric().any():
+            cols.append({'field': col})
+            datasetVars.append({
+                'varName': col,
+                'contentType': "float"
+            })
+        else:
             cols.append({'field': col, 'width': 175})
             datasetVars.append({
                 'varName': col,
                 'contentType': 'string'
-            })
-        else:
-            cols.append({'field': col})
-            datasetVars.append({
-                'varName': col,
-                'contentType': str(data.dtypes[i])
             })
 
     rows = []
@@ -38,7 +48,6 @@ def frontend_format(data):
                 clean_row[cols[j]['field']] = element
         rows.append(clean_row)
     
-
     formatted_data = {
         'columns': cols,
         'rows': rows,
@@ -47,25 +56,92 @@ def frontend_format(data):
 
     return formatted_data
 
-def sample_data(file_path, n=100):
+def read_csv(file_path):
+    """Read the csv file and return the data"""
     data = pd.read_csv(file_path, na_filter=False)
     data = data.loc[:, ~data.columns.str.contains('^Unnamed')]
+    return data
 
+def sample_data(data, n=100):
     formatted_data = frontend_format(data.head(n))
 
     return formatted_data, data.shape
 
-#def match_vars_with_files():
-#    """Iterate through each file and save their accompanied files."""
+def load_metadata(pickle_file):
+    """Load saved the picked metadata or return an empty one"""
+    metadata = defaultdict(set)
+    if os.path.exists(pickle_file):
+        with open(pickle_file, 'rb') as f:
+            unpickler = pickle.Unpickler(f)
+            # if file is not empty scores will be equal
+            # to the value unpickled
+            metadata = unpickler.load()
     
+    return metadata
 
-def check_if_similar_vars(datasets_dir):
-    csv_files = glob.glob(os.path.join(datasets_dir, "*.csv"))
+def load_all_metadata(pickle_folder):
+    """Load saved the picked metadata or return an empty one"""
+    assert os.path.exists(pickle_folder), "Metadata folder doesn't exist"
 
+    metadata = defaultdict(set)
+
+    metadata_files = next(os.walk(pickle_folder))[2]
+
+    print("metadata_files:", metadata_files)
+
+    print("loading all metadata")
+    for metadata_file in metadata_files:
+        with open(os.path.join(pickle_folder, metadata_file), 'rb') as f:
+            unpickler = pickle.Unpickler(f)
+            # if file is not empty scores will be equal
+            # to the value unpickled
+            curr_metadata = unpickler.load()
+            print("curr_metadata:", curr_metadata)
+            metadata.update(curr_metadata)
+
+    return metadata
+
+def save_metadata(data_columns, filename, project_path):
+    """Iterate through each file and save their accompanied files."""
+    pickle_folder = os.path.join(project_path, "metadata/")
+    pickle_file = os.path.join(pickle_folder, "metadata_%s.pkl" % uuid.uuid4())
+    
+    # No more loading. This was stopped because it introduced an error having
+    # multiple threads try to load and save to the same file.
+    # metadata = load_metadata(pickle_file)
+
+    if not os.path.exists(pickle_folder):
+        try:
+            os.mkdir(pickle_folder)
+        except FileExistsError:
+            pass
+
+    metadata = defaultdict(set)
+
+    # for each variable add the file that contains it to the variable's set
+    for col in data_columns:
+        metadata[col].add(filename)
+
+    with open(pickle_file, 'wb') as f:
+        pickle.dump(metadata, f, protocol=4)
+
+# def check_if_similar_vars(datasets_dir):
+#     csv_files = glob.glob(os.path.join(datasets_dir, "*.csv"))
 
 def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folder):
-    # Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
-    
+    """
+    This is core of the flagging application where the command get built and
+    run by the subprocess library.
+
+    Run the Rscript command is a format that looks like this:
+    $ Rscript qa_n_s.R -f /project/QA_no_seasonal/AirportData_2008-2019_v3.csv -v TEMP_F -n -d --is_numeric -s 3 -t 1.5 -e 3 -b 0,90 -o amo.csv
+    """
+    # load the saved pickled metadata
+    pickle_folder = os.path.join(datasets_dir, "metadata")
+    metadata = load_all_metadata(pickle_folder)
+
+    print("metadata:", metadata)
+
     output_folder = os.path.join(results_folder, project_id)
     os.mkdir(output_folder)
 
@@ -126,21 +202,31 @@ def qa_flagging_app_deploy(project_id, datasets_dir, vars_details, results_folde
         r_script_path = os.path.join(deduce_backend_path,
             'dac-man/dacman/ui/server/flagging/r_scripts/qa_n_s.R')
 
-        # TODO: Here we iterate through the variables and their accompanied
+        # Here we iterate through the variables and their accompanied
         # files.
 
         # Find the related files that need to be processed.
         # Update: This used to process all the files that were uploaded. Now
         # we will only include the files that have the current variable (or
         # `var_name[i]`)
+
+        ############# LEGACY CODE ##############
+        #dataset_files = []
+        # for f in os.listdir(datasets_dir):
+        #     if os.path.isfile(os.path.join(datasets_dir, f)):
+        #         dataset_files.append(f)
+        #############     END     ##############
+
+        var_name = var_names[i]
+        print("var_name:", var_name)
         dataset_files = []
-        for f in os.listdir(datasets_dir):
-            if os.path.isfile(os.path.join(datasets_dir, f)):
-                dataset_files.append(f)
+        for dataset_file in metadata[var_name]:
+            dataset_files.append(dataset_file)
         
         output_file = '%d.csv' % i
         app_args.extend(['-o', 'x'])
         
+        print("dataset_files:", dataset_files)
         # Iterate through the files
         for dataset_name in dataset_files:
             # x -> replaced with the new output flagging file
@@ -167,6 +253,8 @@ def combine_csv_files(csv_folder):
 
     dataset_dirs = next(os.walk(csv_folder))[1]
 
+    print("dataset_dirs:", dataset_dirs)
+
     assert len(dataset_dirs) != 0, "No dataset folders to process"
 
     first_dataset_name = None
@@ -180,6 +268,8 @@ def combine_csv_files(csv_folder):
         for csv_file in csv_files:
             df = pd.read_csv(csv_file, na_filter=False)
             df_list.append(df)
+            # delete numbered file
+            os.remove(csv_file)
 
         df_all = pd.concat(df_list, axis=1)
 
@@ -199,35 +289,24 @@ def combine_csv_files(csv_folder):
             index=False
         )
 
-        #df_all.to_csv(
-        #    output_zip_file,
-        #    index=False,
-        #    compression=compression_opts
-        #)
+    csv_unifed_files = glob.glob(os.path.join(csv_folder, "**/*.csv"), recursive=True)
 
-        #df_all.to_csv(
-        #    output_zip_file,
-        #    index=False,
-        #    compression='gzip'
-        #)
+    print("csv_unifed_files:", csv_unifed_files)
 
-    csv_unifed_files = glob.glob(os.path.join(csv_folder, "*.csv"))
-
+    combined_datasets_name = '_'.join(dataset_dirs)[:50]
     output_csv_file = os.path.join(csv_folder, first_dataset_name + '.csv')
 
-    #output_zip_file = os.path.join(csv_folder, first_dataset_name + '.csv.gz')
-    output_zip_file = os.path.join(csv_folder, first_dataset_name + '.zip')
+    #output_zip_file = os.path.join(csv_folder, first_dataset_name + '.zip')
+    output_zip_file = os.path.join(csv_folder, combined_datasets_name + '.zip')
 
-    #with gzip.open(output_zip_file, 'wb') as f_out:
-    #    for file in csv_unifed_files:
-    #        with open(file, 'rb') as f_in:
-    #            f_out.writelines(f_in)
+    print("output_zip_file:", output_zip_file)
 
     with zipfile.ZipFile(output_zip_file, 'w') as zf:
         for file in csv_unifed_files:
             zf.write(file, os.path.basename(file), compress_type=zipfile.ZIP_DEFLATED)
 
     return output_csv_file, output_zip_file
+    #return output_zip_file
 
 def clean_up(folder):
     if os.path.exists(folder) and os.path.isdir(folder):

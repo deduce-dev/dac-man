@@ -325,7 +325,7 @@ function VariableFlaggingDetails({
   }
 
   const runFlagging = () => {
-    console.log(flaggingDetails);
+    console.log("flaggingDetails:", flaggingDetails);
     let varDetails = {
       dataset_name: dataset_name,
       varNames: [...varNames],
@@ -342,7 +342,7 @@ function VariableFlaggingDetails({
       //console.log(response.data);
       //var resData = JSON.parse(JSON.stringify(response.data));
       //var resData = JSON.parse(response.data);
-      console.log(response.data);
+      console.log("response.data:", response.data);
       parentDispatch({
         type: "RUN_FLAGGING",
         payload: {
@@ -350,6 +350,10 @@ function VariableFlaggingDetails({
           flaggingDetails: state,
           response: response.data
         }
+      });
+
+      parentDispatch({
+        type: "DOWNLOAD_RESULTS"
       });
     })
     .catch((error) => {

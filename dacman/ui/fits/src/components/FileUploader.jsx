@@ -276,7 +276,10 @@ function FileUploader({ parentDispatch, file_list }) {
             }
 
             console.log("dataReview:", dataReview);
-            if (file_index == files.length-1) {
+
+            // All files were uploaded and their metadata has been added to
+            // our state
+            if (dataReview.datasets_names.length == files.length) {
               parentDispatch(
                 loadSample(
                   project_id,

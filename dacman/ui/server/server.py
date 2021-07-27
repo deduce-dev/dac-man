@@ -10,7 +10,8 @@ from flask import Flask, flash, request, redirect
 from flask import render_template, json, send_from_directory
 from werkzeug.utils import secure_filename
 
-from flagging.flagging import sample_data, qa_flagging_app_deploy, combine_csv_files, clean_up
+from flagging.flagging import read_csv, sample_data, qa_flagging_app_deploy
+from flagging.flagging import save_metadata, combine_csv_files, clean_up
 from datadiff import (
     BaseResource,
     Dataset,
@@ -80,12 +81,15 @@ def upload_file(project_id, file_index):
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], project_id)
         
         if not os.path.exists(upload_path):
-            os.mkdir(upload_path)
+            try:
+                os.mkdir(upload_path)
+            except FileExistsError:
+                pass
 
         file_path = os.path.join(upload_path, filename)
         file.save(file_path)
 
-        # TODO: The disparate variable feature will be implemented here
+        # The disparate variable feature will be implemented here
         # To be precise, the metadata of the variables will be saved here.
         # Such metadata will include the files that has the accompanying
         # variable. I guess we can start with having the variables having
@@ -94,13 +98,20 @@ def upload_file(project_id, file_index):
         # The metadata needs to be saved to be loaded by later at the data
         # processing phase.
 
-        data, data_total_shape = sample_data(file_path)
+        # An issue started to appear which is having multiple threads
+        # read the same metadata file. I fixed it by having each thread save
+        # its own file.
+
+        data = read_csv(file_path)
+        save_metadata(data.columns, filename, upload_path)
+
+        formatted_data, data_total_shape = sample_data(data)
         return json.jsonify(
             {
                 'file_index': file_index,
                 'project_id': project_id,
                 'data_total_shape': list(data_total_shape),
-                'data': data
+                'data': formatted_data
             })
 
 @app.route('/flagging/run/<project_id>', methods=['POST'])
@@ -113,11 +124,12 @@ def run_flagging(project_id):
         project_id
     )
 
-    # TODO - check if all variables exist in all uploaded files
+    # prev TODO - check if all variables exist in all uploaded files
     # Update July 2021: Because of the disparate variables feature, the files could have
     # different variables!
 
-    # 
+    # Load the metadata to know which variables will be processed on
+    # which files.
 
     # run the R script on the files, and return the folder where the
     # processing happened
@@ -133,16 +145,8 @@ def run_flagging(project_id):
     output_csv_file = Path(output_csv_file)
     output_zip_file = Path(output_zip_file)
 
-    data, data_total_shape = sample_data(output_csv_file)
-
-    '''
-    print({
-        'folder_id': output_csv_file.parent.name,
-        'csv_filename': output_csv_file.name,
-        'zip_filename': output_zip_file.name,
-        'data': data
-    })
-    '''
+    data = read_csv(output_csv_file)
+    fornatted_data, data_total_shape = sample_data(data)
 
     clean_up(os.path.join(app.config['UPLOAD_FOLDER'], project_id))
 
@@ -150,7 +154,7 @@ def run_flagging(project_id):
         'data_total_shape': list(data_total_shape),
         'csv_filename': output_csv_file.name,
         'zip_filename': output_zip_file.name,
-        'data': data
+        'data': fornatted_data
     })
 
 @app.route('/flagging/download/<project_id>', methods=['POST'])
